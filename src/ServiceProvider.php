@@ -8,6 +8,9 @@ use Bpmore\Wrapped\History\Sources\EntryDataHistorySource;
 use Bpmore\Wrapped\History\Sources\LogbookHistorySource;
 use Bpmore\Wrapped\History\Sources\MtimeHistorySource;
 use Bpmore\Wrapped\History\Sources\RevisionsHistorySource;
+use Bpmore\Wrapped\Stats\Cards\AssetsUploadedCard;
+use Bpmore\Wrapped\Stats\Cards\EntriesPublishedCard;
+use Bpmore\Wrapped\Stats\Cards\TotalWordsCard;
 use Bpmore\Wrapped\Stats\StatCard;
 use Bpmore\Wrapped\Stats\StatCardRegistry;
 use Statamic\Providers\AddonServiceProvider;
@@ -38,7 +41,10 @@ class ServiceProvider extends AddonServiceProvider
      * @var list<class-string<StatCard>>
      */
     protected array $statCards = [
-        //
+        // Volume
+        EntriesPublishedCard::class,
+        TotalWordsCard::class,
+        AssetsUploadedCard::class,
     ];
 
     public function register()

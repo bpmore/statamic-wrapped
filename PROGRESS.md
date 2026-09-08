@@ -15,7 +15,7 @@
 ## Phase 2 — Stats
 - [x] `wrapped_snapshots` migration + model
 - [x] One class per stat card, each declaring the history confidence it needs
-- [ ] Volume: entries published, total words, assets uploaded
+- [x] Volume: entries published, total words, assets uploaded
 - [ ] Time: busiest month, busiest week, busiest day-of-week + hour, longest streak
 - [ ] Superlatives: longest entry, most-revised page, fastest turnaround, top taxonomy term, longest-untouched page
 - [ ] Collections: fastest growing, went quiet
@@ -240,3 +240,48 @@
   rather than assumed. `tests/Fixtures/FakeStatCard` stands in for a real card.
 - Gotcha: a Pest helper named `event()` collides with Laravel's global helper and fatals. Named `anEvent()`.
 - Verified: `vendor/bin/pest` 119 passed · `vendor/bin/pint --test` clean · `vendor/bin/phpstan analyse` no errors.
+
+### Task 10 — Volume cards (done)
+Three cards in `src/Stats/Cards/`, registered in `ServiceProvider::$statCards`.
+
+**`entries_published`** — requires Partial.
+- Counts **distinct entries, not events.** An entry unpublished and put back out was published once as far
+  as a reader is concerned; counting events would double it.
+- `previous` is **null, not 0**, when the source has no history before the window. A site three months old
+  did not publish nothing last year, it did not exist. `StatContext::hasHistoryBefore()` decides this.
+  A genuine quiet year still reports 0.
+- Returns null (no card) when the count is 0. "You published 0 entries" is a scolding — SPEC.md §3.
+
+**`total_words`** — requires Partial.
+- **Counted from entries as they stand today, not as they stood when published.** An entry published in
+  January and rewritten in June counts at its June length. No source can give us the January one.
+  Entries since deleted cannot be counted at all, which is why the card reports `entries` alongside
+  `words` — that number is not always the published count.
+- Word counting lives in `Stats\Support\WordCounter` so the heuristic can be argued with in one place.
+  `readability-core` does not exist (checked on packagist), so this is written here; SPEC.md §8 says replace
+  it rather than keep both if that package ever ships.
+- Two rules keep it honest: only fieldtypes the blueprint says are prose are counted
+  (text/textarea/markdown/bard/replicator/grid/group — so a select value or taxonomy handle is not
+  "words someone wrote"), and inside those, structural keys are skipped. **The structural key list exists
+  because of Bard**: every ProseMirror node carries `type`, and counting "paragraph" as a word would
+  badly inflate a long article.
+
+**`assets_uploaded`** — requires **High**, so it only appears on a site running Logbook.
+- Nothing else records an upload: revisions and entry data are entries-only, and an asset's file mtime is
+  the date of the last deploy on most sites. Counting uploads from a directory listing would give a
+  confident number that is simply wrong, so the card is left off instead. This is the clearest example so
+  far of "omit rather than guess", and it gives sites a real reason to install Logbook.
+- Reports `count`, `bytes` and `weighed`. An upload since deleted still happened, but no longer has a size,
+  so `weighed` says how many of the count the byte total actually covers.
+
+**Also in this task:** `StatContext` gained `period`, `previousWindow()` and `hasHistoryBefore()` — the
+"last year's number alongside" requirement needs them, and shifting by the period (not by the window's
+length) keeps leap years and uneven quarters landing on the right dates.
+
+**Test-harness notes:** shared card helpers now live in `tests/Pest.php`, because Pest files share one
+global namespace and a helper defined in two files is a fatal redeclaration. Names are prefixed
+(`cardContext`, `wasPublished`, `wrappedEvent`) — `context()` and `event()` are already Laravel globals and
+both fataled before being renamed. A Pest dataset entry of `[]` spreads to zero arguments; wrap every case
+in an array.
+
+- Verified: `vendor/bin/pest` 156 passed · `vendor/bin/pint --test` clean · `vendor/bin/phpstan analyse` no errors.

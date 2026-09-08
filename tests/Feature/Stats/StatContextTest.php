@@ -4,6 +4,7 @@ use Bpmore\Wrapped\History\Confidence;
 use Bpmore\Wrapped\History\HistoryEvent;
 use Bpmore\Wrapped\History\HistoryEventType;
 use Bpmore\Wrapped\History\ResolvedHistory;
+use Bpmore\Wrapped\Snapshots\Period;
 use Bpmore\Wrapped\Stats\StatCardRegistry;
 use Bpmore\Wrapped\Stats\StatContext;
 use Bpmore\Wrapped\Tests\Fixtures\FakeHistorySource;
@@ -24,6 +25,7 @@ function contextOver(FakeHistorySource $source, ?string $site = null): StatConte
 {
     return new StatContext(
         history: ResolvedHistory::for($source),
+        period: Period::Year,
         from: CarbonImmutable::create(2026, 1, 1)->startOfDay(),
         to: CarbonImmutable::create(2026, 12, 31)->endOfDay(),
         site: $site,
