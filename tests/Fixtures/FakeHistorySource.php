@@ -13,6 +13,9 @@ use Illuminate\Support\Collection;
  */
 class FakeHistorySource implements HistorySource
 {
+    /** How many times the source has actually been read, for cache tests. */
+    public int $reads = 0;
+
     /**
      * @param  list<HistoryEvent>  $events
      */
@@ -45,6 +48,8 @@ class FakeHistorySource implements HistorySource
 
     public function events(CarbonImmutable $from, CarbonImmutable $to, ?string $site = null): Collection
     {
+        $this->reads++;
+
         return (new Collection($this->events))
             ->filter(fn (HistoryEvent $event) => $event->occurredAt->betweenIncluded($from, $to))
             ->filter(fn (HistoryEvent $event) => $site === null || $event->site === $site)

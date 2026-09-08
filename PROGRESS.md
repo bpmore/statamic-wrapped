@@ -14,7 +14,7 @@
 
 ## Phase 2 — Stats
 - [x] `wrapped_snapshots` migration + model
-- [ ] One class per stat card, each declaring the history confidence it needs
+- [x] One class per stat card, each declaring the history confidence it needs
 - [ ] Volume: entries published, total words, assets uploaded
 - [ ] Time: busiest month, busiest week, busiest day-of-week + hour, longest streak
 - [ ] Superlatives: longest entry, most-revised page, fastest turnaround, top taxonomy term, longest-untouched page
@@ -217,3 +217,26 @@
 - Test env note: testbench's default connection is sqlite `:memory:`, so `RefreshDatabase` runs the
   migration with no extra setup.
 - Verified: `vendor/bin/pest` 107 passed · `vendor/bin/pint --test` clean · `vendor/bin/phpstan analyse` no errors.
+
+### Task 9 — Stat card shape: interface, context, registry (done)
+- `Stats\StatCard`: `handle()` (the stable key in the snapshot's stats JSON — stored data, do not rename
+  after release), `requires(): Confidence`, `compute(StatContext): ?array`.
+- **`compute()` returning null means "computed, and there is no story here"** — a year with no entries, a
+  site with one collection. It does **not** mean "not allowed to compute". Confidence gating happens before
+  `compute()` is called, and that is a later task ("Cards omitted when confidence is too low").
+- `Stats\StatContext` carries the resolved history, the window and the site, and **reads each window from
+  the source exactly once**. A dozen cards each asking for the same window would read the logbook table a
+  dozen times; on a large site that is the difference between a job and a timeout. `events($from, $to)`
+  lets a card ask for another window (last year's number alongside this year's) and caches that separately.
+- The context deliberately does **not** expose entries, assets or terms. Several cards will need entry
+  content (word counts, taxonomy terms) — let each fetch what it needs rather than guess at a shared API
+  before any card exists.
+- `Stats\StatCardRegistry` **throws on a duplicate handle.** Two cards sharing one would silently overwrite
+  each other in the stats JSON, which is a data bug that would never surface as an error.
+- Bound as a singleton in `ServiceProvider::$statCards`, currently empty — unlike the history sources in
+  task 2, which were left unbound. The difference: cards land in the very next task, and the list property
+  is the extension point the next task needs.
+- `tests/Fixtures/FakeHistorySource` gained a public `$reads` counter so the context's caching is proved
+  rather than assumed. `tests/Fixtures/FakeStatCard` stands in for a real card.
+- Gotcha: a Pest helper named `event()` collides with Laravel's global helper and fatals. Named `anEvent()`.
+- Verified: `vendor/bin/pest` 119 passed · `vendor/bin/pint --test` clean · `vendor/bin/phpstan analyse` no errors.

@@ -8,6 +8,8 @@ use Bpmore\Wrapped\History\Sources\EntryDataHistorySource;
 use Bpmore\Wrapped\History\Sources\LogbookHistorySource;
 use Bpmore\Wrapped\History\Sources\MtimeHistorySource;
 use Bpmore\Wrapped\History\Sources\RevisionsHistorySource;
+use Bpmore\Wrapped\Stats\StatCard;
+use Bpmore\Wrapped\Stats\StatCardRegistry;
 use Statamic\Providers\AddonServiceProvider;
 
 class ServiceProvider extends AddonServiceProvider
@@ -29,6 +31,16 @@ class ServiceProvider extends AddonServiceProvider
         MtimeHistorySource::class,
     ];
 
+    /**
+     * Every stat card. Order here is the order they are computed, not the order
+     * they are shown — that is the CP screen's business.
+     *
+     * @var list<class-string<StatCard>>
+     */
+    protected array $statCards = [
+        //
+    ];
+
     public function register()
     {
         parent::register();
@@ -40,6 +52,13 @@ class ServiceProvider extends AddonServiceProvider
             return new HistorySourceResolver(array_map(
                 fn (string $source) => $app->make($source),
                 $this->historySources,
+            ));
+        });
+
+        $this->app->singleton(StatCardRegistry::class, function ($app) {
+            return new StatCardRegistry(array_map(
+                fn (string $card) => $app->make($card),
+                $this->statCards,
             ));
         });
     }
