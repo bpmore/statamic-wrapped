@@ -16,7 +16,7 @@
 - [x] `wrapped_snapshots` migration + model
 - [x] One class per stat card, each declaring the history confidence it needs
 - [x] Volume: entries published, total words, assets uploaded
-- [ ] Time: busiest month, busiest week, busiest day-of-week + hour, longest streak
+- [x] Time: busiest month, busiest week, busiest day-of-week + hour, longest streak
 - [ ] Superlatives: longest entry, most-revised page, fastest turnaround, top taxonomy term, longest-untouched page
 - [ ] Collections: fastest growing, went quiet
 - [ ] People stats — team by default, individual leaderboard opt-in, never rank from the bottom
@@ -285,3 +285,40 @@ both fataled before being renamed. A Pest dataset entry of `[]` spreads to zero 
 in an array.
 
 - Verified: `vendor/bin/pest` 156 passed · `vendor/bin/pint --test` clean · `vendor/bin/phpstan analyse` no errors.
+
+### Task 11 — Time cards (done)
+Four cards, all requiring Partial, all built on publications rather than edits.
+
+**`busiest_month`** — stores `year` + `month` as **numbers, never a name**. A stored "September" would be
+wrong on a French site and impossible to change later; the CP screen translates it. Ties go to the earlier
+month (countBy fills in oldest-first order and `sortDesc` is stable), which is deterministic and documented.
+
+**`busiest_week`** — keyed on the **Monday the week starts**, not the ISO number alone. ISO week 1 can fall
+in either of two calendar years, so a bare "week 1" is ambiguous in stored data. The number is reported too
+because that is what people say.
+
+**`busiest_time`** — the delightful one from SPEC.md §2.
+- **The important decision: events landing exactly on 00:00:00 are ignored.** A dated collection stores a
+  date with no time, so `Entry::date()` returns the start of the day. Counting those would report that
+  every site on earth publishes at midnight — a card that is confidently, uniformly wrong. Treating exact
+  midnight as "no time recorded" costs the occasional genuine midnight publication and saves the card.
+  `from` reports how many publications actually carried a time, so the UI need not imply more.
+- Day and hour are counted **independently, not as a pair**. Over a year one day-and-hour combination is
+  thin enough to be noise, while "Tuesdays" and "the afternoon" are each well supported — and it still
+  reads as one sentence.
+- Day is ISO (1 = Monday), hour is 0-23 local.
+
+**`longest_streak`** — consecutive calendar days with something published. Three entries on one day is a
+busy day, not a three-day streak. **Only shown from two days upward**: a streak of one is every site that
+has ever published anything.
+
+**Refactor:** `Stats\Concerns\ReadsPublishedEntries` now owns the "entries only, Published only" filter and
+`firstPublications()`, which keeps the **earliest** event per entry so a republished entry counts once and
+lands in the month it first appeared. `EntriesPublishedCard` and `TotalWordsCard` moved onto it.
+
+**Process note:** one test in this task was written with expectations I was unsure of and marked `skip`.
+That is dead weight, not caution — it was rewritten as a case that actually discriminates (without
+deduplication September wins with three events; with it, March wins with two) and the skip removed.
+No skipped tests in this suite.
+
+- Verified: `vendor/bin/pest` 177 passed · `vendor/bin/pint --test` clean · `vendor/bin/phpstan analyse` no errors.

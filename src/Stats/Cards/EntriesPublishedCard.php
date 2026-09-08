@@ -4,7 +4,7 @@ namespace Bpmore\Wrapped\Stats\Cards;
 
 use Bpmore\Wrapped\History\Confidence;
 use Bpmore\Wrapped\History\HistoryEvent;
-use Bpmore\Wrapped\History\HistoryEventType;
+use Bpmore\Wrapped\Stats\Concerns\ReadsPublishedEntries;
 use Bpmore\Wrapped\Stats\StatCard;
 use Bpmore\Wrapped\Stats\StatContext;
 use Illuminate\Support\Collection;
@@ -18,6 +18,8 @@ use Illuminate\Support\Collection;
  */
 class EntriesPublishedCard implements StatCard
 {
+    use ReadsPublishedEntries;
+
     public function handle(): string
     {
         return 'entries_published';
@@ -56,10 +58,6 @@ class EntriesPublishedCard implements StatCard
      */
     protected function countIn(Collection $events): int
     {
-        return $events
-            ->filter(fn (HistoryEvent $event) => $event->type === HistoryEventType::Published)
-            ->filter(fn (HistoryEvent $event) => $event->itemType === 'entry')
-            ->unique(fn (HistoryEvent $event) => $event->itemId)
-            ->count();
+        return $this->firstPublications($events)->count();
     }
 }

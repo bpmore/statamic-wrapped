@@ -4,7 +4,7 @@ namespace Bpmore\Wrapped\Stats\Cards;
 
 use Bpmore\Wrapped\History\Confidence;
 use Bpmore\Wrapped\History\HistoryEvent;
-use Bpmore\Wrapped\History\HistoryEventType;
+use Bpmore\Wrapped\Stats\Concerns\ReadsPublishedEntries;
 use Bpmore\Wrapped\Stats\StatCard;
 use Bpmore\Wrapped\Stats\StatContext;
 use Bpmore\Wrapped\Stats\Support\WordCounter;
@@ -23,6 +23,8 @@ use Statamic\Facades\Entry as Entries;
  */
 class TotalWordsCard implements StatCard
 {
+    use ReadsPublishedEntries;
+
     public function __construct(protected WordCounter $words) {}
 
     public function handle(): string
@@ -68,11 +70,8 @@ class TotalWordsCard implements StatCard
      */
     protected function publishedIds(StatContext $context): array
     {
-        return $context->events()
-            ->filter(fn (HistoryEvent $event) => $event->type === HistoryEventType::Published)
-            ->filter(fn (HistoryEvent $event) => $event->itemType === 'entry')
+        return $this->firstPublications($context->events())
             ->map(fn (HistoryEvent $event) => $event->itemId)
-            ->unique()
             ->values()
             ->all();
     }

@@ -9,7 +9,11 @@ use Bpmore\Wrapped\History\Sources\LogbookHistorySource;
 use Bpmore\Wrapped\History\Sources\MtimeHistorySource;
 use Bpmore\Wrapped\History\Sources\RevisionsHistorySource;
 use Bpmore\Wrapped\Stats\Cards\AssetsUploadedCard;
+use Bpmore\Wrapped\Stats\Cards\BusiestMonthCard;
+use Bpmore\Wrapped\Stats\Cards\BusiestTimeCard;
+use Bpmore\Wrapped\Stats\Cards\BusiestWeekCard;
 use Bpmore\Wrapped\Stats\Cards\EntriesPublishedCard;
+use Bpmore\Wrapped\Stats\Cards\LongestStreakCard;
 use Bpmore\Wrapped\Stats\Cards\TotalWordsCard;
 use Bpmore\Wrapped\Stats\StatCard;
 use Bpmore\Wrapped\Stats\StatCardRegistry;
@@ -45,6 +49,12 @@ class ServiceProvider extends AddonServiceProvider
         EntriesPublishedCard::class,
         TotalWordsCard::class,
         AssetsUploadedCard::class,
+
+        // Time
+        BusiestMonthCard::class,
+        BusiestWeekCard::class,
+        BusiestTimeCard::class,
+        LongestStreakCard::class,
     ];
 
     public function register()
