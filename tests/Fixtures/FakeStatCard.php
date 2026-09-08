@@ -21,6 +21,7 @@ class FakeStatCard implements StatCard
         protected string $handle,
         protected Confidence $requires = Confidence::Low,
         protected ?array $result = ['ok' => true],
+        protected ?string $throws = null,
     ) {}
 
     public function handle(): string
@@ -36,6 +37,10 @@ class FakeStatCard implements StatCard
     public function compute(StatContext $context): ?array
     {
         $this->computed++;
+
+        if ($this->throws !== null) {
+            throw new \RuntimeException($this->throws);
+        }
 
         return $this->result;
     }

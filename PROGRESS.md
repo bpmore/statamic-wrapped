@@ -20,7 +20,7 @@
 - [x] Superlatives: longest entry, most-revised page, fastest turnaround, top taxonomy term, longest-untouched page
 - [x] Collections: fastest growing, went quiet
 - [x] People stats — team by default, individual leaderboard opt-in, never rank from the bottom
-- [ ] Cards omitted (not guessed) when confidence is too low
+- [x] Cards omitted (not guessed) when confidence is too low
 - [ ] `php please wrapped:generate` with `--year` / `--quarter` / `--site` / `--force`
 
 ## Phase 3 — Output
@@ -413,3 +413,33 @@ config would have to live at `config/statamic-wrapped.php` and be read as
 `config('statamic-wrapped.people.enabled')`. Verified by test: `config('wrapped.people.enabled')` is true.
 
 - Verified: `vendor/bin/pest` 232 passed · `vendor/bin/pint --test` clean · `vendor/bin/phpstan analyse` no errors.
+
+### Task 15 — Cards omitted when confidence is too low (done)
+`Stats\CardRunner` is where SPEC.md §1's rule is actually enforced. A card whose `requires()` exceeds the
+resolved confidence is **never computed at all** — not computed and hidden, not computed with a caveat.
+There is no code path where a card's numbers exist without the history to back them. A test asserts the
+card's `compute()` was never called, not merely that its output was dropped.
+
+`Stats\StatsResult` carries four things, and the split matters:
+- `stats` — handle => data.
+- `omitted` — never computed, the history is not good enough. **This is what the Phase 3 "based on limited
+  history data" notice hangs on** (`wasLimited()`).
+- `empty` — computed, nothing worth showing. A quiet year, not a limitation. These look identical on a
+  finished Wrapped, and a reader has to be able to tell which happened.
+- `failed` — threw. Logged at warning with the card handle, and the rest of the Wrapped carries on. One
+  awkward entry must not cost someone their whole year, but this is recorded and logged rather than
+  swallowed so it surfaces as a bug report instead of a mysteriously missing card.
+
+**Product consequence, verified by test and worth knowing before Phase 3: on an mtime-only site every
+single card is omitted and the Wrapped is empty.** Every card this addon ships requires Partial or better,
+because nothing honest can be said from file timestamps that a deploy rewrites. That is the spec's position
+("nearly worthless on a deployed site"), but the CP screen will need to handle a completely empty Wrapped
+gracefully — most likely as "we can't tell you much yet, here is why" rather than a blank page.
+Flag for the CP screen task.
+
+Confidence ladder confirmed end to end over the real registry:
+- Low → everything omitted.
+- Partial → only `assets_uploaded` and `fastest_turnaround` omitted (the two that need Logbook).
+- High → nothing omitted, nothing failed.
+
+- Verified: `vendor/bin/pest` 243 passed · `vendor/bin/pint --test` clean · `vendor/bin/phpstan analyse` no errors.
