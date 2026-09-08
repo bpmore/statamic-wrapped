@@ -12,9 +12,19 @@ The host site's `composer.json` has a path repository pointing here, and Compose
 it — edits in this repo are live in the site immediately. There is **no reinstall or rebuild
 step** after changing addon code.
 
+## Target platform — do not resolve to anything older
+
+- **Statamic:** `^6.0` — this addon targets Statamic 6. If a dependency resolves
+  to `statamic/cms` 5.x, that is a bug: fix the constraint and re-resolve before doing any
+  further work. Statamic 6 has a different control panel, Vue 3 + Inertia, and different
+  extension points; anything built against 5.x will have to be rewritten.
+- **PHP:** `^8.2`
+- **Laravel / Testbench:** whatever Statamic 6 requires — let Composer resolve it, but
+  verify afterwards with `composer show statamic/cms`.
+
 ## Build commands
 
-- Tests, from this repo: `vendor/bin/phpunit`
+- Tests, from this repo: `vendor/bin/pest`
 - Formatting, from this repo: `vendor/bin/pint`
 - Control panel assets, from this repo: `npm install && npm run build`
 - Statamic commands run from the host site, never here:
@@ -25,15 +35,11 @@ step** after changing addon code.
 Do not run `php please` from this repo — there is no Statamic application here, and it
 will fail.
 
-This addon's test suite uses **PHPUnit**. Statamic's `make:addon` scaffolds
+This addon's test suite uses **Pest**. Statamic's `make:addon` scaffolds
 PHPUnit and a `TestCase` extending `Statamic\Testing\AddonTestCase` (built on Orchestra
 Testbench). Keep extending `AddonTestCase` whichever runner is used.
 
 
-> **Current state — delete this paragraph once it is no longer true.**
-> The addon skeleton does not exist yet: no `composer.json`, no `vendor/`, no
-> `package.json`. Building it is task 1 in `PROGRESS.md`, and none of the commands above
-> will work until that task is done. That is expected, not a broken environment.
 
 ## Working agreement for unattended runs
 
