@@ -125,7 +125,16 @@ class LogbookHistorySource implements HistorySource
             ->orderBy('created_at');
 
         if ($site !== null) {
-            $query->where('meta->site', $site);
+            // Rows with no recorded site are **not** excluded. Logbook only
+            // writes `meta.site` for subjects that have a `site()` method, and
+            // `Statamic\Assets\Asset` does not have one — asset containers are
+            // global in Statamic, not per site. Filtering those out would leave
+            // the assets card permanently empty on every site. So: a row that
+            // names a site belongs to that site, and a row that names none
+            // belongs to everybody.
+            $query->where(fn ($query) => $query
+                ->where('meta->site', $site)
+                ->orWhereNull('meta->site'));
         }
 
         return $query;

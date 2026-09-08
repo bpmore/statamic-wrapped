@@ -44,19 +44,19 @@ function wrappedEvent(
     );
 }
 
-function wasPublished(string $id, string $at, string $itemType = 'entry', ?string $author = null): HistoryEvent
+function wasPublished(string $id, string $at, string $itemType = 'entry', ?string $author = null, ?string $site = null): HistoryEvent
 {
-    return wrappedEvent(HistoryEventType::Published, $id, $at, $itemType, $author);
+    return wrappedEvent(HistoryEventType::Published, $id, $at, $itemType, $author, $site);
 }
 
-function wasUpdated(string $id, string $at, string $itemType = 'entry', ?string $author = null): HistoryEvent
+function wasUpdated(string $id, string $at, string $itemType = 'entry', ?string $author = null, ?string $site = null): HistoryEvent
 {
-    return wrappedEvent(HistoryEventType::Updated, $id, $at, $itemType, $author);
+    return wrappedEvent(HistoryEventType::Updated, $id, $at, $itemType, $author, $site);
 }
 
-function wasCreated(string $id, string $at, string $itemType = 'entry', ?string $author = null): HistoryEvent
+function wasCreated(string $id, string $at, string $itemType = 'entry', ?string $author = null, ?string $site = null): HistoryEvent
 {
-    return wrappedEvent(HistoryEventType::Created, $id, $at, $itemType, $author);
+    return wrappedEvent(HistoryEventType::Created, $id, $at, $itemType, $author, $site);
 }
 
 /**

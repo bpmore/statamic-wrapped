@@ -219,3 +219,25 @@ it('reports no earliest event on an empty table', function () {
 
     expect((new LogbookHistorySource)->earliestEvent())->toBeNull();
 });
+
+it('keeps rows that name no site, which are the ones no site owns', function () {
+    createLogbookTable();
+    logAudit(['subject_id' => 'en', 'meta' => ['site' => 'default']]);
+    logAudit(['subject_id' => 'fr', 'meta' => ['site' => 'french']]);
+    // Asset containers are global in Statamic and Statamic\Assets\Asset has no
+    // site() method, so Logbook records no site for an upload. Dropping these
+    // would leave the assets card permanently empty on every site.
+    logAudit([
+        'subject_id' => 'uploads::logo.png',
+        'subject_type' => 'asset',
+        'action' => 'statamic.asset.uploaded',
+        'meta' => ['raw_event' => 'AssetUploaded'],
+    ]);
+
+    $source = new LogbookHistorySource;
+
+    expect($source->events(...[...wholeOf(2026), 'french'])->pluck('itemId')->all())
+        ->toBe(['fr', 'uploads::logo.png'])
+        ->and($source->events(...[...wholeOf(2026), 'default'])->pluck('itemId')->all())
+        ->toBe(['en', 'uploads::logo.png']);
+});

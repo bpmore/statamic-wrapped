@@ -2,6 +2,7 @@
 
 namespace Bpmore\Wrapped;
 
+use Bpmore\Wrapped\Console\Commands\GenerateWrapped;
 use Bpmore\Wrapped\History\HistorySource;
 use Bpmore\Wrapped\History\HistorySourceResolver;
 use Bpmore\Wrapped\History\Sources\EntryDataHistorySource;
@@ -26,10 +27,16 @@ use Bpmore\Wrapped\Stats\Cards\TopTaxonomyTermCard;
 use Bpmore\Wrapped\Stats\Cards\TotalWordsCard;
 use Bpmore\Wrapped\Stats\StatCard;
 use Bpmore\Wrapped\Stats\StatCardRegistry;
+use Illuminate\Console\Command;
 use Statamic\Providers\AddonServiceProvider;
 
 class ServiceProvider extends AddonServiceProvider
 {
+    /** @var list<class-string<Command>> */
+    protected $commands = [
+        GenerateWrapped::class,
+    ];
+
     /**
      * Every history source, best first.
      *

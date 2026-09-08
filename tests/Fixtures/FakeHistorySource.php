@@ -52,7 +52,12 @@ class FakeHistorySource implements HistorySource
 
         return (new Collection($this->events))
             ->filter(fn (HistoryEvent $event) => $event->occurredAt->betweenIncluded($from, $to))
-            ->filter(fn (HistoryEvent $event) => $site === null || $event->site === $site)
+            // Matches the real sources: an event that names no site is not
+            // site-scoped (assets are global in Statamic) and belongs to every
+            // site's Wrapped rather than to none of them.
+            ->filter(fn (HistoryEvent $event) => $site === null
+                || $event->site === null
+                || $event->site === $site)
             ->values();
     }
 

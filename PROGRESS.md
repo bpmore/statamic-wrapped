@@ -21,7 +21,7 @@
 - [x] Collections: fastest growing, went quiet
 - [x] People stats — team by default, individual leaderboard opt-in, never rank from the bottom
 - [x] Cards omitted (not guessed) when confidence is too low
-- [ ] `php please wrapped:generate` with `--year` / `--quarter` / `--site` / `--force`
+- [x] `php please wrapped:generate` with `--year` / `--quarter` / `--site` / `--force`
 
 ## Phase 3 — Output
 - [ ] CP screen — the canonical, accessible version
@@ -443,3 +443,39 @@ Confidence ladder confirmed end to end over the real registry:
 - High → nothing omitted, nothing failed.
 
 - Verified: `vendor/bin/pest` 243 passed · `vendor/bin/pint --test` clean · `vendor/bin/phpstan analyse` no errors.
+
+### Task 16 — `wrapped:generate` (done) — **Phase 2 complete**
+`src/Console/Commands/GenerateWrapped.php`, registered via `ServiceProvider::$commands`.
+`--year` (defaults to the current year, which is what a 1 December run wants), `--quarter` (1-4),
+`--site` (defaults to **every** site, one snapshot each — SPEC.md §8), `--force`.
+
+- Invalid input exits `INVALID` and writes nothing; no readable history exits `FAILURE`. A scheduled run
+  that quietly succeeds while producing nothing would be worse than a non-zero exit.
+- `--force` uses `updateOrCreate` against the unique key, so a rebuild **replaces** the row rather than
+  adding a second one. Without it, an existing snapshot is left completely alone — `generated_at` is
+  asserted unchanged, not just the row count.
+- `Period` gained `window()` alongside `key()`, so the period owns both its stored key format and its
+  bounds. `assertQuarter()` throws rather than defaulting: a quarterly period with no quarter would write a
+  malformed key or silently build the wrong three months.
+- `generated_by` uses `getAuthIdentifier()`, not `id()` — Statamic's user *contract* does not declare
+  `id()`, it inherits the identifier from Laravel's `Authenticatable`. Null for an unattended run.
+- **An mtime-grade site still gets a row written**, with empty stats. The CP needs it to explain why.
+
+**Real bug found and fixed while writing this task's tests.** `LogbookHistorySource` filtered by
+`meta->site`, and `Statamic\Assets\Asset` **has no `site()` method** — asset containers are global in
+Statamic, not per site — so Logbook never records a site for an upload. Every asset event was being dropped
+by the site filter, which would have left `assets_uploaded` permanently empty on every site, silently.
+Fixed: a row that names a site belongs to that site, a row that names none belongs to everybody.
+`FakeHistorySource` now mirrors that so fixtures cannot drift from real behaviour again.
+This only surfaced because the command is the first thing that passes a concrete site handle all the way
+through — worth remembering that the per-card tests could not have caught it.
+
+**Not done, and not in this task's line:**
+- SPEC.md §4 also wants the work in a **queued job** and a **1 December schedule**. The command does the
+  work synchronously. Neither is in the task list; add them deliberately rather than as a side effect.
+- **The addon is not installed in the host site.** `~/Herd/statamic-dev/composer.json` has the path
+  repository for `../statamic-wrapped` but never requires the package, so `php please wrapped:generate`
+  does not exist there yet. Left alone: it is a change to another repo and outside this task. The command is
+  fully covered in-repo through Testbench, which is the addon's real test environment.
+
+- Verified: `vendor/bin/pest` 259 passed · `vendor/bin/pint --test` clean · `vendor/bin/phpstan analyse` no errors.
