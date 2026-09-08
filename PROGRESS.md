@@ -1,0 +1,51 @@
+# PROGRESS — Wrapped
+
+**Spec:** `wrapped-build-spec.md` · **Package:** `bpmore/statamic-wrapped` · **Free**
+**Rule:** do the next unfinished task only, then update this file, verify the build, and commit.
+
+## Phase 1 — History source (do this first; everything depends on it)
+- [x] Scaffold the addon package, tests, CI
+- [ ] `HistorySource` interface + resolver returning a confidence rating
+- [ ] `LogbookHistorySource` (Statamic Logbook, if installed)
+- [ ] `RevisionsHistorySource` (Pro only; note storage/statamic/revisions is git-ignored)
+- [ ] `EntryDataHistorySource` (date / updated_at / author)
+- [ ] `MtimeHistorySource` (last resort, low confidence)
+- [ ] Resolver picks best available and reports which; tests for each
+
+## Phase 2 — Stats
+- [ ] `wrapped_snapshots` migration + model
+- [ ] One class per stat card, each declaring the history confidence it needs
+- [ ] Volume: entries published, total words, assets uploaded
+- [ ] Time: busiest month, busiest week, busiest day-of-week + hour, longest streak
+- [ ] Superlatives: longest entry, most-revised page, fastest turnaround, top taxonomy term, longest-untouched page
+- [ ] Collections: fastest growing, went quiet
+- [ ] People stats — team by default, individual leaderboard opt-in, never rank from the bottom
+- [ ] Cards omitted (not guessed) when confidence is too low
+- [ ] `php please wrapped:generate` with `--year` / `--quarter` / `--site` / `--force`
+
+## Phase 3 — Output
+- [ ] CP screen — the canonical, accessible version
+- [ ] Confidence notice when history data is limited
+- [ ] Dashboard widget + December nudge
+- [ ] PNG card export via headless Chrome
+- [ ] Suggested alt text generated with each PNG
+- [ ] Confetti on first view, once
+- [ ] `view wrapped` permission; people-stats behind a narrower gate
+
+## Phase 4 — Ship
+- [ ] README, screenshots, marketplace listing copy
+- [ ] Test on a large fixture site and on a 3-month-old site (first-year framing)
+- [ ] Tag 1.0 — target late November 2026
+
+## Notes
+<!-- Record surprises, decisions and blockers here. If a task is wrong or blocked, write why and stop. -->
+
+### Task 1 — Scaffold the addon package, tests, CI (done)
+- Namespace is `Bpmore\Wrapped\` over `src/`; tests are `Bpmore\Wrapped\Tests\` over `tests/`.
+- Resolved versions: `statamic/cms` v5.74.4, `orchestra/testbench` v10 (Laravel 12), Pest 3.8, PHPStan 2 via larastan 3.
+- `composer.lock` is git-ignored (correct for a library), so CI runs `composer update`, not `composer install`.
+- PHPStan starts at level 4. Raise it later if it stays quiet; don't raise it mid-feature.
+- **Deferred:** no `package.json` / Vite setup yet. No CP assets exist until Phase 3, and an empty build step
+  would just be a thing that can break. Add it with the CP screen. `npm install && npm run build` in CLAUDE.md
+  will not work until then — that is expected, not a broken environment.
+- Verified: `vendor/bin/pest` 2 passed · `vendor/bin/pint --test` clean · `vendor/bin/phpstan analyse` no errors.

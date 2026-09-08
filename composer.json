@@ -1,0 +1,63 @@
+{
+    "name": "bpmore/statamic-wrapped",
+    "description": "Year in review for a Statamic content team.",
+    "type": "statamic-addon",
+    "license": "MIT",
+    "keywords": [
+        "statamic",
+        "statamic-addon",
+        "wrapped",
+        "year in review"
+    ],
+    "authors": [
+        {
+            "name": "Brent Passmore",
+            "email": "brentpassmore@gmail.com"
+        }
+    ],
+    "require": {
+        "php": "^8.2",
+        "statamic/cms": "^5.0"
+    },
+    "require-dev": {
+        "larastan/larastan": "^3.0",
+        "laravel/pint": "^1.18",
+        "orchestra/testbench": "^9.0|^10.0",
+        "pestphp/pest": "^3.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Bpmore\\Wrapped\\": "src"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Bpmore\\Wrapped\\Tests\\": "tests"
+        }
+    },
+    "config": {
+        "allow-plugins": {
+            "pestphp/pest-plugin": true,
+            "pixelfear/composer-dist-plugin": true
+        },
+        "sort-packages": true
+    },
+    "extra": {
+        "statamic": {
+            "name": "Wrapped",
+            "description": "Year in review for a Statamic content team."
+        },
+        "laravel": {
+            "providers": [
+                "Bpmore\\Wrapped\\ServiceProvider"
+            ]
+        }
+    },
+    "scripts": {
+        "test": "vendor/bin/pest",
+        "lint": "vendor/bin/pint",
+        "analyse": "vendor/bin/phpstan analyse"
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}

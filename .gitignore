@@ -1,0 +1,13 @@
+/vendor
+/node_modules
+/dist
+/build
+composer.lock
+package-lock.json
+.phpunit.result.cache
+.phpunit.cache
+.DS_Store
+.idea
+.vscode
+build.log
+build-log.jsonl
