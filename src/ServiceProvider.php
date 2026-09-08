@@ -46,6 +46,8 @@ class ServiceProvider extends AddonServiceProvider
 
     public function bootAddon()
     {
-        //
+        // Loaded rather than published, so `php artisan migrate` in the host
+        // site picks the table up with no install step.
+        $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
     }
 }

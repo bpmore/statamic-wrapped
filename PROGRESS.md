@@ -13,7 +13,7 @@
 - [x] Resolver picks best available and reports which; tests for each
 
 ## Phase 2 — Stats
-- [ ] `wrapped_snapshots` migration + model
+- [x] `wrapped_snapshots` migration + model
 - [ ] One class per stat card, each declaring the history confidence it needs
 - [ ] Volume: entries published, total words, assets uploaded
 - [ ] Time: busiest month, busiest week, busiest day-of-week + hour, longest streak
@@ -197,3 +197,23 @@
   mtime gives exactly one and never an author.
 - **Only Logbook covers assets and taxonomy terms.** The other three are entries-only.
 - Confidence available in practice: High (logbook), Partial (revisions, entry_data), Low (mtime).
+
+### Task 8 — `wrapped_snapshots` migration + model (done) — first of phase 2
+- `database/migrations/2026_09_08_000000_create_wrapped_snapshots_table.php`, **loaded** by the service
+  provider rather than published, so `php artisan migrate` in the host site picks it up with no install step.
+- Columns exactly as SPEC.md §4: site, period, period_key, history_source, confidence, stats(json),
+  generated_at, generated_by. Default connection; no separate database.
+- **Unique on (site, period, period_key).** Regenerating replaces the row rather than adding a second one,
+  which is what `--force` will rely on. A duplicate insert throws `UniqueConstraintViolationException`.
+- `history_source` and `confidence` are **stored on the row, not derived on read.** They describe the run
+  that made this snapshot. A site that installs Logbook in March does not retroactively improve the Wrapped
+  it generated in January, and the UI must not claim otherwise. `Snapshot::supports()` mirrors
+  `ResolvedHistory::supports()` so a card can be gated from a stored snapshot as well as a live resolve.
+- New `Snapshots\Period` enum (year|quarter) with `key(int $year, ?int $quarter)` — the **only** place the
+  `'2026'` / `'2026-Q3'` format is written, because it is a stored value that must stay stable across
+  releases. Throws on a quarterly key with no usable quarter rather than writing a malformed key.
+- `$timestamps = false`: `generated_at` is the only time the row has, and regenerating updates it, so a
+  created_at/updated_at pair would say nothing new.
+- Test env note: testbench's default connection is sqlite `:memory:`, so `RefreshDatabase` runs the
+  migration with no extra setup.
+- Verified: `vendor/bin/pest` 107 passed · `vendor/bin/pint --test` clean · `vendor/bin/phpstan analyse` no errors.
