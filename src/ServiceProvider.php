@@ -20,6 +20,8 @@ use Bpmore\Wrapped\Stats\Cards\LongestEntryCard;
 use Bpmore\Wrapped\Stats\Cards\LongestStreakCard;
 use Bpmore\Wrapped\Stats\Cards\LongestUntouchedCard;
 use Bpmore\Wrapped\Stats\Cards\MostRevisedCard;
+use Bpmore\Wrapped\Stats\Cards\PeopleCard;
+use Bpmore\Wrapped\Stats\Cards\TopContributorCard;
 use Bpmore\Wrapped\Stats\Cards\TopTaxonomyTermCard;
 use Bpmore\Wrapped\Stats\Cards\TotalWordsCard;
 use Bpmore\Wrapped\Stats\StatCard;
@@ -73,6 +75,11 @@ class ServiceProvider extends AddonServiceProvider
         // Collections
         FastestGrowingCollectionCard::class,
         CollectionWentQuietCard::class,
+
+        // People. Team stats are on by default; the individual one is opt-in.
+        // See config/wrapped.php for why.
+        PeopleCard::class,
+        TopContributorCard::class,
     ];
 
     public function register()

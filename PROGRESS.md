@@ -19,7 +19,7 @@
 - [x] Time: busiest month, busiest week, busiest day-of-week + hour, longest streak
 - [x] Superlatives: longest entry, most-revised page, fastest turnaround, top taxonomy term, longest-untouched page
 - [x] Collections: fastest growing, went quiet
-- [ ] People stats — team by default, individual leaderboard opt-in, never rank from the bottom
+- [x] People stats — team by default, individual leaderboard opt-in, never rank from the bottom
 - [ ] Cards omitted (not guessed) when confidence is too low
 - [ ] `php please wrapped:generate` with `--year` / `--quarter` / `--site` / `--force`
 
@@ -381,3 +381,35 @@ Wording carries the warmth (SPEC.md §3) and belongs to the CP screen; the card 
 **Shared:** `ReadsPublishedEntries::publicationsByCollection()` — counts per collection, biggest first.
 
 - Verified: `vendor/bin/pest` 217 passed · `vendor/bin/pint --test` clean · `vendor/bin/phpstan analyse` no errors.
+
+### Task 14 — People stats (done)
+The socially loaded one. SPEC.md §3 is the spec here, not a nice-to-have.
+
+**New `config/wrapped.php`**, which is where the reasoning lives because a site operator reads the config,
+not the source. `wrapped.people.enabled` (team stats, **on**) and `wrapped.people.individuals` (stats that
+name one person, **off**). Both have env overrides.
+
+**`people`** — team card, on by default, requires Partial. "42 entries from 7 people." Names nobody, so it
+cannot single anyone out. **Needs two people**: on a one-person site a "team" card identifies that person
+by arithmetic. Reports `unattributed` separately, because the attributable count is not always the
+published total.
+
+**`top_contributor`** — off until the site opts in. Returns **exactly one person and their count — never a
+ranked list**. A full leaderboard invites reading down it, which is the whole problem. Needs two
+contributors, since with one there is nothing to be top of. **Stores the user id, never the name**, so a
+snapshot does not freeze somebody's name into the database.
+
+**Never ranks from the bottom.** There is no "least active author" card and there will not be one. There is
+a test asserting no registered card handle contains `least`, `quietest`, `leaderboard` or `ranking` — a
+guard on the product decision rather than on an implementation detail, so a future addition trips it.
+
+`Stats\Concerns\CountsPeople` holds the two permission checks and `byAuthor()`. Events with no author are
+dropped rather than gathered into an "unknown" bucket: an unknown bucket can *win*, and "your top
+contributor is nobody" is not a card.
+
+**Packaging note:** added `extra.statamic.slug: wrapped` to composer.json. Statamic derives the addon config
+filename and config key from the slug (`Addons\Manifest` reads `extra.statamic.slug`), so without it the
+config would have to live at `config/statamic-wrapped.php` and be read as
+`config('statamic-wrapped.people.enabled')`. Verified by test: `config('wrapped.people.enabled')` is true.
+
+- Verified: `vendor/bin/pest` 232 passed · `vendor/bin/pint --test` clean · `vendor/bin/phpstan analyse` no errors.

@@ -45,7 +45,8 @@
     "extra": {
         "statamic": {
             "name": "Wrapped",
-            "description": "Year in review for a Statamic content team."
+            "description": "Year in review for a Statamic content team.",
+            "slug": "wrapped"
         },
         "laravel": {
             "providers": [
