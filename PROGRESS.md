@@ -7,7 +7,7 @@
 - [x] Scaffold the addon package, tests, CI
 - [x] `HistorySource` interface + resolver returning a confidence rating
 - [x] `LogbookHistorySource` (Statamic Logbook, if installed)
-- [ ] `RevisionsHistorySource` (Pro only; note storage/statamic/revisions is git-ignored)
+- [x] `RevisionsHistorySource` (Pro only; note storage/statamic/revisions is git-ignored)
 - [ ] `EntryDataHistorySource` (date / updated_at / author)
 - [ ] `MtimeHistorySource` (last resort, low confidence)
 - [ ] Resolver picks best available and reports which; tests for each
@@ -89,3 +89,33 @@
 - **Deferred to Phase 4:** a `suggest` entry for `emran-alhaddad/statamic-logbook` in `composer.json`.
 - Still not bound in the container. Registration is task 6, as decided in task 2.
 - Verified: `vendor/bin/pest` 37 passed · `vendor/bin/pint --test` clean · `vendor/bin/phpstan analyse` no errors.
+
+### Task 4 — `RevisionsHistorySource` (done)
+- Read against the installed `vendor/statamic/cms` v6.31.0 source, not from docs.
+- **Only entries are revisable.** `Statamic\Revisions\Revisable` is used by `Entry` and nothing else in
+  Statamic 6, so `itemType` is always `entry`. No assets, terms or globals from this source, ever.
+- Layout is `<revisions dir>/collections/<collection>/<site>/<entry id>/<timestamp>.yaml`. The filename is
+  the unix timestamp, so the date window and the site are decided from the path before a file is opened.
+  The site segment is the entry's locale, so site filtering here is exact rather than best-effort.
+- Directory comes from `Statamic\Facades\Revision::directory()` rather than rebuilding it from the three
+  config keys that feed it (`STATAMIC_REVISIONS_PATH`, `statamic.revisions.path`, the stache store).
+- Actions: `publish` -> Published, `unpublish` -> Updated, `revision` (the default) -> Updated.
+  `working.yaml` is the unsaved working copy — a draft, not something that happened — and is skipped by name.
+- **There is no Created event from revisions.** Statamic records no creation action, and the oldest revision
+  is not a creation date (revisions can be switched on years into a site's life). Phase 2 must get creation
+  dates from entry data, not from here.
+- **Decision — rated Partial, not High.** The trail itself is real (who, what, when), which by the enum's
+  own wording is High. But revisions are opt-in *per collection*, and nothing on disk says which collections
+  had them on. A site with revisions on the blog only would report "40 entries published" for a site that
+  published 400 — confidently wrong, which SPEC.md §1 says is worse than saying less. Reverse this only if
+  the source is taught to report its own collection coverage.
+  Phase 2 note: set card requirements knowing revisions is Partial, or cards revisions *can* answer well
+  (most-revised page) will be omitted for no good reason.
+- `earliestEvent()` reads every file rather than taking the lowest filename, so an unparseable or
+  unrecognised revision cannot set the date the whole Wrapped is framed around. Same contract as Logbook.
+- Availability is decided by the files, not by `Statamic::pro()`. A site that dropped to Solo still has the
+  revisions it wrote.
+- PHPStan rejected the defensive `is_array()`/`is_string()` guards around `YAML::parse()` and
+  `Revision::directory()` as always-true — the facade docblocks declare those return types. Removed rather
+  than suppressed; the try/catch around the calls is the real guard.
+- Verified: `vendor/bin/pest` 55 passed · `vendor/bin/pint --test` clean · `vendor/bin/phpstan analyse` no errors.
