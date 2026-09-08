@@ -49,3 +49,4 @@
   would just be a thing that can break. Add it with the CP screen. `npm install && npm run build` in CLAUDE.md
   will not work until then — that is expected, not a broken environment.
 - Verified: `vendor/bin/pest` 2 passed · `vendor/bin/pint --test` clean · `vendor/bin/phpstan analyse` no errors.
+- **Corrected after task 1:** scaffold resolved `statamic/cms` to v5.74.4. Bumped the constraint to `^6.0`; now on v6.31.0. All specs target Statamic 6.
