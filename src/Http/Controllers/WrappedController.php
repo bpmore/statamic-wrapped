@@ -4,6 +4,7 @@ namespace Bpmore\Wrapped\Http\Controllers;
 
 use Bpmore\Wrapped\Snapshots\Snapshot;
 use Bpmore\Wrapped\Stats\CardPresenter;
+use Bpmore\Wrapped\Stats\ConfidenceNotice;
 use Inertia\Inertia;
 use Inertia\Response;
 use Statamic\Facades\Site;
@@ -19,7 +20,7 @@ use Statamic\Http\Controllers\CP\CpController;
  */
 class WrappedController extends CpController
 {
-    public function index(CardPresenter $presenter): Response
+    public function index(CardPresenter $presenter, ConfidenceNotice $notice): Response
     {
         $site = Site::selected()->handle();
 
@@ -33,10 +34,11 @@ class WrappedController extends CpController
             'snapshot' => $snapshot === null ? null : [
                 'period' => $snapshot->period->value,
                 'periodKey' => $snapshot->period_key,
-                'historySource' => $snapshot->history_source,
-                'confidence' => $snapshot->confidence->value,
                 'generatedAt' => $snapshot->generated_at->toIso8601String(),
                 'cards' => $presenter->present($snapshot->stats),
+                // A Wrapped never appears without saying what it was built
+                // from — SPEC.md §1.
+                'history' => $notice->for($snapshot),
             ],
         ]);
     }

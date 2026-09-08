@@ -29,34 +29,49 @@ defineProps({
             </p>
         </div>
 
-        <!--
-            A snapshot exists but every card was left out. On a site with only
-            file modification times this is the honest outcome, and it needs a
-            real explanation rather than a blank page.
-        -->
-        <div v-else-if="snapshot.cards.length === 0" class="p-6 border rounded-lg">
-            <h2 class="font-medium mb-2">Not enough history to say anything yet</h2>
-            <p class="text-sm">
-                This Wrapped was built from {{ snapshot.historySource }}, which cannot support
-                any of the cards on its own.
-            </p>
-        </div>
-
-        <!--
-            A description list rather than a grid of divs: each card is a term
-            and its explanation, which is what a screen reader should hear.
-        -->
-        <dl v-else class="grid gap-4 md:grid-cols-2">
-            <div
-                v-for="card in snapshot.cards"
-                :key="card.handle"
-                class="p-5 border rounded-lg"
+        <template v-else>
+            <!--
+                The confidence notice. Always present, so a Wrapped never
+                presents itself without saying what it was built from. Quiet
+                when everything worked, plain when it did not. It is a <p>, not
+                an alert: thin history is not an error and not the reader's
+                fault.
+            -->
+            <p
+                class="text-sm mb-6 px-4 py-3 rounded-lg"
+                :class="snapshot.history.limited
+                    ? 'bg-yellow-50 dark:bg-yellow-900/20 text-yellow-900 dark:text-yellow-200'
+                    : 'text-gray-600 dark:text-gray-400'"
             >
-                <dt class="text-sm font-medium text-gray-600 dark:text-gray-400">
-                    {{ card.heading }}
-                </dt>
-                <dd class="mt-1 text-lg">{{ card.body }}</dd>
+                {{ snapshot.history.notice }}
+                <span v-if="snapshot.history.suggestion">{{ snapshot.history.suggestion }}</span>
+            </p>
+
+            <!--
+                A snapshot whose cards were all left out. The notice above has
+                already explained why, so this only has to not look broken.
+            -->
+            <div v-if="snapshot.cards.length === 0" class="p-6 border rounded-lg">
+                <h2 class="font-medium">No cards this time</h2>
             </div>
-        </dl>
+
+            <!--
+                A description list rather than a grid of divs: each card is a
+                term and its explanation, which is what a screen reader should
+                hear.
+            -->
+            <dl v-else class="grid gap-4 md:grid-cols-2">
+                <div
+                    v-for="card in snapshot.cards"
+                    :key="card.handle"
+                    class="p-5 border rounded-lg"
+                >
+                    <dt class="text-sm font-medium text-gray-600 dark:text-gray-400">
+                        {{ card.heading }}
+                    </dt>
+                    <dd class="mt-1 text-lg">{{ card.body }}</dd>
+                </div>
+            </dl>
+        </template>
     </div>
 </template>

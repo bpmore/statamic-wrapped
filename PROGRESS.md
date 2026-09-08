@@ -25,7 +25,7 @@
 
 ## Phase 3 — Output
 - [x] CP screen — the canonical, accessible version
-- [ ] Confidence notice when history data is limited
+- [x] Confidence notice when history data is limited
 - [ ] Dashboard widget + December nudge
 - [ ] PNG card export via headless Chrome
 - [ ] Suggested alt text generated with each PNG
@@ -520,3 +520,32 @@ Two states the screen has to handle, both tested:
 `vendor:publish --tag=wrapped` copies the built manifest into `public/vendor/statamic-wrapped/build`.
 
 - Verified: `vendor/bin/pest` 277 passed · `vendor/bin/pint --test` clean · `vendor/bin/phpstan analyse` no errors · `npm run build` clean.
+
+### Task 18 — Confidence notice (done)
+`Stats\ConfidenceNotice`. A Wrapped now **never appears without saying what it was built from**, and the
+wording escalates only as far as the truth requires — SPEC.md §1.
+
+Three levels, in `resources/lang/en/messages.php`:
+- **complete** — "Built from Statamic Logbook." A quiet line, nothing more.
+- **limited** — names the source and says how many cards were left out *rather than guessed at*.
+  Pluralised through `trans_choice`, so it reads "One card", never "1 cards".
+- **empty** — "There is not enough history here to say anything yet... and most deploys rewrite those."
+  This is the mtime case flagged back in task 15, now with a real explanation instead of a blank page.
+
+**The omitted count is derived, not stored.** The snapshot records the confidence it had and every card
+declares the confidence it needs, so the answer falls out of the two. That avoids a schema change, stays
+correct as cards are added, and answers the more useful question anyway: what would this site get if its
+history improved.
+
+**Sources are named, not handled.** "mtime" means nothing to a reader; "file modification times" does.
+An unrecognised handle falls back to "an unknown source" rather than leaking the handle.
+
+**The suggestion is offered once and never nags.** Logbook is suggested only when the history is limited
+*and* the site is not already running Logbook. A complete Wrapped gets no upsell.
+
+On the screen it is a `<p>`, not an alert. Thin history is not an error and not the reader's fault.
+
+**Props moved:** `confidence` and `historySource` are now under `snapshot.history` alongside the notice.
+Two task 17 tests asserted the old paths and were updated.
+
+- Verified: `vendor/bin/pest` 292 passed · `vendor/bin/pint --test` clean · `vendor/bin/phpstan analyse` no errors · `npm run build` clean · assets republished to the host site.
