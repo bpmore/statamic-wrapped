@@ -13,7 +13,12 @@ use Bpmore\Wrapped\Stats\Cards\BusiestMonthCard;
 use Bpmore\Wrapped\Stats\Cards\BusiestTimeCard;
 use Bpmore\Wrapped\Stats\Cards\BusiestWeekCard;
 use Bpmore\Wrapped\Stats\Cards\EntriesPublishedCard;
+use Bpmore\Wrapped\Stats\Cards\FastestTurnaroundCard;
+use Bpmore\Wrapped\Stats\Cards\LongestEntryCard;
 use Bpmore\Wrapped\Stats\Cards\LongestStreakCard;
+use Bpmore\Wrapped\Stats\Cards\LongestUntouchedCard;
+use Bpmore\Wrapped\Stats\Cards\MostRevisedCard;
+use Bpmore\Wrapped\Stats\Cards\TopTaxonomyTermCard;
 use Bpmore\Wrapped\Stats\Cards\TotalWordsCard;
 use Bpmore\Wrapped\Stats\StatCard;
 use Bpmore\Wrapped\Stats\StatCardRegistry;
@@ -55,6 +60,13 @@ class ServiceProvider extends AddonServiceProvider
         BusiestWeekCard::class,
         BusiestTimeCard::class,
         LongestStreakCard::class,
+
+        // Superlatives
+        LongestEntryCard::class,
+        MostRevisedCard::class,
+        FastestTurnaroundCard::class,
+        TopTaxonomyTermCard::class,
+        LongestUntouchedCard::class,
     ];
 
     public function register()

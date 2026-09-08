@@ -17,7 +17,7 @@
 - [x] One class per stat card, each declaring the history confidence it needs
 - [x] Volume: entries published, total words, assets uploaded
 - [x] Time: busiest month, busiest week, busiest day-of-week + hour, longest streak
-- [ ] Superlatives: longest entry, most-revised page, fastest turnaround, top taxonomy term, longest-untouched page
+- [x] Superlatives: longest entry, most-revised page, fastest turnaround, top taxonomy term, longest-untouched page
 - [ ] Collections: fastest growing, went quiet
 - [ ] People stats — team by default, individual leaderboard opt-in, never rank from the bottom
 - [ ] Cards omitted (not guessed) when confidence is too low
@@ -322,3 +322,40 @@ deduplication September wins with three events; with it, March wins with two) an
 No skipped tests in this suite.
 
 - Verified: `vendor/bin/pest` 177 passed · `vendor/bin/pint --test` clean · `vendor/bin/phpstan analyse` no errors.
+
+### Task 12 — Superlative cards (done)
+Five cards. New `Stats\Concerns\DescribesEntries` handles looking an entry up and coping with it having
+been deleted since — a superlative names one page, so every card here needs that.
+
+**`longest_entry`** — Partial. Same caveat as total words: measured as the entry reads today.
+
+**`most_revised`** — Partial, and **this resolves the task 4 question about revisions being rated Partial.**
+The card guards on the *data*, not the rating: entry data and mtime can only ever emit one Updated event
+per entry, so anything below two edits returns nothing. The card therefore disappears on sources that
+cannot count edits and works properly on Revisions (Partial) as well as Logbook (High). Requiring High
+would have dropped it on the sites best able to answer it. **Publishing is not counted as editing** — it is
+a status change with cards of its own. Falls through to the runner-up if the winner has been deleted.
+
+**`fastest_turnaround`** — **High**, so Logbook only. It is the sole source that records a creation.
+Only entries both created *and* published inside the period count: something started last December and
+published in January had a turnaround, but not one this year can claim. Stored in **seconds** — "42 minutes"
+would not translate. A publication timestamped before its own creation is a clock problem, not a fast
+writer, and is dropped.
+
+**`top_taxonomy_term`** — Partial. Read through the blueprint: fields of type `terms`, whose `taxonomies`
+config says which taxonomy a bare slug belongs to. Statamic stores **bare slugs for a single-taxonomy field
+and `taxonomy::slug` for a multi-taxonomy one**, so both shapes are handled; a bare slug on a
+multi-taxonomy field is ambiguous and is dropped rather than attributed to the wrong taxonomy.
+Stores the handle and slug, **never the term's title** — titles are localised and editable.
+Needs at least two uses: one is not what a period was "mostly about".
+
+**`longest_untouched`** — Partial. Warm, never scolding (SPEC.md §3): this is the page nobody has *needed*
+to change. Only counts if untouched for the whole period. **Known limit, documented in the class:** an
+entry the source has never recorded is invisible here, and is very likely the most untouched page of all.
+A site that installed Logbook last year cannot see the page last edited in 2019. "We have no record of it"
+is not "nobody touched it", so it is left out rather than claimed.
+
+**Pattern worth keeping:** three of these cards guard on a minimum (2 edits, 2 term uses, untouched for the
+whole period) rather than on confidence alone. A superlative that is barely a superlative is not a card.
+
+- Verified: `vendor/bin/pest` 203 passed · `vendor/bin/pint --test` clean · `vendor/bin/phpstan analyse` no errors.
