@@ -28,10 +28,23 @@ use Bpmore\Wrapped\Stats\Cards\TotalWordsCard;
 use Bpmore\Wrapped\Stats\StatCard;
 use Bpmore\Wrapped\Stats\StatCardRegistry;
 use Illuminate\Console\Command;
+use Statamic\Facades\CP\Nav;
 use Statamic\Providers\AddonServiceProvider;
 
 class ServiceProvider extends AddonServiceProvider
 {
+    /**
+     * Control panel assets, built to `public/build` and published into the host
+     * site's `public/vendor` under the addon slug.
+     *
+     * The plain list form rather than the array form on purpose: the parent
+     * declares `list<string>`, and the array form exists only to move the build
+     * directory, which is not worth fighting the declared type over.
+     *
+     * @var list<string>
+     */
+    protected $vite = ['resources/js/cp.js'];
+
     /** @var list<class-string<Command>> */
     protected $commands = [
         GenerateWrapped::class,
@@ -116,5 +129,16 @@ class ServiceProvider extends AddonServiceProvider
         // Loaded rather than published, so `php artisan migrate` in the host
         // site picks the table up with no install step.
         $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
+
+        $this->bootNav();
+    }
+
+    protected function bootNav(): void
+    {
+        Nav::extend(function ($nav) {
+            $nav->content('Wrapped')
+                ->route('wrapped.index')
+                ->icon('sparkles');
+        });
     }
 }

@@ -24,7 +24,7 @@
 - [x] `php please wrapped:generate` with `--year` / `--quarter` / `--site` / `--force`
 
 ## Phase 3 — Output
-- [ ] CP screen — the canonical, accessible version
+- [x] CP screen — the canonical, accessible version
 - [ ] Confidence notice when history data is limited
 - [ ] Dashboard widget + December nudge
 - [ ] PNG card export via headless Chrome
@@ -479,3 +479,44 @@ through — worth remembering that the per-card tests could not have caught it.
   fully covered in-repo through Testbench, which is the addon's real test environment.
 
 - Verified: `vendor/bin/pest` 259 passed · `vendor/bin/pint --test` clean · `vendor/bin/phpstan analyse` no errors.
+
+### Task 17 — CP screen (done) — first of phase 3
+**Statamic 6's control panel is Inertia + Vue. There are no Blade CP views any more** — `resources/views/cp`
+does not exist in the package. An addon screen is: a Vue page component registered client-side, and
+`Inertia::render()` server-side with a matching name.
+
+The wiring, confirmed against the Statamic 6 docs rather than guessed:
+- `package.json` depends on `@statamic/cms` via `file:./vendor/statamic/cms/resources/dist-package`.
+- `vite.config.js` uses `laravel-vite-plugin` plus `@statamic/cms/vite-plugin`. That plugin **externalises
+  Vue to the copy the CP already loaded** — bundling a second one would give the page a different
+  reactivity system to the CP around it.
+- `resources/js/cp.js` does `Statamic.booting(() => Statamic.$inertia.register('wrapped::Wrapped', Wrapped))`.
+  **The name must match `Inertia::render('wrapped::Wrapped')` exactly.**
+- `ServiceProvider::$vite` (plain list form — the parent declares `list<string>`, and the array form only
+  exists to move the build directory, not worth fighting the type for), so the build goes to `public/build`.
+  Assets publish under the addon slug: `php artisan vendor:publish --tag=wrapped`.
+- `routes/cp.php` is auto-detected. Nav item via `Nav::extend()`.
+
+**The presenter is the design decision.** Cards store numbers and handles — a month is `7`, a term is a
+slug, a contributor is a user id. `Stats\CardPresenter` turns those back into a heading and a sentence at
+display time, so the wording lives in a normal Laravel translation file (`resources/lang/en/cards.php`) and
+the screen is plain text a screen reader reads straight through. A card with no wording is **left out
+rather than rendered as its own translation key**.
+
+Two states the screen has to handle, both tested:
+- No snapshot at all — "run `php please wrapped:generate`". Not an error.
+- A snapshot whose cards were all omitted — the mtime case flagged in task 15. It explains what it was
+  built from instead of showing a blank page. The dedicated confidence notice is the next task.
+
+**Two mistakes worth remembering:**
+1. The `$vite` property edit **silently did nothing** — my scripted replace matched a docblock Pint had
+   already rewritten (`\Illuminate\Console\Command` -> `Command`). Nothing failed; the property simply was
+   not there, and assets did not publish. Caught only by checking `ServiceProvider::$publishGroups` in the
+   host site. **Assert on every scripted edit.**
+2. `loadTranslationsFrom()` in `bootAddon()` was redundant — Statamic's own `bootTranslations()` already
+   picks up `resources/lang` and registers the `wrapped-translations` publish group. Removed.
+
+**Verified in the host site**, not just in tests: route registers as `statamic.cp.wrapped.index`, and
+`vendor:publish --tag=wrapped` copies the built manifest into `public/vendor/statamic-wrapped/build`.
+
+- Verified: `vendor/bin/pest` 277 passed · `vendor/bin/pint --test` clean · `vendor/bin/phpstan analyse` no errors · `npm run build` clean.
