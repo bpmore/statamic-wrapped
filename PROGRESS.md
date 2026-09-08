@@ -10,7 +10,7 @@
 - [x] `RevisionsHistorySource` (Pro only; note storage/statamic/revisions is git-ignored)
 - [x] `EntryDataHistorySource` (date / updated_at / author)
 - [x] `MtimeHistorySource` (last resort, low confidence)
-- [ ] Resolver picks best available and reports which; tests for each
+- [x] Resolver picks best available and reports which; tests for each
 
 ## Phase 2 — Stats
 - [ ] `wrapped_snapshots` migration + model
@@ -172,3 +172,28 @@
   unless `config('statamic.system.multisite')` is true — `Site::setSites([...])` alone is not enough, and
   `Site::hasMultiple()` returning true is misleading. Both multisite test helpers now set the config first.
 - Verified: `vendor/bin/pest` 84 passed · `vendor/bin/pint --test` clean · `vendor/bin/phpstan analyse` no errors.
+
+### Task 7 — Resolver picks best available and reports which (done) — **Phase 1 complete**
+- `ServiceProvider::register()` binds `HistorySourceResolver` as a **singleton** with all four sources.
+  Singleton because deciding availability means reading the logbook table, the revisions directory, or
+  every entry on the site — worth doing once per process, not once per stat card.
+- **Registration order is load-bearing**, and lives in `ServiceProvider::$historySources`:
+  logbook, revisions, entry_data, mtime. Ties are broken by this order, which is what puts Revisions ahead
+  of entry data when both are Partial. Do not reorder without re-reading task 4's confidence note.
+- `tests/Feature/History/ResolvesBestSourceTest.php` is the end-to-end proof: real fixtures for all four
+  sources, each test adding a better one, asserting the resolver switches to it. It also reads events back
+  through whatever it resolved, so the interface is exercised as the stat layer will use it.
+- Resolution ladder confirmed by test: nothing -> null/Low · entry files only -> mtime/Low ·
+  dated entries -> entry_data/Partial · revision files -> revisions/Partial · logbook table -> logbook/High.
+- "Reports which" is `ResolvedHistory::handle()` (for the snapshot's `history_source` column),
+  `name()` (for the UI line) and `confidence` (for the `confidence` column and card gating).
+  Showing it on screen is Phase 3.
+
+### Phase 1 summary — what the stat layer can rely on
+- **No source produces a Created event.** Logbook does when the site has it, but the other three cannot,
+  and the resolver may hand you any of them. Do not design a card around creation dates.
+- **Only Logbook produces Deleted events.**
+- **Only Logbook and Revisions have a real edit trail.** entry_data gives at most two events per entry;
+  mtime gives exactly one and never an author.
+- **Only Logbook covers assets and taxonomy terms.** The other three are entries-only.
+- Confidence available in practice: High (logbook), Partial (revisions, entry_data), Low (mtime).
