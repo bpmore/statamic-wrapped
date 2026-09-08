@@ -41,4 +41,23 @@ trait ReadsPublishedEntries
             ->unique(fn (HistoryEvent $event) => $event->itemId)
             ->values();
     }
+
+    /**
+     * How many entries each collection published, biggest first.
+     *
+     * Every source records the collection on an entry event, so this works
+     * whichever one was resolved. Events that somehow arrive without one are
+     * dropped: an uncounted entry is better than a collection named "".
+     *
+     * @param  Collection<int, HistoryEvent>  $events
+     * @return Collection<string, int>
+     */
+    protected function publicationsByCollection(Collection $events): Collection
+    {
+        return $this->firstPublications($events)
+            ->map(fn (HistoryEvent $event) => $event->meta['collection'] ?? null)
+            ->filter(fn ($collection) => is_string($collection) && $collection !== '')
+            ->countBy()
+            ->sortDesc();
+    }
 }

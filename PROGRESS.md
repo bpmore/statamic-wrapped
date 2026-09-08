@@ -18,7 +18,7 @@
 - [x] Volume: entries published, total words, assets uploaded
 - [x] Time: busiest month, busiest week, busiest day-of-week + hour, longest streak
 - [x] Superlatives: longest entry, most-revised page, fastest turnaround, top taxonomy term, longest-untouched page
-- [ ] Collections: fastest growing, went quiet
+- [x] Collections: fastest growing, went quiet
 - [ ] People stats — team by default, individual leaderboard opt-in, never rank from the bottom
 - [ ] Cards omitted (not guessed) when confidence is too low
 - [ ] `php please wrapped:generate` with `--year` / `--quarter` / `--site` / `--force`
@@ -359,3 +359,25 @@ is not "nobody touched it", so it is left out rather than claimed.
 whole period) rather than on confidence alone. A superlative that is barely a superlative is not a card.
 
 - Verified: `vendor/bin/pest` 203 passed · `vendor/bin/pint --test` clean · `vendor/bin/phpstan analyse` no errors.
+
+### Task 13 — Collections cards (done)
+Both read the collection from `HistoryEvent->meta['collection']`, which **all four sources set**, so these
+work whichever source was resolved. Events arriving without one are dropped: an uncounted entry beats a
+collection named "".
+
+**`fastest_growing_collection`** — Partial. **"Most" is a count, not a ratio.** A ratio would let a
+collection going from one entry to three beat one going from fifty to a hundred and twenty, which is not
+what anyone means by "grew the most". `previous` rides along so the screen can say "up from 31", and is
+null (not 0) for a site younger than one period. Needs **at least two collections** to have published —
+on a single-collection site the answer was never in doubt, and that is not a card.
+
+**`collection_went_quiet`** — Partial. Busy last period, completely silent this one. Two guards keep it
+from being noise: it must have gone fully quiet rather than merely slowed down, and it must have published
+**at least twice** before — one entry last year and none this year is a collection that barely started, not
+one that went quiet. Picks the collection with the most to lose. A site with no history before the period
+cannot produce this card, which is correct: nothing can go quiet before it has spoken.
+Wording carries the warmth (SPEC.md §3) and belongs to the CP screen; the card supplies only the fact.
+
+**Shared:** `ReadsPublishedEntries::publicationsByCollection()` — counts per collection, biggest first.
+
+- Verified: `vendor/bin/pest` 217 passed · `vendor/bin/pint --test` clean · `vendor/bin/phpstan analyse` no errors.

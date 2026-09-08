@@ -12,7 +12,9 @@ use Bpmore\Wrapped\Stats\Cards\AssetsUploadedCard;
 use Bpmore\Wrapped\Stats\Cards\BusiestMonthCard;
 use Bpmore\Wrapped\Stats\Cards\BusiestTimeCard;
 use Bpmore\Wrapped\Stats\Cards\BusiestWeekCard;
+use Bpmore\Wrapped\Stats\Cards\CollectionWentQuietCard;
 use Bpmore\Wrapped\Stats\Cards\EntriesPublishedCard;
+use Bpmore\Wrapped\Stats\Cards\FastestGrowingCollectionCard;
 use Bpmore\Wrapped\Stats\Cards\FastestTurnaroundCard;
 use Bpmore\Wrapped\Stats\Cards\LongestEntryCard;
 use Bpmore\Wrapped\Stats\Cards\LongestStreakCard;
@@ -67,6 +69,10 @@ class ServiceProvider extends AddonServiceProvider
         FastestTurnaroundCard::class,
         TopTaxonomyTermCard::class,
         LongestUntouchedCard::class,
+
+        // Collections
+        FastestGrowingCollectionCard::class,
+        CollectionWentQuietCard::class,
     ];
 
     public function register()
