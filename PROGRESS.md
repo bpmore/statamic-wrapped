@@ -9,7 +9,7 @@
 - [x] `LogbookHistorySource` (Statamic Logbook, if installed)
 - [x] `RevisionsHistorySource` (Pro only; note storage/statamic/revisions is git-ignored)
 - [x] `EntryDataHistorySource` (date / updated_at / author)
-- [ ] `MtimeHistorySource` (last resort, low confidence)
+- [x] `MtimeHistorySource` (last resort, low confidence)
 - [ ] Resolver picks best available and reports which; tests for each
 
 ## Phase 2 — Stats
@@ -151,3 +151,24 @@
   stache stores and calling `Stache::clear()`. Multisite tests need `Site::setSites([...])` first or
   `slug()` fatals on a null site.
 - Verified: `vendor/bin/pest` 72 passed · `vendor/bin/pint --test` clean · `vendor/bin/phpstan analyse` no errors.
+
+### Task 6 — `MtimeHistorySource` (done)
+- **Updated events only, and that is the point.** An mtime says a file was written; it does not say anything
+  was published. Emitting a Published event from one is exactly the "busiest week that's actually the date
+  of the last deploy" SPEC.md §1 warns about. No author either — a filesystem does not record who.
+  One event per entry: only the most recent write survives.
+- Reads the mtime with `is_file()` / `filemtime()` rather than Statamic's `fileLastModified()`, which
+  **returns `Carbon::now()` when the file does not exist**. That would turn "no file" into "edited today"
+  and invent a busiest day. Same class of trap as `lastModified()` in task 5 — Statamic's convenience
+  accessors around dates fall back rather than fail, and this addon must not.
+- An entry with no file behind it (eloquent driver, or a file moved out from under the Stache) yields
+  nothing, which correctly makes this source unavailable on an eloquent-driver site.
+- **Refactor:** the entry-walking query moved to `src/History/Sources/Concerns/IteratesEntries.php`, shared
+  with `EntryDataHistorySource` — second occurrence, so it was time. The `instanceof QueryBuilder` narrowing
+  is the part that mattered to share; it is a subtle invariant that must not drift between the two.
+  The small `string()` caster is still duplicated across all four sources. Left alone deliberately: eight
+  obvious lines, and extracting it would touch every source for no real gain.
+- **Test harness gotcha, cost real time:** `Collection::sites()` silently collapses to `[Site::default()]`
+  unless `config('statamic.system.multisite')` is true — `Site::setSites([...])` alone is not enough, and
+  `Site::hasMultiple()` returning true is misleading. Both multisite test helpers now set the config first.
+- Verified: `vendor/bin/pest` 84 passed · `vendor/bin/pint --test` clean · `vendor/bin/phpstan analyse` no errors.

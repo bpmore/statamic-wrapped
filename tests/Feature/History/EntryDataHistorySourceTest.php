@@ -15,6 +15,9 @@ use Statamic\Facades\Stache;
  */
 function useSites(): void
 {
+    // Statamic collapses a collection to one site unless multisite is actually on.
+    config(['statamic.system.multisite' => true]);
+
     Site::setSites([
         'default' => ['name' => 'Default', 'url' => '/', 'locale' => 'en_US'],
         'french' => ['name' => 'French', 'url' => '/fr/', 'locale' => 'fr_FR'],

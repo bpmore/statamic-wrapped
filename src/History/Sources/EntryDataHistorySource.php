@@ -6,12 +6,10 @@ use Bpmore\Wrapped\History\Confidence;
 use Bpmore\Wrapped\History\HistoryEvent;
 use Bpmore\Wrapped\History\HistoryEventType;
 use Bpmore\Wrapped\History\HistorySource;
+use Bpmore\Wrapped\History\Sources\Concerns\IteratesEntries;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Collection;
-use Illuminate\Support\LazyCollection;
 use Statamic\Entries\Entry as EntryModel;
-use Statamic\Facades\Entry as Entries;
-use Statamic\Query\Builder as QueryBuilder;
 
 /**
  * History inferred from the entries themselves.
@@ -39,6 +37,8 @@ use Statamic\Query\Builder as QueryBuilder;
  */
 class EntryDataHistorySource implements HistorySource
 {
+    use IteratesEntries;
+
     /**
      * An entry is evidence it was published once it is actually live. A draft
      * never went out. 'expired' means it did go out and its date has since
@@ -108,28 +108,6 @@ class EntryDataHistorySource implements HistorySource
         }
 
         return $earliest;
-    }
-
-    /**
-     * @return LazyCollection<int, EntryModel>
-     */
-    protected function entries(?string $site = null): LazyCollection
-    {
-        $query = Entries::query();
-
-        // Statamic's entry query contract is empty, and a content driver is
-        // free to return anything for it. One we cannot drive yields nothing,
-        // which makes this source unavailable and lets the resolver fall
-        // through to a source that works.
-        if (! $query instanceof QueryBuilder) {
-            return LazyCollection::empty();
-        }
-
-        if ($site !== null) {
-            $query->where('site', $site);
-        }
-
-        return $query->lazy();
     }
 
     /**
