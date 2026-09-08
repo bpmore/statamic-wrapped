@@ -27,9 +27,11 @@ use Bpmore\Wrapped\Stats\Cards\TopTaxonomyTermCard;
 use Bpmore\Wrapped\Stats\Cards\TotalWordsCard;
 use Bpmore\Wrapped\Stats\StatCard;
 use Bpmore\Wrapped\Stats\StatCardRegistry;
+use Bpmore\Wrapped\Widgets\WrappedWidget;
 use Illuminate\Console\Command;
 use Statamic\Facades\CP\Nav;
 use Statamic\Providers\AddonServiceProvider;
+use Statamic\Widgets\Widget;
 
 class ServiceProvider extends AddonServiceProvider
 {
@@ -44,6 +46,11 @@ class ServiceProvider extends AddonServiceProvider
      * @var list<string>
      */
     protected $vite = ['resources/js/cp.js'];
+
+    /** @var list<class-string<Widget>> */
+    protected $widgets = [
+        WrappedWidget::class,
+    ];
 
     /** @var list<class-string<Command>> */
     protected $commands = [

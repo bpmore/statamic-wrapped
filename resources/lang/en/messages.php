@@ -41,4 +41,14 @@ return [
 
     ],
 
+    'widget' => [
+
+        // December, for the year that is ending.
+        'ready' => 'Your :period Wrapped is ready.',
+
+        // The rest of the year: a quiet link to something that already exists.
+        'title' => 'Your :period Wrapped',
+
+    ],
+
 ];

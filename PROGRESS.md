@@ -26,7 +26,7 @@
 ## Phase 3 — Output
 - [x] CP screen — the canonical, accessible version
 - [x] Confidence notice when history data is limited
-- [ ] Dashboard widget + December nudge
+- [x] Dashboard widget + December nudge
 - [ ] PNG card export via headless Chrome
 - [ ] Suggested alt text generated with each PNG
 - [ ] Confetti on first view, once
@@ -549,3 +549,27 @@ On the screen it is a `<p>`, not an alert. Thin history is not an error and not 
 Two task 17 tests asserted the old paths and were updated.
 
 - Verified: `vendor/bin/pest` 292 passed · `vendor/bin/pint --test` clean · `vendor/bin/phpstan analyse` no errors · `npm run build` clean · assets republished to the host site.
+
+### Task 19 — Dashboard widget and December nudge (done)
+`src/Widgets/WrappedWidget.php`, registered via `ServiceProvider::$widgets`. A Statamic widget returns
+`VueComponent::render('name', $props)`, so the Vue side is an **ordinary component** registered with
+`Statamic.$components.register()` — not `$inertia.register()`, which is only for pages.
+
+- **Shows nothing at all when there is no Wrapped.** `component()` returns null rather than advertising
+  itself on a dashboard with nothing to show.
+- **It only calls itself a nudge in December, for the year that is ending** — a Year-period snapshot whose
+  key is the current year, in month 12. A quarter never nudges, and neither does last year's Wrapped.
+  The rest of the year it is a quiet link to something that already exists.
+- The headline leads with `entries_published` when present, because that is the fact people came for,
+  falling back to the first card and then to the **confidence notice**. A thin site gets "there is not
+  enough history here" rather than an empty line.
+
+**Dismissal is `localStorage`, keyed by period.** A per-browser convenience does not deserve a table, an
+endpoint and per-user state to get wrong, and keying by period means next year's Wrapped nudges again on
+its own. Reads and writes are wrapped in try/catch — private windows and blocked site data throw. Only the
+December nudge is dismissible; the quiet link is not in anybody's way.
+
+**Not done here:** the widget does not check a `view wrapped` permission yet — that is the last task in
+this phase and will need to cover the screen, the widget and the nav item together.
+
+- Verified: `vendor/bin/pest` 302 passed · `vendor/bin/pint --test` clean · `vendor/bin/phpstan analyse` no errors · `npm run build` clean · assets republished to the host site.
