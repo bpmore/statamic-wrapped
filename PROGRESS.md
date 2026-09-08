@@ -8,7 +8,7 @@
 - [x] `HistorySource` interface + resolver returning a confidence rating
 - [x] `LogbookHistorySource` (Statamic Logbook, if installed)
 - [x] `RevisionsHistorySource` (Pro only; note storage/statamic/revisions is git-ignored)
-- [ ] `EntryDataHistorySource` (date / updated_at / author)
+- [x] `EntryDataHistorySource` (date / updated_at / author)
 - [ ] `MtimeHistorySource` (last resort, low confidence)
 - [ ] Resolver picks best available and reports which; tests for each
 
@@ -119,3 +119,35 @@
   `Revision::directory()` as always-true — the facade docblocks declare those return types. Removed rather
   than suppressed; the try/catch around the calls is the real guard.
 - Verified: `vendor/bin/pest` 55 passed · `vendor/bin/pint --test` clean · `vendor/bin/phpstan analyse` no errors.
+
+### Task 5 — `EntryDataHistorySource` (done)
+- At most **two events per entry**: it went live (`date`), and it was last touched (`updated_at`).
+  Every edit before the last one is gone. That is the whole shape of this source.
+- **No Created events, ever.** Statamic stores no creation timestamp. An entry's `date` is when it is
+  published or displayed, not when someone first typed into it. **No Deleted events either** — a deleted
+  entry is not there to read. Phase 2 must not expect creation dates from any source we have so far.
+- Reads `$entry->get('updated_at')` **directly, never `lastModified()`**. `TracksLastModified::lastModified()`
+  falls back to file mtime, which would launder a Low-confidence signal into a Partial-confidence source.
+  This is the single most important line in the class.
+- `updated_by` is the author of the Updated event; the blueprint's `author` field is the author of the
+  Published event. An `author` field can hold several users — the first is taken, the rest dropped rather
+  than double-counted.
+- **Decision — a future-dated entry is not counted as published.** Statamic's default
+  `futureDateBehavior: public` means `status()` returns 'published' for an entry dated next month. Wrapped
+  reports what has happened, so `date->isFuture()` is excluded. Drafts are excluded via `status()`;
+  'expired' is included, because it did go out and its date has merely passed.
+- `isAvailable()` is "does any entry actually yield an event", not "do entries exist". A site with no dated
+  collections and no `updated_at` has entries but no history in them, and must fall through to mtime.
+  It short-circuits on the first entry that yields something.
+- **Known leak, documented in the class:** on a dated collection, `Entry::date()` falls back to
+  last-modified and from there to mtime for an entry with no date of its own. Rare (the date normally comes
+  from the filename) but it is the one way mtime can reach this source's Partial rating.
+- PHPStan: `Statamic\Contracts\Entries\Entry` and `...\QueryBuilder` are both **empty interfaces**, so
+  they give the analyser nothing. Entries are type-hinted as the concrete `Statamic\Entries\Entry` (which
+  the eloquent driver extends), and the query builder is narrowed with a real `instanceof` check that
+  returns an empty result for a driver we cannot drive — which makes the source unavailable and lets the
+  resolver fall through. Not a suppression; it is the correct runtime behaviour.
+- Tests build real entries in a temporary content directory by repointing the `collections`/`entries`
+  stache stores and calling `Stache::clear()`. Multisite tests need `Site::setSites([...])` first or
+  `slug()` fatals on a null site.
+- Verified: `vendor/bin/pest` 72 passed · `vendor/bin/pint --test` clean · `vendor/bin/phpstan analyse` no errors.
