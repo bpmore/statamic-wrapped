@@ -5,7 +5,7 @@
 
 ## Phase 1 — History source (do this first; everything depends on it)
 - [x] Scaffold the addon package, tests, CI
-- [ ] `HistorySource` interface + resolver returning a confidence rating
+- [x] `HistorySource` interface + resolver returning a confidence rating
 - [ ] `LogbookHistorySource` (Statamic Logbook, if installed)
 - [ ] `RevisionsHistorySource` (Pro only; note storage/statamic/revisions is git-ignored)
 - [ ] `EntryDataHistorySource` (date / updated_at / author)
@@ -50,3 +50,20 @@
   will not work until then — that is expected, not a broken environment.
 - Verified: `vendor/bin/pest` 2 passed · `vendor/bin/pint --test` clean · `vendor/bin/phpstan analyse` no errors.
 - **Corrected after task 1:** scaffold resolved `statamic/cms` to v5.74.4. Bumped the constraint to `^6.0`; now on v6.31.0. All specs target Statamic 6.
+
+### Task 2 — `HistorySource` interface + resolver (done)
+- Everything lives in `src/History/`: `Confidence`, `HistoryEventType`, `HistoryEvent`, `HistorySource`,
+  `ResolvedHistory`, `HistorySourceResolver`.
+- `Confidence` and `HistoryEventType` were written but uncommitted before this task; they are covered by tests now.
+- Sources flatten whatever they know into a stream of `HistoryEvent`, so the stat layer never branches on source.
+  `author` and `site` are nullable — a source that does not know them must leave them null rather than guess.
+- The interface is `events(from, to, ?site)` plus `earliestEvent(?site)`. `earliestEvent` exists for the
+  first-year framing in SPEC.md §1, not as a convenience.
+- Resolver takes highest `Confidence::rank()` among available sources; ties keep the first registered.
+  So register best-first (logbook, revisions, entry_data, mtime) in task 6.
+- `resolve()` returns null when nothing is available; `confidence()` reports `Low` in that case rather than
+  throwing, because "we know almost nothing" is the honest answer, not an error.
+- **Not done on purpose:** the resolver is not bound in the container yet. There are no real sources to register
+  until tasks 3-6, and an empty binding would be a thing that can rot. Bind it in task 6.
+- `tests/Fixtures/FakeHistorySource.php` lets the resolver be tested without a real source.
+- Verified: `vendor/bin/pest` 14 passed · `vendor/bin/pint --test` clean · `vendor/bin/phpstan analyse` no errors.
