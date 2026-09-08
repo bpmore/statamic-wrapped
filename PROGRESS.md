@@ -6,7 +6,7 @@
 ## Phase 1 — History source (do this first; everything depends on it)
 - [x] Scaffold the addon package, tests, CI
 - [x] `HistorySource` interface + resolver returning a confidence rating
-- [ ] `LogbookHistorySource` (Statamic Logbook, if installed)
+- [x] `LogbookHistorySource` (Statamic Logbook, if installed)
 - [ ] `RevisionsHistorySource` (Pro only; note storage/statamic/revisions is git-ignored)
 - [ ] `EntryDataHistorySource` (date / updated_at / author)
 - [ ] `MtimeHistorySource` (last resort, low confidence)
@@ -67,3 +67,25 @@
   until tasks 3-6, and an empty binding would be a thing that can rot. Bind it in task 6.
 - `tests/Fixtures/FakeHistorySource.php` lets the resolver be tested without a real source.
 - Verified: `vendor/bin/pest` 14 passed · `vendor/bin/pint --test` clean · `vendor/bin/phpstan analyse` no errors.
+
+### Task 3 — `LogbookHistorySource` (done)
+- Sources live in `src/History/Sources/`. Read against Logbook v2.2.0 source, not from memory.
+- Table is `logbook_audit_logs` on its **own** connection named `logbook`, built from
+  `config('logbook.db.connection')`. Logbook's `DbConnectionResolver` does exactly that; we replicate the
+  three lines rather than depend on their class, so this addon has no hard dependency on Logbook.
+- Actions are `statamic.<subject>.<operation>`. Mapped operations: created/uploaded -> Created,
+  published -> Published, updated/saved/replaced/unpublished -> Updated, deleted -> Deleted.
+  Everything else (logins, two-factor, impersonation) is audit signal, not content history, and is dropped.
+- `subject_type` is passed straight through as `itemType` ('entry', 'asset', 'term', 'collection'...).
+  The source stays dumb; the stat layer filters.
+- Site comes from `meta->site`, which Logbook only sets for site-aware subjects. Rows without it get
+  `site = null` and are excluded when a site filter is given. That is the honest answer, not a bug.
+- **Availability is decided by the table, not by `class_exists`.** A site that removed Logbook still has
+  the history it recorded, and that history is no less true.
+- **Verified on SQLite only:** the `where('meta->site', ...)` JSON filter. Laravel generates the MySQL and
+  Postgres equivalents but no test covers them here.
+- The test file rebuilds Logbook's schema by hand (it is not a dependency). If Logbook's schema drifts,
+  `tests/Feature/History/LogbookHistorySourceTest.php` is the file that has to notice.
+- **Deferred to Phase 4:** a `suggest` entry for `emran-alhaddad/statamic-logbook` in `composer.json`.
+- Still not bound in the container. Registration is task 6, as decided in task 2.
+- Verified: `vendor/bin/pest` 37 passed · `vendor/bin/pint --test` clean · `vendor/bin/phpstan analyse` no errors.
