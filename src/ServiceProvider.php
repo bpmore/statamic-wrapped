@@ -3,6 +3,8 @@
 namespace Bpmore\Wrapped;
 
 use Bpmore\Wrapped\Console\Commands\GenerateWrapped;
+use Bpmore\Wrapped\Export\ChromeRenderer;
+use Bpmore\Wrapped\Export\ImageRenderer;
 use Bpmore\Wrapped\History\HistorySource;
 use Bpmore\Wrapped\History\HistorySourceResolver;
 use Bpmore\Wrapped\History\Sources\EntryDataHistorySource;
@@ -46,6 +48,9 @@ class ServiceProvider extends AddonServiceProvider
      * @var list<string>
      */
     protected $vite = ['resources/js/cp.js'];
+
+    /** Views are `wrapped::`, matching the config and translation namespaces. */
+    protected $viewNamespace = 'wrapped';
 
     /** @var list<class-string<Widget>> */
     protected $widgets = [
@@ -122,6 +127,8 @@ class ServiceProvider extends AddonServiceProvider
                 $this->historySources,
             ));
         });
+
+        $this->app->bind(ImageRenderer::class, ChromeRenderer::class);
 
         $this->app->singleton(StatCardRegistry::class, function ($app) {
             return new StatCardRegistry(array_map(

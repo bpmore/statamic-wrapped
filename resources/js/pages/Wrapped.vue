@@ -5,6 +5,10 @@ defineProps({
     site: { type: String, required: true },
     snapshot: { type: Object, default: null },
 });
+
+// Built from the current path so it survives however the control panel is
+// mounted, rather than being hardcoded to /cp.
+const imageUrl = `${window.location.pathname.replace(/\/$/, '')}/image`;
 </script>
 
 <template>
@@ -64,14 +68,28 @@ defineProps({
                 <div
                     v-for="card in snapshot.cards"
                     :key="card.handle"
-                    class="p-5 border rounded-lg"
+                    class="p-5 border rounded-lg flex flex-col"
                 >
                     <dt class="text-sm font-medium text-gray-600 dark:text-gray-400">
                         {{ card.heading }}
                     </dt>
-                    <dd class="mt-1 text-lg">{{ card.body }}</dd>
+                    <dd class="mt-1 text-lg flex-1">{{ card.body }}</dd>
+
+                    <!--
+                        A download, not a link to a hosted image. The picture is
+                        a convenience; this page is the real version.
+                    -->
+                    <a
+                        v-if="snapshot.canExport"
+                        :href="`${imageUrl}/${card.handle}`"
+                        class="text-sm underline mt-3 self-start"
+                    >Download image</a>
                 </div>
             </dl>
+
+            <p v-if="snapshot.canExport && snapshot.cards.length" class="mt-6">
+                <a :href="imageUrl" class="text-sm underline">Download all of it as one image</a>
+            </p>
         </template>
     </div>
 </template>

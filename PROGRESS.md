@@ -27,7 +27,7 @@
 - [x] CP screen — the canonical, accessible version
 - [x] Confidence notice when history data is limited
 - [x] Dashboard widget + December nudge
-- [ ] PNG card export via headless Chrome
+- [x] PNG card export via headless Chrome
 - [ ] Suggested alt text generated with each PNG
 - [ ] Confetti on first view, once
 - [ ] `view wrapped` permission; people-stats behind a narrower gate
@@ -573,3 +573,31 @@ December nudge is dismissible; the quiet link is not in anybody's way.
 this phase and will need to cover the screen, the widget and the nav item together.
 
 - Verified: `vendor/bin/pest` 302 passed · `vendor/bin/pint --test` clean · `vendor/bin/phpstan analyse` no errors · `npm run build` clean · assets republished to the host site.
+
+### Task 20 — PNG card export (done)
+`Export\ImageRenderer` (interface), `Export\ChromeRenderer`, `Export\CardImages`, two Blade templates,
+and two CP download routes.
+
+**Chrome is driven directly — no Puppeteer, no Browsershot.** Those would put Node and a
+several-hundred-megabyte browser download between a free addon and a picture of a number, and card layout
+is only HTML and CSS. `--headless=new --screenshot` against a `file://` URL is the whole mechanism.
+The binary comes from `wrapped.images.chrome`, else the usual install locations are checked.
+**A missing browser hides the download; it never fails a request** — the screen is the real version.
+
+**Rendered at `--force-device-scale-factor=2`**, so a 1200x630 card comes out 2400x1260 and stays sharp
+when a social platform re-encodes it. Summary is 1200x1500.
+
+**No hosted URL, ever.** The routes return `Content-Disposition: attachment`. Nothing is written to a
+public directory and no link is minted: a URL leaking a team's internal publishing stats is a support
+problem and a privacy problem for a free addon — SPEC.md §5.
+
+**The templates are deliberately self-contained**: inline CSS, system fonts, no network. The renderer loads
+them from `file://` with no internet, so anything fetched would simply be missing from the picture. Tests
+assert the HTML contains no `http://`, no `https://` and no `<script`, and that card text is escaped rather
+than becoming markup.
+
+**Verified for real, not just mocked.** One test runs actual Chrome and asserts PNG bytes (skipped when no
+browser is present). Rendered against the seeded dev site and inspected the output image: it reads
+"WHEN YOU PUBLISH / You publish most on Tuesday, and most often around 2 pm. / 2026 · default".
+
+- Verified: `vendor/bin/pest` 318 passed · `vendor/bin/pint --test` clean · `vendor/bin/phpstan analyse` no errors · `npm run build` clean · assets republished · both routes registered in the host site.

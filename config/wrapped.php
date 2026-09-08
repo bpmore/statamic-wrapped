@@ -33,6 +33,28 @@ return [
     |
     */
 
+    /*
+    |--------------------------------------------------------------------------
+    | Shareable images
+    |--------------------------------------------------------------------------
+    |
+    | Cards are rendered to PNG by taking a screenshot of some HTML with
+    | headless Chrome. Chrome is driven directly rather than through Node and
+    | Puppeteer: that is a large dependency to add to a free addon for a picture
+    | of a number.
+    |
+    | Leave `chrome` null and the usual install locations are checked. If no
+    | browser is found the download is simply unavailable — the control panel
+    | screen is the real version and works regardless.
+    |
+    */
+
+    'images' => [
+
+        'chrome' => env('WRAPPED_CHROME_PATH'),
+
+    ],
+
     'people' => [
 
         'enabled' => (bool) env('WRAPPED_PEOPLE_ENABLED', true),

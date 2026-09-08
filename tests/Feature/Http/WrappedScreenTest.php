@@ -1,8 +1,10 @@
 <?php
 
+use Bpmore\Wrapped\Export\ImageRenderer;
 use Bpmore\Wrapped\History\Confidence;
 use Bpmore\Wrapped\Snapshots\Period;
 use Bpmore\Wrapped\Snapshots\Snapshot;
+use Bpmore\Wrapped\Tests\Fixtures\FakeImageRenderer;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia;
@@ -146,4 +148,45 @@ it('warns on the screen when the history was too thin for some cards', function 
             ->where('snapshot.history.notice', 'There is not enough history here to say anything yet. This site has only file modification times to go on, and most deploys rewrite those.')
             ->where('snapshot.history.suggestion', 'Statamic Logbook records who changed what and when, and would give a much fuller picture next time.')
         );
+});
+
+it('offers a download for each card and for the whole thing', function () {
+    app()->instance(ImageRenderer::class, new FakeImageRenderer);
+    storeSnapshot(['entries_published' => ['count' => 42, 'previous' => null]]);
+
+    $this->get(cp_route('wrapped.index'))
+        ->assertInertia(fn (AssertableInertia $page) => $page->where('snapshot.canExport', true));
+
+    $this->get(cp_route('wrapped.image', 'entries_published'))
+        ->assertOk()
+        ->assertHeader('content-type', 'image/png')
+        ->assertHeader('content-disposition', 'attachment; filename="wrapped-2026-default-entries_published.png"');
+
+    $this->get(cp_route('wrapped.image.summary'))
+        ->assertOk()
+        ->assertHeader('content-disposition', 'attachment; filename="wrapped-2026-default.png"');
+});
+
+it('hides the download when there is no browser to render with', function () {
+    app()->instance(
+        ImageRenderer::class,
+        new FakeImageRenderer(available: false),
+    );
+    storeSnapshot(['entries_published' => ['count' => 42, 'previous' => null]]);
+
+    $this->get(cp_route('wrapped.index'))
+        ->assertInertia(fn (AssertableInertia $page) => $page->where('snapshot.canExport', false));
+});
+
+it('does not export a card this wrapped never had', function () {
+    app()->instance(ImageRenderer::class, new FakeImageRenderer);
+    storeSnapshot(['entries_published' => ['count' => 42, 'previous' => null]]);
+
+    $this->get(cp_route('wrapped.image', 'nonsense'))->assertNotFound();
+});
+
+it('does not export before anything has been generated', function () {
+    app()->instance(ImageRenderer::class, new FakeImageRenderer);
+
+    $this->get(cp_route('wrapped.image.summary'))->assertNotFound();
 });
