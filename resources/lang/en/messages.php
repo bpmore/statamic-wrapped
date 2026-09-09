@@ -41,6 +41,26 @@ return [
 
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Suggested alt text
+    |--------------------------------------------------------------------------
+    |
+    | Handed over with every downloaded image so whoever posts it can paste it
+    | in. It carries the card's own words rather than describing the picture:
+    | "an image showing..." tells a reader what they are missing instead of
+    | telling them the thing itself.
+    |
+    */
+
+    'alt' => [
+
+        'card' => ':heading: :body From the :period Wrapped for :site.',
+
+        'summary' => 'The :period Wrapped for :site. :cards',
+
+    ],
+
     'widget' => [
 
         // December, for the year that is ending.

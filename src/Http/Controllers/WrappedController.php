@@ -2,6 +2,7 @@
 
 namespace Bpmore\Wrapped\Http\Controllers;
 
+use Bpmore\Wrapped\Export\AltText;
 use Bpmore\Wrapped\Export\CardImages;
 use Bpmore\Wrapped\Snapshots\Snapshot;
 use Bpmore\Wrapped\Stats\CardPresenter;
@@ -24,7 +25,7 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
  */
 class WrappedController extends CpController
 {
-    public function index(CardPresenter $presenter, ConfidenceNotice $notice, CardImages $images): Response
+    public function index(CardPresenter $presenter, ConfidenceNotice $notice, CardImages $images, AltText $alt): Response
     {
         $site = Site::selected()->handle();
 
@@ -36,15 +37,29 @@ class WrappedController extends CpController
                 'period' => $snapshot->period->value,
                 'periodKey' => $snapshot->period_key,
                 'generatedAt' => $snapshot->generated_at->toIso8601String(),
-                'cards' => $presenter->present($snapshot->stats),
+                'cards' => $this->cards($presenter, $alt, $snapshot),
                 // A Wrapped never appears without saying what it was built
                 // from — SPEC.md §1.
                 'history' => $notice->for($snapshot),
                 // No browser, no download button. The screen is the real
                 // version and works either way.
                 'canExport' => $images->isAvailable(),
+                'summaryAlt' => $alt->forSummary($snapshot),
             ],
         ]);
+    }
+
+    /**
+     * Each card with the alt text that should go out alongside its image.
+     *
+     * @return list<array{handle: string, heading: string, body: string, alt: string}>
+     */
+    protected function cards(CardPresenter $presenter, AltText $alt, Snapshot $snapshot): array
+    {
+        return array_map(
+            fn (array $card) => $card + ['alt' => $alt->forCard($snapshot, $card)],
+            $presenter->present($snapshot->stats),
+        );
     }
 
     /**

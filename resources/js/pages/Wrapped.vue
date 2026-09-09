@@ -1,4 +1,5 @@
 <script setup>
+import { ref } from 'vue';
 import { Head } from '@statamic/cms/inertia';
 
 defineProps({
@@ -9,6 +10,24 @@ defineProps({
 // Built from the current path so it survives however the control panel is
 // mounted, rather than being hardcoded to /cp.
 const imageUrl = `${window.location.pathname.replace(/\/$/, '')}/image`;
+
+// Which alt text was last copied, so the button can confirm it worked.
+const copied = ref(null);
+
+const copyAlt = async (key, text) => {
+    try {
+        await navigator.clipboard.writeText(text);
+    } catch (e) {
+        // Clipboard access can be refused. The text is on the page either way,
+        // so selecting it by hand still works.
+        return;
+    }
+
+    copied.value = key;
+    setTimeout(() => {
+        if (copied.value === key) copied.value = null;
+    }, 2000);
+};
 </script>
 
 <template>
@@ -79,17 +98,44 @@ const imageUrl = `${window.location.pathname.replace(/\/$/, '')}/image`;
                         A download, not a link to a hosted image. The picture is
                         a convenience; this page is the real version.
                     -->
-                    <a
-                        v-if="snapshot.canExport"
-                        :href="`${imageUrl}/${card.handle}`"
-                        class="text-sm underline mt-3 self-start"
-                    >Download image</a>
+                    <div v-if="snapshot.canExport" class="mt-3">
+                        <a :href="`${imageUrl}/${card.handle}`" class="text-sm underline">Download image</a>
+
+                        <!--
+                            Suggested alt text, written out rather than hidden
+                            behind the button, so it can be read and edited
+                            before it goes anywhere.
+                        -->
+                        <details class="mt-2">
+                            <summary class="text-sm cursor-pointer text-gray-600 dark:text-gray-400">
+                                Suggested alt text
+                            </summary>
+                            <p class="text-sm mt-2 text-gray-600 dark:text-gray-400">{{ card.alt }}</p>
+                            <button
+                                type="button"
+                                class="text-sm underline mt-2"
+                                @click="copyAlt(card.handle, card.alt)"
+                            >{{ copied === card.handle ? 'Copied' : 'Copy' }}</button>
+                        </details>
+                    </div>
                 </div>
             </dl>
 
-            <p v-if="snapshot.canExport && snapshot.cards.length" class="mt-6">
+            <div v-if="snapshot.canExport && snapshot.cards.length" class="mt-6">
                 <a :href="imageUrl" class="text-sm underline">Download all of it as one image</a>
-            </p>
+
+                <details class="mt-2">
+                    <summary class="text-sm cursor-pointer text-gray-600 dark:text-gray-400">
+                        Suggested alt text
+                    </summary>
+                    <p class="text-sm mt-2 text-gray-600 dark:text-gray-400">{{ snapshot.summaryAlt }}</p>
+                    <button
+                        type="button"
+                        class="text-sm underline mt-2"
+                        @click="copyAlt('summary', snapshot.summaryAlt)"
+                    >{{ copied === 'summary' ? 'Copied' : 'Copy' }}</button>
+                </details>
+            </div>
         </template>
     </div>
 </template>

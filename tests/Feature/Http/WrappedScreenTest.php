@@ -190,3 +190,14 @@ it('does not export before anything has been generated', function () {
 
     $this->get(cp_route('wrapped.image.summary'))->assertNotFound();
 });
+
+it('hands over suggested alt text with every image', function () {
+    app()->instance(ImageRenderer::class, new FakeImageRenderer);
+    storeSnapshot(['entries_published' => ['count' => 42, 'previous' => null]]);
+
+    $this->get(cp_route('wrapped.index'))
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('snapshot.cards.0.alt', 'Entries published: You published 42 entries. From the 2026 Wrapped for default.')
+            ->where('snapshot.summaryAlt', 'The 2026 Wrapped for default. Entries published: You published 42 entries.')
+        );
+});

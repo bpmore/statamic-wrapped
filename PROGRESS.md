@@ -28,7 +28,7 @@
 - [x] Confidence notice when history data is limited
 - [x] Dashboard widget + December nudge
 - [x] PNG card export via headless Chrome
-- [ ] Suggested alt text generated with each PNG
+- [x] Suggested alt text generated with each PNG
 - [ ] Confetti on first view, once
 - [ ] `view wrapped` permission; people-stats behind a narrower gate
 
@@ -601,3 +601,26 @@ browser is present). Rendered against the seeded dev site and inspected the outp
 "WHEN YOU PUBLISH / You publish most on Tuesday, and most often around 2 pm. / 2026 · default".
 
 - Verified: `vendor/bin/pest` 318 passed · `vendor/bin/pint --test` clean · `vendor/bin/phpstan analyse` no errors · `npm run build` clean · assets republished · both routes registered in the host site.
+
+### Task 21 — Suggested alt text (done)
+`Export\AltText`, with the wording in `resources/lang/en/messages.php` under `alt.*`.
+
+**The alt text is the card's own words**, plus where they came from:
+"When you publish: You publish most on Tuesday, and most often around 2 pm. From the 2026 Wrapped for
+default." A card image is text made of pixels, and there is nothing in it a sighted reader gets that a
+described reader should not.
+
+**Deliberately not "an image of a card showing...".** Alt text carries the information, not a description
+of the medium — telling somebody they are looking at a picture tells them what they are missing instead of
+telling them the thing. A test asserts the output contains none of "image of", "screenshot" or "picture of".
+
+The summary's alt text lists **every** card. Long, because the image is long: a truncated description of a
+summary is worse than none.
+
+**On screen it is written out, not hidden behind the button.** A `<details>` under each download shows the
+suggested text so it can be read and edited before it goes anywhere, with a Copy button beside it. The
+clipboard call is wrapped — access can be refused — and the text stays selectable either way.
+
+Fixed while testing: an empty Wrapped produced a trailing space where the cards should have been.
+
+- Verified: `vendor/bin/pest` 324 passed · `vendor/bin/pint --test` clean · `vendor/bin/phpstan analyse` no errors · `npm run build` clean · checked against the seeded dev site.
