@@ -6,6 +6,7 @@ use Bpmore\Wrapped\Snapshots\Snapshot;
 use Bpmore\Wrapped\Widgets\WrappedWidget;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Statamic\Facades\User;
 
 uses(RefreshDatabase::class);
 
@@ -32,6 +33,10 @@ function widgetProps(): ?array
 
     return $component?->toArray()['props'];
 }
+
+// The widget shows nothing to someone who cannot open the screen, so every
+// test here views as a super user unless it says otherwise.
+beforeEach(fn () => test()->actingAs(User::make()->id('super')->email('super@example.com')->makeSuper()));
 
 afterEach(fn () => CarbonImmutable::setTestNow());
 

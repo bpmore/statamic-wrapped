@@ -4,6 +4,7 @@ namespace Bpmore\Wrapped\Stats\Cards;
 
 use Bpmore\Wrapped\History\Confidence;
 use Bpmore\Wrapped\History\HistoryEvent;
+use Bpmore\Wrapped\Stats\AboutPeople;
 use Bpmore\Wrapped\Stats\Concerns\CountsPeople;
 use Bpmore\Wrapped\Stats\Concerns\ReadsPublishedEntries;
 use Bpmore\Wrapped\Stats\StatCard;
@@ -20,7 +21,7 @@ use Bpmore\Wrapped\Stats\StatContext;
  * Needs two people. A team card about one person is not a team card, and on a
  * one-person site it identifies that person by arithmetic.
  */
-class PeopleCard implements StatCard
+class PeopleCard implements AboutPeople, StatCard
 {
     use CountsPeople, ReadsPublishedEntries;
 

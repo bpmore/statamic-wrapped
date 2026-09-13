@@ -4,6 +4,7 @@ namespace Bpmore\Wrapped\Widgets;
 
 use Bpmore\Wrapped\Snapshots\Period;
 use Bpmore\Wrapped\Snapshots\Snapshot;
+use Bpmore\Wrapped\Stats\CardGate;
 use Bpmore\Wrapped\Stats\CardPresenter;
 use Bpmore\Wrapped\Stats\ConfidenceNotice;
 use Carbon\CarbonImmutable;
@@ -30,10 +31,16 @@ class WrappedWidget extends Widget
     public function __construct(
         protected CardPresenter $presenter,
         protected ConfidenceNotice $notice,
+        protected CardGate $gate,
     ) {}
 
     public function component(): ?VueComponent
     {
+        // A nudge towards a screen you cannot open is just a locked door.
+        if (! $this->gate->canView()) {
+            return null;
+        }
+
         $snapshot = Snapshot::query()
             ->where('site', Site::selected()->handle())
             ->orderByDesc('generated_at')

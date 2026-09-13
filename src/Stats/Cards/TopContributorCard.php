@@ -3,6 +3,7 @@
 namespace Bpmore\Wrapped\Stats\Cards;
 
 use Bpmore\Wrapped\History\Confidence;
+use Bpmore\Wrapped\Stats\AboutPeople;
 use Bpmore\Wrapped\Stats\Concerns\CountsPeople;
 use Bpmore\Wrapped\Stats\Concerns\ReadsPublishedEntries;
 use Bpmore\Wrapped\Stats\StatCard;
@@ -24,7 +25,7 @@ use Bpmore\Wrapped\Stats\StatContext;
  * Only the user id is stored. Names and avatars are resolved at display time,
  * so a snapshot never freezes somebody's name into the database.
  */
-class TopContributorCard implements StatCard
+class TopContributorCard implements AboutPeople, StatCard
 {
     use CountsPeople, ReadsPublishedEntries;
 

@@ -21,7 +21,13 @@ use Statamic\Support\Str;
  */
 class CardPresenter
 {
+    public function __construct(protected CardGate $gate) {}
+
     /**
+     * Only the cards this viewer may see. The gate lives here rather than in
+     * each caller because the screen, the widget, the image export and the alt
+     * text all present cards, and a new caller must not be able to forget it.
+     *
      * @param  array<string, array<string, mixed>>  $stats
      * @return list<array{handle: string, heading: string, body: string}>
      */
@@ -29,7 +35,7 @@ class CardPresenter
     {
         $cards = [];
 
-        foreach ($stats as $handle => $data) {
+        foreach ($this->gate->visible($stats) as $handle => $data) {
             $key = $this->bodyKey($handle, $data);
 
             if (! $this->translated("cards.{$handle}.heading")) {

@@ -6,8 +6,12 @@ use Statamic\Facades\User;
 
 function presented(array $stats): array
 {
-    return (new CardPresenter)->present($stats);
+    return app(CardPresenter::class)->present($stats);
 }
+
+// The presenter gates people cards on the viewer. Everything here is about
+// wording, so act as someone who may see all of it.
+beforeEach(fn () => test()->actingAs(User::make()->id('super')->email('super@example.com')->makeSuper()));
 
 function bodyOf(string $handle, array $data): string
 {

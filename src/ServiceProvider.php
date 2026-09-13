@@ -11,6 +11,7 @@ use Bpmore\Wrapped\History\Sources\EntryDataHistorySource;
 use Bpmore\Wrapped\History\Sources\LogbookHistorySource;
 use Bpmore\Wrapped\History\Sources\MtimeHistorySource;
 use Bpmore\Wrapped\History\Sources\RevisionsHistorySource;
+use Bpmore\Wrapped\Stats\CardGate;
 use Bpmore\Wrapped\Stats\Cards\AssetsUploadedCard;
 use Bpmore\Wrapped\Stats\Cards\BusiestMonthCard;
 use Bpmore\Wrapped\Stats\Cards\BusiestTimeCard;
@@ -32,6 +33,7 @@ use Bpmore\Wrapped\Stats\StatCardRegistry;
 use Bpmore\Wrapped\Widgets\WrappedWidget;
 use Illuminate\Console\Command;
 use Statamic\Facades\CP\Nav;
+use Statamic\Facades\Permission;
 use Statamic\Providers\AddonServiceProvider;
 use Statamic\Widgets\Widget;
 
@@ -144,7 +146,31 @@ class ServiceProvider extends AddonServiceProvider
         // site picks the table up with no install step.
         $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
 
+        $this->bootPermissions();
         $this->bootNav();
+    }
+
+    /**
+     * Two permissions, nested so the second cannot be granted without the
+     * first. `view wrapped` is meant to be granted broadly; the people one is
+     * a separate decision — see config/wrapped.php for why.
+     */
+    protected function bootPermissions(): void
+    {
+        Permission::extend(function () {
+            Permission::group('wrapped', __('wrapped::permissions.group'), function () {
+                Permission::register(CardGate::VIEW, function ($permission) {
+                    $permission
+                        ->label(__('wrapped::permissions.view'))
+                        ->description(__('wrapped::permissions.view_desc'))
+                        ->children([
+                            Permission::make(CardGate::VIEW_PEOPLE)
+                                ->label(__('wrapped::permissions.view_people'))
+                                ->description(__('wrapped::permissions.view_people_desc')),
+                        ]);
+                });
+            });
+        });
     }
 
     protected function bootNav(): void
@@ -152,7 +178,8 @@ class ServiceProvider extends AddonServiceProvider
         Nav::extend(function ($nav) {
             $nav->content('Wrapped')
                 ->route('wrapped.index')
-                ->icon('sparkles');
+                ->icon('sparkles')
+                ->can(CardGate::VIEW);
         });
     }
 }

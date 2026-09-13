@@ -30,7 +30,7 @@
 - [x] PNG card export via headless Chrome
 - [x] Suggested alt text generated with each PNG
 - [x] Confetti on first view, once
-- [ ] `view wrapped` permission; people-stats behind a narrower gate
+- [x] `view wrapped` permission; people-stats behind a narrower gate
 
 ## Phase 4 — Ship
 - [ ] README, screenshots, marketplace listing copy
@@ -650,3 +650,42 @@ manual: load `/cp/wrapped` on the seeded dev site, once.
 The bundle grew from 6.9 kB to 18.3 kB gzipped-7.4 kB. Acceptable for a control panel page loaded on demand.
 
 - Verified: `vendor/bin/pest` 324 passed · `vendor/bin/pint --test` clean · `vendor/bin/phpstan analyse` no errors · `npm run build` clean · assets republished.
+
+### Task 23 — Permissions (done) — **Phase 3 complete**
+Two permissions, registered under a "Wrapped" group and **nested** so the second cannot be granted
+without the first: `view wrapped` (the screen, the widget, the downloads — meant to be granted broadly)
+and `view wrapped people` (the cards about who did what — a separate decision, for the reasons in
+`config/wrapped.php`). Labels and descriptions in `resources/lang/en/permissions.php`.
+
+**The gate is one class, `Stats\CardGate`, checked in one place: `CardPresenter::present()`.** The screen,
+the widget, the image export and the alt text all present cards through it, so a new caller cannot forget
+to gate. Verified by test that a viewer without the people permission gets no people card on screen, cannot
+download one **even by guessing the URL** (404, not 403 — it does not exist for them), gets a summary image
+without them on it, and alt text that does not mention them.
+
+**Which cards are "about people" is declared by the cards themselves**, via a marker interface
+`Stats\AboutPeople` on `PeopleCard` and `TopContributorCard`. Implementing it is what puts a card behind the
+gate, so a future people card cannot be added without it.
+
+**Checked through Laravel's Gate, not the user object.** Statamic hooks its permissions into the Gate
+(`Gate::after` in its AuthServiceProvider: supers pass, then `hasPermission`), and `Gate::allows()` is the
+same path the `can:` route middleware takes, so the route and the cards on it can never disagree.
+`Statamic\Contracts\Auth\User` does not declare `can()` — another thin contract — which is what pushed
+this toward the Gate in the first place.
+
+**Nobody logged in means nobody sees people.** `Gate::allows()` is false with no user, so the CLI and
+any future unauthenticated context get the safe default without a special case.
+
+**Statamic behaviour worth knowing:** the control panel turns an authorization failure into a **redirect to
+the dashboard with an "unauthorized" error flash**, not a bare 403. The tests assert that, because it is
+what a user actually sees. The gate was working the whole time; the first assertion was just wrong about
+Statamic's presentation of it.
+
+Test harness: non-super users with specific permissions need a file-backed `Role`; the tests point
+`statamic.users.repositories.file.paths.roles` at a temp file and `Stache::clear()`.
+
+**Deferred, and now the only Phase 3 leftover:** nothing. The people-stats *config* switch (`people.enabled`,
+`people.individuals`) and the people-stats *permission* are deliberately separate layers — config decides
+whether the cards are computed at all; the permission decides who is shown them.
+
+- Verified: `vendor/bin/pest` 338 passed · `vendor/bin/pint --test` clean · `vendor/bin/phpstan analyse` no errors · both permissions register in the host site.
