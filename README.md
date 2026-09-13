@@ -1,0 +1,143 @@
+# Wrapped for Statamic
+
+A year in review for your content team. What you published, when you were busiest, which page has been quietly doing its job since 2021. A dozen cards on a control panel screen, each one downloadable as a shareable image.
+
+Free. Statamic 6. PHP 8.2+.
+
+![The Wrapped screen in the Statamic control panel](docs/screenshots/cp-screen.png)
+
+## What it shows
+
+Roughly a dozen cards, in four groups. Every card is a sentence, not a chart.
+
+| Group | Cards |
+|---|---|
+| **Volume** | Entries published (with last year alongside) · Words published · Files uploaded |
+| **Time** | Busiest month · Busiest week · When you publish ("Tuesday afternoons") · Longest streak |
+| **Superlatives** | Longest entry · Most revised · Fastest turnaround · Most used term · Quietly doing its job |
+| **Collections** | Fastest growing · Took the period off |
+| **People** | The team (on by default) · Top contributor (opt-in) |
+
+The tone is warm on purpose. "This page has needed no changes since June 2021" is a compliment. Wrapped never scolds, never ranks anyone from the bottom, and never shows a number it cannot stand behind.
+
+![A downloadable card: You publish most on Tuesday, and most often around 2 pm.](docs/screenshots/card-busiest_time.png)
+
+## Install
+
+```bash
+composer require bpmore/statamic-wrapped
+php artisan migrate
+```
+
+Then build one:
+
+```bash
+php please wrapped:generate
+```
+
+It appears under **Wrapped** in the control panel nav, and a widget shows up on the dashboard once there is something to show.
+
+## Where the numbers come from
+
+This is the part worth understanding. **Statamic does not reliably know its own edit history**, and every interesting card depends on it. Wrapped reads whichever of these your site has, best first:
+
+| Source | What it knows | Confidence |
+|---|---|---|
+| [Statamic Logbook](https://statamic.com/addons/emran-alhaddad/statamic-logbook) | Who changed what, when — a full audit trail, including uploads | High |
+| Revisions (Pro) | Every save of every entry in collections that have revisions on | Partial |
+| Entry data | Each entry's publish date and last-updated stamp | Partial |
+| File modification times | When a file was last written | Low |
+
+**Every Wrapped says which one it used**, at the top of the screen. A card that needs better history than your site keeps is **left out rather than guessed at**. On a site with only file modification times, which most deploys rewrite, that means no cards at all and a plain explanation of why.
+
+If you want the full set, install Logbook. It is free, and two of the cards (files uploaded, fastest turnaround) can only come from it.
+
+## Generating
+
+```bash
+php please wrapped:generate                 # this year, every site
+php please wrapped:generate --year=2025
+php please wrapped:generate --quarter=3     # Q3 of this year
+php please wrapped:generate --site=french
+php please wrapped:generate --force         # rebuild one that already exists
+```
+
+One snapshot per site per period, cached in a table. Nothing is computed on page load.
+
+To have it ready when people come looking, schedule it for the first of December:
+
+```php
+// routes/console.php
+Schedule::command('wrapped:generate')->yearlyOn(12, 1);
+```
+
+## Shareable images
+
+Every card can be downloaded as a PNG sized for social, along with the whole Wrapped as one image. Each download comes with **suggested alt text**, written out next to the link so it can be read and edited before it goes anywhere.
+
+![A downloadable card: "About Us" has needed no changes since 4 June 2021.](docs/screenshots/card-longest_untouched.png)
+
+Images are rendered with headless Chrome. If Chrome or Chromium is installed in a usual place it is found automatically; otherwise point at it:
+
+```dotenv
+WRAPPED_CHROME_PATH=/usr/bin/chromium
+```
+
+Without a browser the download links simply do not appear. The screen is the real version and works regardless.
+
+**There is no public URL for a Wrapped**, and there will not be one. These are downloads, shared deliberately.
+
+## People stats
+
+Who did what is the most socially loaded thing this addon knows, and the defaults are cautious.
+
+- **Team stats** ("47 entries from 3 people") are on by default. They name nobody.
+- **The top contributor card** is off until you turn it on. It names exactly one person, as a celebration, and never a ranked list.
+- **Nothing ranks from the bottom.** There is no "least active author" card and there will not be one.
+
+```php
+// config/wrapped.php
+'people' => [
+    'enabled' => true,       // team stats
+    'individuals' => false,  // the one card that names a person
+],
+```
+
+The reasoning is in the config file, because that is the file a site owner actually opens.
+
+## Permissions
+
+Two, nested:
+
+- **View Wrapped** opens the screen, the widget and the downloads. Meant to be granted broadly.
+- **View people stats** additionally shows the people cards. A separate decision.
+
+Super users see everything. Everyone else needs the permission on a role.
+
+## Multisite
+
+One Wrapped per site. Generate with `--site=` for one, or without it for all.
+
+## Quarterly
+
+Add `--quarter=1` through `4` for three months instead of twelve. Same cards, same screen.
+
+## What it will not do
+
+No analytics. No public links. No emailing. No AI summaries. No historical backfill beyond what your history source honestly supports.
+
+## Development
+
+```bash
+composer install
+vendor/bin/pest
+vendor/bin/pint
+vendor/bin/phpstan analyse
+npm install && npm run build
+```
+
+Link it into a Statamic site with a Composer path repository and it is live without a reinstall step.
+
+## License
+
+MIT.

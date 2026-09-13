@@ -33,7 +33,7 @@
 - [x] `view wrapped` permission; people-stats behind a narrower gate
 
 ## Phase 4 — Ship
-- [ ] README, screenshots, marketplace listing copy
+- [x] README, screenshots, marketplace listing copy
 - [ ] Test on a large fixture site and on a 3-month-old site (first-year framing)
 - [ ] Tag 1.0 — target late November 2026
 
@@ -689,3 +689,21 @@ Test harness: non-super users with specific permissions need a file-backed `Role
 whether the cards are computed at all; the permission decides who is shown them.
 
 - Verified: `vendor/bin/pest` 338 passed · `vendor/bin/pint --test` clean · `vendor/bin/phpstan analyse` no errors · both permissions register in the host site.
+
+### Task 24 — README, screenshots, marketplace copy (done) — first of phase 4
+- `README.md`: what it shows, install, **where the numbers come from** (the source/confidence table is the
+  most important section — it is the one real engineering problem, and a reader should understand why a
+  card can be missing), generating and scheduling, images and alt text, people stats, permissions.
+- `docs/marketplace.md`: tagline, short and long descriptions, feature list, screenshot order, requirements
+  line. Versioned with the thing it describes.
+- `docs/screenshots/`: seven images, **all real** — four card exports and the summary rendered by Chrome
+  from the seeded dev site, plus the control panel screen and dashboard captured with Playwright while
+  logged in. Nothing mocked up. ~1 MB total.
+- `composer.json` gained the `suggest` for `emran-alhaddad/statamic-logbook` deferred from task 3.
+  `composer update --lock` refreshed the (git-ignored) lock so `composer validate` is clean.
+- `.playwright-mcp/` (Playwright's scratch output) added to `.gitignore`.
+
+Playwright note: Herd's self-signed cert fails `ERR_CERT_COMMON_NAME_INVALID` in Playwright's browser;
+the plain `http://` address works and Herd serves it.
+
+- Verified: `vendor/bin/pest` 338 passed · `vendor/bin/pint --test` clean · `vendor/bin/phpstan analyse` no errors · `composer validate` clean.

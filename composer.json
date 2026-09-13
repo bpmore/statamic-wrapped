@@ -25,6 +25,9 @@
         "orchestra/testbench": "^9.0|^10.0",
         "pestphp/pest": "^3.0"
     },
+    "suggest": {
+        "emran-alhaddad/statamic-logbook": "A full audit trail, which makes every card available and is the most accurate source Wrapped can read."
+    },
     "autoload": {
         "psr-4": {
             "Bpmore\\Wrapped\\": "src"
