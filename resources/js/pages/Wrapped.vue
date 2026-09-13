@@ -1,10 +1,23 @@
 <script setup>
-import { ref } from 'vue';
+import { onMounted, ref } from 'vue';
 import { Head } from '@statamic/cms/inertia';
+import { celebrate, markCelebrated, shouldCelebrate } from '../celebrate.js';
 
-defineProps({
+const props = defineProps({
     site: { type: String, required: true },
     snapshot: { type: Object, default: null },
+});
+
+onMounted(() => {
+    const key = props.snapshot?.periodKey;
+    const cards = props.snapshot?.cards?.length ?? 0;
+
+    if (shouldCelebrate(key, cards)) {
+        // Marked before firing, so a thrown error mid-burst still counts as
+        // seen rather than replaying on every reload.
+        markCelebrated(key);
+        celebrate();
+    }
 });
 
 // Built from the current path so it survives however the control panel is

@@ -29,7 +29,7 @@
 - [x] Dashboard widget + December nudge
 - [x] PNG card export via headless Chrome
 - [x] Suggested alt text generated with each PNG
-- [ ] Confetti on first view, once
+- [x] Confetti on first view, once
 - [ ] `view wrapped` permission; people-stats behind a narrower gate
 
 ## Phase 4 — Ship
@@ -624,3 +624,29 @@ clipboard call is wrapped — access can be refused — and the text stays selec
 Fixed while testing: an empty Wrapped produced a trailing space where the cards should have been.
 
 - Verified: `vendor/bin/pest` 324 passed · `vendor/bin/pint --test` clean · `vendor/bin/phpstan analyse` no errors · `npm run build` clean · checked against the seeded dev site.
+
+### Task 22 — Confetti on first view, once (done)
+`resources/js/celebrate.js`, using `canvas-confetti` (1.9.4, bundled by Vite — no runtime dependency for
+the site). Two short bursts from the lower corners, then done: a moment, not a screensaver.
+
+The decision is one plain function, `shouldCelebrate(periodKey, cardCount)`, with every reason it might say
+no in one place:
+- **Nothing to celebrate.** An empty Wrapped gets an explanation, not a party.
+- **Already seen.** `localStorage`, keyed by period — the same per-browser nicety as the widget dismissal —
+  so next year's Wrapped celebrates again on its own.
+- **Reduced motion.** `prefers-reduced-motion: reduce` means never. A burst of moving particles is exactly
+  what that setting asks not to see, and the Wrapped is complete without it.
+- **No storage.** If localStorage throws (private window, blocked site data) it declines. No way to
+  remember means it would fire on every visit, which is the wrong side of that coin.
+
+"Seen" is marked **before** the burst fires, so an error mid-animation still counts as seen rather than
+replaying on every reload.
+
+**Testing honesty:** this repo has no JavaScript test runner and adding one for a single function is not
+worth the toolchain. The seven guard cases were checked with an ad hoc node script stubbing `window`
+(all pass) and the result recorded here; they are not part of `vendor/bin/pest`. Visual confirmation is
+manual: load `/cp/wrapped` on the seeded dev site, once.
+
+The bundle grew from 6.9 kB to 18.3 kB gzipped-7.4 kB. Acceptable for a control panel page loaded on demand.
+
+- Verified: `vendor/bin/pest` 324 passed · `vendor/bin/pint --test` clean · `vendor/bin/phpstan analyse` no errors · `npm run build` clean · assets republished.
