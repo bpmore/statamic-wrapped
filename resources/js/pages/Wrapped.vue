@@ -50,7 +50,7 @@ const copyAlt = async (key, text) => {
         <header class="mb-6">
             <h1 class="text-2xl font-bold">Wrapped</h1>
             <p v-if="snapshot" class="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                {{ snapshot.periodKey }} &middot; {{ site }}
+                {{ snapshot.label }} &middot; {{ site }}
             </p>
         </header>
 

@@ -24,6 +24,11 @@ return new class extends Migration
 
             $table->json('stats');
 
+            // Set only when the site is younger than the period: the oldest
+            // moment any trustworthy source knows about, so the screen can say
+            // "since June" rather than "2026" — SPEC.md §1. Null otherwise.
+            $table->timestamp('started_at')->nullable();
+
             $table->timestamp('generated_at');
             $table->string('generated_by', 191)->nullable();
 

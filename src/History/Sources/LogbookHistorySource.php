@@ -67,14 +67,28 @@ class LogbookHistorySource implements HistorySource
         return Confidence::High;
     }
 
+    protected ?bool $available = null;
+
+    /** @var array<string, CarbonImmutable|null> */
+    protected array $earliest = [];
+
+    /**
+     * Remembered for the life of the source. Every read asks this first, and
+     * a generate run reads several windows; a table does not appear or vanish
+     * between them, and the check is a real query against the schema.
+     */
     public function isAvailable(): bool
     {
+        if ($this->available !== null) {
+            return $this->available;
+        }
+
         try {
-            return Schema::connection($this->connection())->hasTable(self::TABLE);
+            return $this->available = Schema::connection($this->connection())->hasTable(self::TABLE);
         } catch (Throwable) {
             // A misconfigured or missing Logbook connection is not an error
             // here; it just means this source cannot be read.
-            return false;
+            return $this->available = false;
         }
     }
 
@@ -99,19 +113,25 @@ class LogbookHistorySource implements HistorySource
 
     public function earliestEvent(?string $site = null): ?CarbonImmutable
     {
+        $key = $site ?? '*';
+
+        if (array_key_exists($key, $this->earliest)) {
+            return $this->earliest[$key];
+        }
+
         if (! $this->isAvailable()) {
-            return null;
+            return $this->earliest[$key] = null;
         }
 
         // The oldest row we can turn into an event, rather than the oldest row.
         // A sign-in from 2019 is not evidence that anything was published.
         foreach ($this->scopedQuery($site)->cursor() as $row) {
             if ($event = $this->toEvent($row)) {
-                return $event->occurredAt;
+                return $this->earliest[$key] = $event->occurredAt;
             }
         }
 
-        return null;
+        return $this->earliest[$key] = null;
     }
 
     /**

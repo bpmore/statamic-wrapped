@@ -23,6 +23,8 @@ use Statamic\Facades\User;
  */
 class GenerateWrapped extends Command
 {
+    protected HistorySourceResolver $resolver;
+
     protected $signature = 'wrapped:generate
         {--year= : The year to build. Defaults to the current year.}
         {--quarter= : Build a single quarter (1-4) instead of the whole year.}
@@ -52,6 +54,7 @@ class GenerateWrapped extends Command
 
         [$from, $to] = $period->window($year, $quarter);
         $key = $period->key($year, $quarter);
+        $this->resolver = $resolver;
 
         $this->components->info(sprintf(
             'Building %s from %s (%s confidence).',
@@ -104,12 +107,26 @@ class GenerateWrapped extends Command
                 'history_source' => $resolved->handle(),
                 'confidence' => $resolved->confidence,
                 'stats' => $result->stats,
+                'started_at' => $this->startedAt($site, $from),
                 'generated_at' => CarbonImmutable::now(),
                 'generated_by' => $this->actor(),
             ],
         );
 
         $this->components->twoColumnDetail($site, $this->summarise($result));
+    }
+
+    /**
+     * When the site began, if that was inside the period being wrapped.
+     *
+     * A site three months old has no "2026"; it has "since June". Null for a
+     * site older than the period, which is the usual case and needs no framing.
+     */
+    protected function startedAt(string $site, CarbonImmutable $from): ?CarbonImmutable
+    {
+        $earliest = $this->resolver->earliestKnown($site);
+
+        return $earliest !== null && $earliest->greaterThan($from) ? $earliest : null;
     }
 
     /**

@@ -2,6 +2,7 @@
 
 namespace Bpmore\Wrapped\History;
 
+use Carbon\CarbonImmutable;
 use Illuminate\Support\Collection;
 
 /**
@@ -73,6 +74,40 @@ class HistorySourceResolver
         }
 
         return $this->resolved = $best === null ? null : ResolvedHistory::for($best);
+    }
+
+    /**
+     * The oldest moment any trustworthy source has a record of, for the
+     * first-year framing in SPEC.md §1: a site that began in June should say
+     * "since June", not "2026".
+     *
+     * Two things make this honest rather than merely available:
+     *
+     * - It looks across **every** available source, not just the resolved one.
+     *   A site that installed Logbook in June but has entries dated back to
+     *   2019 is an old site with recent history, not a young site — and the
+     *   entry dates are what say so.
+     * - It **ignores Low-confidence sources**. File mtimes are always
+     *   available and on a deployed site their earliest is the last deploy,
+     *   which would make every production site look three weeks old.
+     */
+    public function earliestKnown(?string $site = null): ?CarbonImmutable
+    {
+        $earliest = null;
+
+        foreach ($this->available() as $source) {
+            if (! $source->confidence()->meets(Confidence::Partial)) {
+                continue;
+            }
+
+            $candidate = $source->earliestEvent($site);
+
+            if ($candidate !== null && ($earliest === null || $candidate->lessThan($earliest))) {
+                $earliest = $candidate;
+            }
+        }
+
+        return $earliest;
     }
 
     /**

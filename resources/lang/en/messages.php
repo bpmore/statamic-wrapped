@@ -17,6 +17,10 @@
 
 return [
 
+    // The heading for a site younger than the period it was wrapped for. A
+    // site that began in June did not have a 2026; it had "since June".
+    'since' => 'Since :month',
+
     'source' => [
         'logbook' => 'Statamic Logbook',
         'revisions' => 'Statamic revisions',

@@ -34,7 +34,7 @@
 
 ## Phase 4 — Ship
 - [x] README, screenshots, marketplace listing copy
-- [ ] Test on a large fixture site and on a 3-month-old site (first-year framing)
+- [x] Test on a large fixture site and on a 3-month-old site (first-year framing)
 - [ ] Tag 1.0 — target late November 2026
 
 ## Notes
@@ -707,3 +707,44 @@ Playwright note: Herd's self-signed cert fails `ERR_CERT_COMMON_NAME_INVALID` in
 the plain `http://` address works and Herd serves it.
 
 - Verified: `vendor/bin/pest` 338 passed · `vendor/bin/pint --test` clean · `vendor/bin/phpstan analyse` no errors · `composer validate` clean.
+
+### Task 25 — Large site and three-month-old site (done)
+`tests/Feature/Scenarios/LargeSiteTest.php` and `YoungSiteTest.php`. Both through **real sources**, not fakes,
+where it matters.
+
+**The first-year framing was missing, and this task built it.** Cards already handled a young site
+(`previous` null, no "went quiet"), but the screen still said "2026" for a site that began in June. SPEC.md
+§1 asks for "since June". Now:
+- `HistorySourceResolver::earliestKnown()` — the oldest moment any **trustworthy** source knows about.
+  Two things make it honest: it looks across every available source rather than only the resolved one
+  (a site that installed Logbook in June but has entries dated 2019 is an *old site with new history*,
+  and the entry dates say so), and it **ignores Low-confidence sources** (file mtimes are always available
+  and on a deployed site their earliest is last week's deploy, which would make every production site
+  look brand new). Both cases are tests.
+- `wrapped_snapshots.started_at`, nullable, set by the generate command only when the earliest known
+  moment is inside the period. **Migration edited in place** — nothing has shipped. The dev site's table
+  got the column by hand.
+- The screen shows **"Since June 2026"** instead of "2026" when set. Label built server-side like all
+  wording (`messages.since`).
+
+**Large site: 40,000 audit rows generate in ~3.9s**, well inside the 30s / 256 MB budget the test holds
+it to. 1,500 real flat-file entries through `EntryDataHistorySource` in ~12s (the time is Statamic
+writing files in the fixture, not the addon reading them). Budgets are deliberately loose: a slow CI box
+passes, a real regression fails.
+
+**Found and fixed by the large-site test:** `LogbookHistorySource` ran a "does the table exist?" schema
+query **before every read** — 7 of 12 queries in a generate run were that check. The table does not
+come and go mid-run, so `isAvailable()` is now memoised for the life of the source, and `earliestEvent()`
+per site with it. A generate run is now **6 reads: one existence check, then the period, the previous
+period, the all-time window for the untouched card, and one earliest-event probe.** A test holds it there,
+so "sixteen cards each reading the log" can never creep back in.
+
+Two fixture mistakes worth remembering, both mine: the 40k fixture interleaved action and author on the
+same modulus so every "published" row had one author (team card rightly declined), and it expected
+`most_revised` from rows with no entries on disk (the card rightly found nothing to name). Neither was a
+product bug; both were the product being correct about bad data.
+
+`FakeHistorySource::earliestEvent()` was still dropping null-site events after task 16 fixed `events()`.
+Aligned. The real Logbook source was already consistent.
+
+- Verified: `vendor/bin/pest` 348 passed · `vendor/bin/pint --test` clean · `vendor/bin/phpstan analyse` no errors · regenerated on the dev site (`started_at` correctly null: it has 2025 history).

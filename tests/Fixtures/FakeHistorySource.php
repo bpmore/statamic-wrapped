@@ -64,7 +64,9 @@ class FakeHistorySource implements HistorySource
     public function earliestEvent(?string $site = null): ?CarbonImmutable
     {
         return (new Collection($this->events))
-            ->filter(fn (HistoryEvent $event) => $site === null || $event->site === $site)
+            ->filter(fn (HistoryEvent $event) => $site === null
+                || $event->site === null
+                || $event->site === $site)
             ->map(fn (HistoryEvent $event) => $event->occurredAt)
             ->sort()
             ->first();

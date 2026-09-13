@@ -36,6 +36,9 @@ class WrappedController extends CpController
             'snapshot' => $snapshot === null ? null : [
                 'period' => $snapshot->period->value,
                 'periodKey' => $snapshot->period_key,
+                // "Since June 2026" for a site younger than the period; the
+                // bare period otherwise. SPEC.md §1's first-year framing.
+                'label' => $this->label($snapshot),
                 'generatedAt' => $snapshot->generated_at->toIso8601String(),
                 'cards' => $this->cards($presenter, $alt, $snapshot),
                 // A Wrapped never appears without saying what it was built
@@ -89,6 +92,13 @@ class WrappedController extends CpController
             'Content-Type' => 'image/png',
             'Content-Disposition' => 'attachment; filename="'.$images->filename($snapshot, $card).'"',
         ]);
+    }
+
+    protected function label(Snapshot $snapshot): string
+    {
+        return $snapshot->isFirstPeriod()
+            ? __('wrapped::messages.since', ['month' => $snapshot->started_at->translatedFormat('F Y')])
+            : $snapshot->period_key;
     }
 
     protected function latest(): ?Snapshot

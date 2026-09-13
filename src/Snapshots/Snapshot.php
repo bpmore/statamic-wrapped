@@ -24,6 +24,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property string $history_source
  * @property Confidence $confidence
  * @property array<string, mixed> $stats
+ * @property CarbonImmutable|null $started_at
  * @property CarbonImmutable $generated_at
  * @property string|null $generated_by
  */
@@ -45,6 +46,7 @@ class Snapshot extends Model
         'history_source',
         'confidence',
         'stats',
+        'started_at',
         'generated_at',
         'generated_by',
     ];
@@ -58,8 +60,17 @@ class Snapshot extends Model
             'period' => Period::class,
             'confidence' => Confidence::class,
             'stats' => 'array',
+            'started_at' => 'immutable_datetime',
             'generated_at' => 'immutable_datetime',
         ];
+    }
+
+    /**
+     * A site younger than the period it was wrapped for.
+     */
+    public function isFirstPeriod(): bool
+    {
+        return $this->started_at !== null;
     }
 
     /**
