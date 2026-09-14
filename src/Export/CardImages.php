@@ -65,7 +65,7 @@ class CardImages
             'heading' => $card['heading'],
             'body' => $card['body'],
             'period' => Period::label($snapshot->period_key),
-            'site' => $snapshot->site,
+            'site' => $snapshot->siteName(),
             'width' => $width,
             'height' => $height,
         ])->render(), $width, $height);
@@ -88,7 +88,7 @@ class CardImages
             'theme' => $this->theme,
             'cards' => $cards,
             'period' => Period::label($snapshot->period_key),
-            'site' => $snapshot->site,
+            'site' => $snapshot->siteName(),
             'width' => $width,
             'height' => $height,
         ])->render(), $width, $height);

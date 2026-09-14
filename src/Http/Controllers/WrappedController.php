@@ -38,12 +38,11 @@ class WrappedController extends CpController
 {
     public function index(Request $request, CardPresenter $presenter, ConfidenceNotice $notice, CardImages $images, AltText $alt, WrappedVideo $video, Soundtracks $soundtracks, ShareLinks $links, CardGate $gate): Response
     {
-        $site = Site::selected()->handle();
-
         $snapshot = $this->chosen($request);
 
         return Inertia::render('wrapped::Wrapped', [
-            'site' => $site,
+            // The site as a person knows it; the screen only ever shows it.
+            'site' => Site::selected()->name(),
             // Every snapshot this site has, for the picker. A site building
             // monthly and yearly has a dozen-plus, and the newest built is
             // not always the one someone came for.
@@ -178,7 +177,7 @@ class WrappedController extends CpController
             throw new NotFoundHttpException('There is no Wrapped to tell yet.');
         }
 
-        $frames = [['kind' => 'intro', 'title' => __('wrapped::messages.story.intro', ['period' => $snapshot->label()]), 'subtitle' => $snapshot->site]];
+        $frames = [['kind' => 'intro', 'title' => __('wrapped::messages.story.intro', ['period' => $snapshot->label()]), 'subtitle' => $snapshot->siteName()]];
 
         foreach ($presenter->present($snapshot->stats) as $card) {
             $frames[] = ['kind' => 'card', 'handle' => $card['handle'], 'heading' => $card['heading'], 'body' => $card['body']];
@@ -188,7 +187,7 @@ class WrappedController extends CpController
 
         return Inertia::render('wrapped::Story', [
             'theme' => $theme->toArray(),
-            'site' => $snapshot->site,
+            'site' => $snapshot->siteName(),
             'label' => $snapshot->label(),
             'backUrl' => $this->route('wrapped.index', $snapshot),
             'frames' => $frames,
@@ -231,7 +230,7 @@ class WrappedController extends CpController
             // the chosen cards' own sentences to it.
             'descriptionLead' => __('wrapped::messages.alt.video', [
                 'period' => Period::label($snapshot->period_key),
-                'site' => $snapshot->site,
+                'site' => $snapshot->siteName(),
             ]),
             'filename' => $video->filename($snapshot),
         ];

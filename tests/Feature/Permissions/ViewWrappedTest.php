@@ -142,7 +142,7 @@ describe('someone who may view wrapped but not people', function () {
 
         $this->get(cp_route('wrapped.index'))
             ->assertInertia(fn (AssertableInertia $page) => $page
-                ->where('snapshot.summaryAlt', 'The 2026 Wrapped for default. Entries published: You published 47 entries, against 21 the period before.'));
+                ->where('snapshot.summaryAlt', 'The 2026 Wrapped for Laravel. Entries published: You published 47 entries, against 21 the period before.'));
     });
 
     it('still gets the widget', function () {

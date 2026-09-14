@@ -31,7 +31,7 @@ class AltText
             'heading' => $card['heading'],
             'body' => $card['body'],
             'period' => Period::label($snapshot->period_key),
-            'site' => $snapshot->site,
+            'site' => $snapshot->siteName(),
         ]);
     }
 
@@ -52,7 +52,7 @@ class AltText
         // trailing a space where the cards should have been.
         return trim(__('wrapped::messages.alt.summary', [
             'period' => Period::label($snapshot->period_key),
-            'site' => $snapshot->site,
+            'site' => $snapshot->siteName(),
             'cards' => implode(' ', $sentences),
         ]));
     }
