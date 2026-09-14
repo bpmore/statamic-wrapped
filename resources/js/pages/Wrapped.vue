@@ -1,14 +1,28 @@
 <script setup>
 import { onMounted, ref } from 'vue';
-import { Head } from '@statamic/cms/inertia';
-import { Button, Header } from '@statamic/cms/ui';
+import { Head, router } from '@statamic/cms/inertia';
+import { Button, Header, Select } from '@statamic/cms/ui';
 import { celebrate, markCelebrated, shouldCelebrate } from '../celebrate.js';
 import VideoMaker from '../components/VideoMaker.vue';
 
 const props = defineProps({
     site: { type: String, required: true },
+    // Every snapshot the site has: { key, label, url, current }.
+    periods: { type: Array, default: () => [] },
     snapshot: { type: Object, default: null },
 });
+
+// The picker. Choosing a period is navigation, not state: the URL carries
+// it, so the story, images and video links on the new page all follow.
+const period = ref(props.snapshot?.periodKey ?? null);
+
+const periodOptions = props.periods.map((p) => ({ label: p.label, value: p.key }));
+
+const showPeriod = (key) => {
+    const target = props.periods.find((p) => p.key === key);
+
+    if (target && !target.current) router.visit(target.url);
+};
 
 onMounted(() => {
     const key = props.snapshot?.periodKey;
@@ -21,11 +35,6 @@ onMounted(() => {
         celebrate();
     }
 });
-
-// Built from the current path so it survives however the control panel is
-// mounted, rather than being hardcoded to /cp.
-const imageUrl = `${window.location.pathname.replace(/\/$/, '')}/image`;
-const videoUrl = `${window.location.pathname.replace(/\/$/, '')}/video`;
 
 // Which alt text was last copied, so the button can confirm it worked.
 const copied = ref(null);
@@ -55,13 +64,29 @@ const copyAlt = async (key, text) => {
             the way its native screens do rather than as a visitor.
         -->
         <Header title="Wrapped">
-            <!-- The tap-through version: same facts, at the reader's pace. -->
-            <Button
-                v-if="snapshot && snapshot.cards.length"
-                :href="snapshot.storyUrl"
-                variant="primary"
-                text="Play it"
-            />
+            <!-- The header's actions slot lays these out in a row. -->
+            <template #actions>
+                <!--
+                    Which Wrapped. Only when there is a choice: one snapshot
+                    is just a label, and the subtitle already says it.
+                -->
+                <div v-if="periods.length > 1" class="wrapped-period">
+                    <Select
+                        v-model="period"
+                        :options="periodOptions"
+                        aria-label="Which Wrapped to show"
+                        @update:model-value="showPeriod"
+                    />
+                </div>
+
+                <!-- The tap-through version: same facts, at the reader's pace. -->
+                <Button
+                    v-if="snapshot && snapshot.cards.length"
+                    :href="snapshot.storyUrl"
+                    variant="primary"
+                    text="Play it"
+                />
+            </template>
         </Header>
 
         <p v-if="snapshot" class="wrapped-subtitle">
@@ -115,7 +140,7 @@ const copyAlt = async (key, text) => {
                         a convenience; this page is the real version.
                     -->
                     <div v-if="snapshot.canExport" class="wrapped-card__actions">
-                        <a :href="`${imageUrl}/${card.handle}`" class="wrapped-link">Download image</a>
+                        <a :href="card.imageUrl" class="wrapped-link">Download image</a>
 
                         <!--
                             Suggested alt text, written out rather than hidden
@@ -141,11 +166,11 @@ const copyAlt = async (key, text) => {
             <VideoMaker
                 v-if="snapshot.video.available && snapshot.cards.length"
                 :video="snapshot.video"
-                :video-url="videoUrl"
+                :video-url="snapshot.videoUrl"
             />
 
             <div v-if="snapshot.canExport && snapshot.cards.length" class="wrapped-summary">
-                <a :href="imageUrl" class="wrapped-link">Download all of it as one image</a>
+                <a :href="snapshot.summaryImageUrl" class="wrapped-link">Download all of it as one image</a>
 
                 <details class="wrapped-details">
                     <summary>Suggested alt text</summary>
@@ -172,6 +197,11 @@ const copyAlt = async (key, text) => {
     margin: 0 auto;
 }
 
+
+/* The select is full-width by default, which would push the button onto its own row. */
+.wrapped-period {
+    width: 12rem;
+}
 
 .wrapped-subtitle,
 .wrapped-muted {

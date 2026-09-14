@@ -65,11 +65,12 @@ watch(track, () => { audio.value?.pause(); playing.value = null; });
 // --- The download --------------------------------------------------------
 
 const downloadUrl = computed(() => {
-    const params = new URLSearchParams();
-    chosen.value.forEach((c) => params.append('cards[]', c.handle));
-    if (track.value) params.set('track', track.value);
+    // The given URL already carries the period; the choice is added to it.
+    const url = new URL(props.videoUrl, window.location.origin);
+    chosen.value.forEach((c) => url.searchParams.append('cards[]', c.handle));
+    if (track.value) url.searchParams.set('track', track.value);
 
-    return `${props.videoUrl}?${params.toString()}`;
+    return url.toString();
 });
 
 // --- Its description -----------------------------------------------------

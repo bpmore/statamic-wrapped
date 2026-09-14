@@ -54,7 +54,7 @@
 
 ## Phase 6 — Monthly, and a shareable link
 - [x] `Period::Month`: `2026-09` keys, month windows, `--month` on generate, human labels for every period
-- [ ] Period picker on the Wrapped screen: choose which snapshot to view; story, images and video follow it
+- [x] Period picker on the Wrapped screen: choose which snapshot to view; story, images and video follow it
 - [ ] Share links: off by default; publish one snapshot as a frozen copy behind an unguessable, revocable token; people cards opt-in per link
 - [ ] The public story page: no CP chrome, noindex, the site's theme, same tap-through behaviour
 - [ ] README + release 1.2
@@ -1139,3 +1139,23 @@ part to design first.
   August 2026, not 2026**, because it picks the newest snapshot — exactly the reason task 36 (the
   period picker) is next. Left the August snapshot in place as test data for it.
 - 474 tests, Pint and PHPStan clean.
+
+### Task 36 — The period picker (done)
+- `?period=2026-09` on every Wrapped route (screen, story, image, video). No period means the newest
+  build, as before. A period the site has not built is a 404, not a fallback to something else.
+- The screen now sends `periods` (key, label, url, current), years first, then quarters, then months,
+  each newest first, so the year stays at the top however many months pile up. Every URL the page
+  hands out (`storyUrl`, `videoUrl`, `summaryImageUrl`, each card's `imageUrl`) carries the period, so
+  nothing on the page can quietly revert to the newest build. The Vue side no longer builds URLs from
+  `window.location`.
+- The picker is Statamic's own `Select` from `@statamic/cms/ui`, in the `Header`'s `actions` slot next
+  to "Play it". It only appears when there is more than one snapshot. Choosing is navigation via the
+  Inertia router; the URL is the state. Its default `w-full` pushed the button onto a second row, so it
+  sits in a 12rem wrapper.
+- `Period::fromKey()` is the inverse of `key()`; `Snapshot::startsOn()` uses it for ordering.
+- Widget: links to its own period, and in December prefers the current year's snapshot over a month
+  or quarter built after it. Outside December, newest build as before.
+- Checked in the browser on the dev site with three snapshots (2026, Q3 2026, August 2026): picker
+  lists them, switching changes every link, the story's Done goes back to the same period, and
+  `?period=2031` is a 404.
+- 490 tests, Pint and PHPStan clean, build reproducible.

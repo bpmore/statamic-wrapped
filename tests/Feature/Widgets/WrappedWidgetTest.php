@@ -122,11 +122,32 @@ it('explains itself rather than showing an empty line on a thin site', function 
     expect(widgetProps()['headline'])->toContain('not enough history here');
 });
 
-it('links to the wrapped screen', function () {
+it('links to its own period on the wrapped screen', function () {
     CarbonImmutable::setTestNow('2026-12-05 09:00:00');
     widgetSnapshot(['entries_published' => ['count' => 1, 'previous' => null]]);
 
-    expect(widgetProps()['url'])->toBe(cp_route('wrapped.index'));
+    expect(widgetProps()['url'])->toBe(cp_route('wrapped.index', ['period' => '2026']));
+});
+
+it('shows the year in December even when a month was built after it', function () {
+    CarbonImmutable::setTestNow('2026-12-05 09:00:00');
+    widgetSnapshot(['entries_published' => ['count' => 40, 'previous' => null]]);
+    Snapshot::where('period_key', '2026')->update(['generated_at' => CarbonImmutable::parse('2026-12-01 09:00:00')]);
+    widgetSnapshot(['entries_published' => ['count' => 3, 'previous' => null]], key: '2026-11', period: Period::Month);
+    Snapshot::where('period_key', '2026-11')->update(['generated_at' => CarbonImmutable::parse('2026-12-02 09:00:00')]);
+
+    expect(widgetProps()['title'])->toBe('Your 2026 Wrapped is ready.')
+        ->and(widgetProps()['nudge'])->toBeTrue();
+});
+
+it('shows the newest build outside December', function () {
+    CarbonImmutable::setTestNow('2026-10-05 09:00:00');
+    widgetSnapshot(['entries_published' => ['count' => 40, 'previous' => null]]);
+    Snapshot::where('period_key', '2026')->update(['generated_at' => CarbonImmutable::parse('2026-10-01 09:00:00')]);
+    widgetSnapshot(['entries_published' => ['count' => 3, 'previous' => null]], key: '2026-09', period: Period::Month);
+    Snapshot::where('period_key', '2026-09')->update(['generated_at' => CarbonImmutable::parse('2026-10-02 09:00:00')]);
+
+    expect(widgetProps()['title'])->toBe('Your September 2026 Wrapped');
 });
 
 it('renders through the wrapped-widget vue component', function () {

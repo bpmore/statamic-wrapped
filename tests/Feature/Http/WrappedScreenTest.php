@@ -325,7 +325,7 @@ describe('the story', function () {
                 ->component('wrapped::Story')
                 ->where('label', '2026')
                 ->where('site', 'default')
-                ->where('backUrl', cp_route('wrapped.index'))
+                ->where('backUrl', cp_route('wrapped.index', ['period' => '2026']))
                 ->has('frames', 4)
                 ->where('frames.0.kind', 'intro')
                 ->where('frames.0.title', '2026 Wrapped')
@@ -400,10 +400,108 @@ describe('the story', function () {
                 ->where('theme.logo', null));
     });
 
-    it('is linked from the wrapped screen', function () {
+    it('is linked from the wrapped screen, for the same period', function () {
         storeSnapshot(['entries_published' => ['count' => 42, 'previous' => null]]);
 
         $this->get(cp_route('wrapped.index'))
-            ->assertInertia(fn (AssertableInertia $page) => $page->where('snapshot.storyUrl', cp_route('wrapped.story')));
+            ->assertInertia(fn (AssertableInertia $page) => $page->where('snapshot.storyUrl', cp_route('wrapped.story', ['period' => '2026'])));
+    });
+});
+
+describe('choosing a period', function () {
+    function anotherSnapshot(string $key, Period $period, string $generatedAt, int $count): Snapshot
+    {
+        return Snapshot::create([
+            'site' => 'default',
+            'period' => $period,
+            'period_key' => $key,
+            'history_source' => 'logbook',
+            'confidence' => Confidence::High,
+            'stats' => ['entries_published' => ['count' => $count, 'previous' => null]],
+            'generated_at' => CarbonImmutable::parse($generatedAt),
+            'generated_by' => null,
+        ]);
+    }
+
+    it('lists every period the site has, years first, then quarters, then months, newest first', function () {
+        storeSnapshot(['entries_published' => ['count' => 40, 'previous' => null]]);
+        anotherSnapshot('2026-08', Period::Month, '2026-09-01 09:00:00', 4);
+        anotherSnapshot('2026-Q3', Period::Quarter, '2026-10-01 09:00:00', 12);
+        anotherSnapshot('2026-09', Period::Month, '2026-10-01 09:00:00', 5);
+        anotherSnapshot('2025', Period::Year, '2026-01-01 09:00:00', 30);
+
+        $this->get(cp_route('wrapped.index'))
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->where('periods.0.key', '2026')
+                ->where('periods.0.label', '2026')
+                ->where('periods.0.url', cp_route('wrapped.index', ['period' => '2026']))
+                ->where('periods.0.current', true)
+                ->where('periods.1.key', '2025')
+                ->where('periods.2.key', '2026-Q3')
+                ->where('periods.2.label', 'Q3 2026')
+                ->where('periods.3.key', '2026-09')
+                ->where('periods.3.label', 'September 2026')
+                ->where('periods.3.current', false)
+                ->where('periods.4.key', '2026-08'));
+    });
+
+    it('shows the period asked for, and every link on the page follows it', function () {
+        app()->instance(ImageRenderer::class, new FakeImageRenderer);
+        storeSnapshot(['entries_published' => ['count' => 40, 'previous' => null]]);
+        anotherSnapshot('2026-09', Period::Month, '2026-12-02 09:00:00', 5);
+
+        $this->get(cp_route('wrapped.index', ['period' => '2026']))
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->where('snapshot.periodKey', '2026')
+                ->where('snapshot.cards.0.body', 'You published 40 entries.')
+                ->where('snapshot.cards.0.imageUrl', cp_route('wrapped.image', ['card' => 'entries_published', 'period' => '2026']))
+                ->where('snapshot.summaryImageUrl', cp_route('wrapped.image.summary', ['period' => '2026']))
+                ->where('snapshot.videoUrl', cp_route('wrapped.video', ['period' => '2026']))
+                ->where('snapshot.storyUrl', cp_route('wrapped.story', ['period' => '2026'])));
+
+        $this->get(cp_route('wrapped.story', ['period' => '2026']))
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->where('label', '2026')
+                ->where('backUrl', cp_route('wrapped.index', ['period' => '2026'])));
+
+        $this->get(cp_route('wrapped.image', ['card' => 'entries_published', 'period' => '2026']))
+            ->assertOk()
+            ->assertHeader('content-disposition', 'attachment; filename="wrapped-2026-default-entries_published.png"');
+    });
+
+    it('still defaults to the newest build when nothing is asked for', function () {
+        storeSnapshot(['entries_published' => ['count' => 40, 'previous' => null]]);
+        anotherSnapshot('2026-09', Period::Month, '2026-12-02 09:00:00', 5);
+
+        $this->get(cp_route('wrapped.index'))
+            ->assertInertia(fn (AssertableInertia $page) => $page->where('snapshot.periodKey', '2026-09'));
+    });
+
+    it('is a 404 for a period the site has not built, not a quiet fallback', function () {
+        storeSnapshot(['entries_published' => ['count' => 40, 'previous' => null]]);
+
+        $this->get(cp_route('wrapped.index', ['period' => '2031']))->assertNotFound();
+        $this->get(cp_route('wrapped.story', ['period' => '2031']))->assertNotFound();
+        $this->get(cp_route('wrapped.image.summary', ['period' => '2031']))->assertNotFound();
+        $this->get(cp_route('wrapped.video', ['period' => '2031', 'cards' => ['entries_published']]))->assertNotFound();
+    });
+
+    it('never lets one site pick another site\'s period', function () {
+        storeSnapshot(['entries_published' => ['count' => 40, 'previous' => null]]);
+        Snapshot::create([
+            'site' => 'french',
+            'period' => Period::Month,
+            'period_key' => '2026-09',
+            'history_source' => 'logbook',
+            'confidence' => Confidence::High,
+            'stats' => ['entries_published' => ['count' => 5, 'previous' => null]],
+            'generated_at' => CarbonImmutable::parse('2026-12-02 09:00:00'),
+            'generated_by' => null,
+        ]);
+
+        $this->get(cp_route('wrapped.index', ['period' => '2026-09']))->assertNotFound();
+
+        $this->get(cp_route('wrapped.index'))
+            ->assertInertia(fn (AssertableInertia $page) => $page->has('periods', 1));
     });
 });

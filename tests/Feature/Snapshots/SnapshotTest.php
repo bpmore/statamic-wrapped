@@ -146,6 +146,24 @@ it('steps January back into the previous year', function () {
         ->and($previousTo->format('Y-m-d'))->toBe('2025-12-31');
 });
 
+it('reads a key back into its parts', function (string $key, Period $period, int $year, ?int $part) {
+    expect(Period::fromKey($key))->toBe([$period, $year, $part]);
+})->with([
+    ['2026', Period::Year, 2026, null],
+    ['2026-Q3', Period::Quarter, 2026, 3],
+    ['2026-09', Period::Month, 2026, 9],
+]);
+
+it('does not read a key it never wrote', function (string $key) {
+    expect(Period::fromKey($key))->toBeNull();
+})->with(['2026-9', '2026-13', '2026-Q5', 'september', '']);
+
+it('knows the day a snapshot starts on, from its key alone', function () {
+    expect(snapshot(['period' => Period::Month, 'period_key' => '2026-09'])->startsOn()->format('Y-m-d'))->toBe('2026-09-01')
+        ->and(snapshot(['period' => Period::Quarter, 'period_key' => '2026-Q3'])->startsOn()->format('Y-m-d'))->toBe('2026-07-01')
+        ->and(snapshot(['period_key' => '2025'])->startsOn()->format('Y-m-d'))->toBe('2025-01-01');
+});
+
 it('turns every kind of period key into words', function (string $key, string $label) {
     expect(Period::label($key))->toBe($label);
 })->with([

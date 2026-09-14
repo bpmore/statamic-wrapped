@@ -91,21 +91,42 @@ enum Period: string
      */
     public static function label(string $key): string
     {
+        [$period, $year, $part] = self::fromKey($key) ?? [null, null, null];
+
+        return match ($period) {
+            self::Quarter => __('wrapped::messages.period.quarter', ['quarter' => $part, 'year' => $year]),
+            self::Month => CarbonImmutable::createMidnightDate($year, $part, 1)->translatedFormat('F Y'),
+            default => $key,
+        };
+    }
+
+    /**
+     * A stored key back into its parts, or null for a key this version does
+     * not recognise. The inverse of `key()`.
+     *
+     * @return array{0: self, 1: int, 2: int|null}|null
+     */
+    public static function fromKey(string $key): ?array
+    {
+        if (preg_match('/^(\d{4})$/', $key, $m)) {
+            return [self::Year, (int) $m[1], null];
+        }
+
         if (preg_match('/^(\d{4})-Q([1-4])$/', $key, $m)) {
-            return __('wrapped::messages.period.quarter', ['quarter' => $m[2], 'year' => $m[1]]);
+            return [self::Quarter, (int) $m[1], (int) $m[2]];
         }
 
-        if (preg_match('/^(\d{4})-(\d{2})$/', $key, $m)) {
-            return CarbonImmutable::createMidnightDate((int) $m[1], (int) $m[2], 1)->translatedFormat('F Y');
+        if (preg_match('/^(\d{4})-(0[1-9]|1[0-2])$/', $key, $m)) {
+            return [self::Month, (int) $m[1], (int) $m[2]];
         }
 
-        return $key;
+        return null;
     }
 
     /**
      * How many of these there are in a year, for validation and for wording.
      */
-    protected function parts(): int
+    public function parts(): int
     {
         return match ($this) {
             self::Year => 1,

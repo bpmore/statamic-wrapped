@@ -41,10 +41,7 @@ class WrappedWidget extends Widget
             return null;
         }
 
-        $snapshot = Snapshot::query()
-            ->where('site', Site::selected()->handle())
-            ->orderByDesc('generated_at')
-            ->first();
+        $snapshot = $this->snapshot();
 
         if ($snapshot === null) {
             return null;
@@ -58,9 +55,33 @@ class WrappedWidget extends Widget
                 ? __('wrapped::messages.widget.ready', ['period' => Period::label($snapshot->period_key)])
                 : __('wrapped::messages.widget.title', ['period' => Period::label($snapshot->period_key)]),
             'headline' => $this->headline($snapshot),
-            'url' => cp_route('wrapped.index'),
+            // The screen's default is its newest build, which on a site
+            // that also wraps months may not be this one.
+            'url' => cp_route('wrapped.index', ['period' => $snapshot->period_key]),
             'nudge' => $nudging,
         ]);
+    }
+
+    /**
+     * The newest build, except in December, when the year that is ending wins
+     * over whatever month or quarter happened to be built after it. That is
+     * the one moment the widget exists for.
+     */
+    protected function snapshot(): ?Snapshot
+    {
+        $query = Snapshot::query()->where('site', Site::selected()->handle());
+
+        $now = CarbonImmutable::now();
+
+        if ($now->month === 12) {
+            $year = (clone $query)->where('period', Period::Year)->where('period_key', (string) $now->year)->first();
+
+            if ($year !== null) {
+                return $year;
+            }
+        }
+
+        return $query->orderByDesc('generated_at')->first();
     }
 
     /**

@@ -32,14 +32,18 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
  */
 class WrappedController extends CpController
 {
-    public function index(CardPresenter $presenter, ConfidenceNotice $notice, CardImages $images, AltText $alt, WrappedVideo $video, Soundtracks $soundtracks): Response
+    public function index(Request $request, CardPresenter $presenter, ConfidenceNotice $notice, CardImages $images, AltText $alt, WrappedVideo $video, Soundtracks $soundtracks): Response
     {
         $site = Site::selected()->handle();
 
-        $snapshot = $this->latest();
+        $snapshot = $this->chosen($request);
 
         return Inertia::render('wrapped::Wrapped', [
             'site' => $site,
+            // Every snapshot this site has, for the picker. A site building
+            // monthly and yearly has a dozen-plus, and the newest built is
+            // not always the one someone came for.
+            'periods' => $snapshot === null ? [] : $this->periods($snapshot),
             'snapshot' => $snapshot === null ? null : [
                 'period' => $snapshot->period->value,
                 'periodKey' => $snapshot->period_key,
@@ -55,21 +59,53 @@ class WrappedController extends CpController
                 // version and works either way.
                 'canExport' => $images->isAvailable(),
                 'summaryAlt' => $alt->forSummary($snapshot),
+                'summaryImageUrl' => $this->route('wrapped.image.summary', $snapshot),
                 'video' => $this->videoMaker($video, $soundtracks, $snapshot),
-                'storyUrl' => cp_route('wrapped.story'),
+                'videoUrl' => $this->route('wrapped.video', $snapshot),
+                'storyUrl' => $this->route('wrapped.story', $snapshot),
             ],
         ]);
     }
 
     /**
+     * The site's snapshots as picker entries: years, then quarters, then
+     * months, each newest first. The year is the headline and stays at the
+     * top however many months pile up under it: 2026, Q3 2026, Q2 2026,
+     * August 2026, July 2026, ...
+     *
+     * @return list<array{key: string, label: string, url: string, current: bool}>
+     */
+    protected function periods(Snapshot $current): array
+    {
+        return Snapshot::query()
+            ->where('site', $current->site)
+            ->get()
+            ->sortBy([
+                fn (Snapshot $a, Snapshot $b) => $a->period->parts() <=> $b->period->parts(),
+                fn (Snapshot $a, Snapshot $b) => $b->startsOn() <=> $a->startsOn(),
+            ])
+            ->values()
+            ->map(fn (Snapshot $snapshot) => [
+                'key' => $snapshot->period_key,
+                'label' => $this->label($snapshot),
+                'url' => $this->route('wrapped.index', $snapshot),
+                'current' => $snapshot->is($current),
+            ])
+            ->all();
+    }
+
+    /**
      * Each card with the alt text that should go out alongside its image.
      *
-     * @return list<array{handle: string, heading: string, body: string, alt: string}>
+     * @return list<array{handle: string, heading: string, body: string, alt: string, imageUrl: string}>
      */
     protected function cards(CardPresenter $presenter, AltText $alt, Snapshot $snapshot): array
     {
         return array_map(
-            fn (array $card) => $card + ['alt' => $alt->forCard($snapshot, $card)],
+            fn (array $card) => $card + [
+                'alt' => $alt->forCard($snapshot, $card),
+                'imageUrl' => $this->route('wrapped.image', $snapshot, ['card' => $card['handle']]),
+            ],
             $presenter->present($snapshot->stats),
         );
     }
@@ -83,9 +119,9 @@ class WrappedController extends CpController
      * a keyboard; and every frame is real text a screen reader can read. The
      * MP4 is the shareable export of this.
      */
-    public function story(CardPresenter $presenter, Soundtracks $soundtracks, Theme $theme): Response
+    public function story(Request $request, CardPresenter $presenter, Soundtracks $soundtracks, Theme $theme): Response
     {
-        $snapshot = $this->latest();
+        $snapshot = $this->chosen($request);
 
         if ($snapshot === null) {
             throw new NotFoundHttpException('There is no Wrapped to tell yet.');
@@ -103,7 +139,7 @@ class WrappedController extends CpController
             'theme' => $theme->toArray(),
             'site' => $snapshot->site,
             'label' => $this->label($snapshot),
-            'backUrl' => cp_route('wrapped.index'),
+            'backUrl' => $this->route('wrapped.index', $snapshot),
             'frames' => $frames,
             'tracks' => $soundtracks->all()->values()->map(fn ($track) => $track->toArray() + [
                 'mimeType' => $track->mimeType(),
@@ -157,7 +193,7 @@ class WrappedController extends CpController
      */
     public function video(Request $request, WrappedVideo $video): HttpResponse
     {
-        $snapshot = $this->latest();
+        $snapshot = $this->chosen($request);
 
         if ($snapshot === null) {
             throw new NotFoundHttpException('There is no Wrapped to make a video from yet.');
@@ -209,9 +245,9 @@ class WrappedController extends CpController
      * leaking a team's internal publishing stats is a support problem and a
      * privacy problem for a free addon — SPEC.md §5.
      */
-    public function image(CardImages $images, ?string $card = null): HttpResponse
+    public function image(Request $request, CardImages $images, ?string $card = null): HttpResponse
     {
-        $snapshot = $this->latest();
+        $snapshot = $this->chosen($request);
 
         if ($snapshot === null) {
             throw new NotFoundHttpException('There is no Wrapped to export yet.');
@@ -238,11 +274,35 @@ class WrappedController extends CpController
             : Period::label($snapshot->period_key);
     }
 
-    protected function latest(): ?Snapshot
+    /**
+     * A route for this snapshot. The period rides in the query on every URL
+     * the screen hands out, so the story, images and video all follow the
+     * picker rather than silently reverting to the newest build.
+     *
+     * @param  array<string, string>  $parameters
+     */
+    protected function route(string $name, Snapshot $snapshot, array $parameters = []): string
     {
-        return Snapshot::query()
-            ->where('site', Site::selected()->handle())
-            ->orderByDesc('generated_at')
-            ->first();
+        return cp_route($name, $parameters + ['period' => $snapshot->period_key]);
+    }
+
+    /**
+     * The snapshot the request asks for, or the newest built when it does not
+     * say. A period the site has no snapshot for is a 404, not a fallback:
+     * a link to "September" that quietly shows the year is worse than an
+     * honest miss.
+     */
+    protected function chosen(Request $request): ?Snapshot
+    {
+        $query = Snapshot::query()->where('site', Site::selected()->handle());
+
+        $period = $request->query('period');
+
+        if (is_string($period) && $period !== '') {
+            return $query->where('period_key', $period)->first()
+                ?? throw new NotFoundHttpException("There is no [{$period}] Wrapped for this site.");
+        }
+
+        return $query->orderByDesc('generated_at')->first();
     }
 }

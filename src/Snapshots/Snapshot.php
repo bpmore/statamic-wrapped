@@ -5,6 +5,7 @@ namespace Bpmore\Wrapped\Snapshots;
 use Bpmore\Wrapped\History\Confidence;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Model;
+use RuntimeException;
 
 /**
  * One generated Wrapped, cached.
@@ -71,6 +72,18 @@ class Snapshot extends Model
     public function isFirstPeriod(): bool
     {
         return $this->started_at !== null;
+    }
+
+    /**
+     * The first day this snapshot covers, from its key. For ordering a mix of
+     * years, quarters and months; the stats themselves already know.
+     */
+    public function startsOn(): CarbonImmutable
+    {
+        [$period, $year, $part] = Period::fromKey($this->period_key)
+            ?? throw new RuntimeException("[{$this->period_key}] is not a period key this version understands.");
+
+        return $period->window($year, $part)[0];
     }
 
     /**
