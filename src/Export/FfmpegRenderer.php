@@ -40,14 +40,17 @@ class FfmpegRenderer implements VideoRenderer
             throw new RuntimeException('A video needs at least one frame.');
         }
 
+        // Input checks before the binary check: a missing soundtrack is the
+        // caller's mistake and should be reported the same way with or
+        // without FFmpeg installed.
+        if ($audio !== null && ! is_file($audio)) {
+            throw new RuntimeException("The soundtrack at [{$audio}] does not exist.");
+        }
+
         $binary = $this->binary();
 
         if ($binary === null) {
             throw new RuntimeException('No FFmpeg binary was found. Set wrapped.video.ffmpeg to its path.');
-        }
-
-        if ($audio !== null && ! is_file($audio)) {
-            throw new RuntimeException("The soundtrack at [{$audio}] does not exist.");
         }
 
         $directory = $this->workspace();

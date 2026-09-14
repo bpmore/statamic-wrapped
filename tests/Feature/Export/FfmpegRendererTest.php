@@ -101,7 +101,11 @@ describe('refusing bad input before touching ffmpeg', function () {
     });
 
     it('refuses a soundtrack that does not exist', function () {
-        expect(fn () => withRealFfmpeg()->render([frame()], null, '/nope/track.mp3', new VideoSpec))
+        // With no FFmpeg at all, so the check is proven to come first. This
+        // is what CI looks like.
+        config(['wrapped.video.ffmpeg' => '/definitely/not/ffmpeg']);
+
+        expect(fn () => (new FfmpegRenderer)->render([frame()], null, '/nope/track.mp3', new VideoSpec))
             ->toThrow(RuntimeException::class, 'does not exist');
     });
 });
