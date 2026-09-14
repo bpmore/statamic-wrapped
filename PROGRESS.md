@@ -1,3 +1,5 @@
+ALL TASKS COMPLETE
+
 # PROGRESS — Wrapped
 
 **Spec:** `wrapped-build-spec.md` · **Package:** `bpmore/statamic-wrapped` · **Free**
@@ -35,7 +37,7 @@
 ## Phase 4 — Ship
 - [x] README, screenshots, marketplace listing copy
 - [x] Test on a large fixture site and on a 3-month-old site (first-year framing)
-- [ ] Tag 1.0 — target late November 2026
+- [x] Tag 1.0 — target late November 2026 (tagged 13 September 2026)
 
 ## Notes
 <!-- Record surprises, decisions and blockers here. If a task is wrong or blocked, write why and stop. -->
@@ -748,3 +750,21 @@ product bug; both were the product being correct about bad data.
 Aligned. The real Logbook source was already consistent.
 
 - Verified: `vendor/bin/pest` 348 passed · `vendor/bin/pint --test` clean · `vendor/bin/phpstan analyse` no errors · regenerated on the dev site (`started_at` correctly null: it has 2025 history).
+
+### Task 26 — Tag 1.0 (done) — **all tasks complete**
+- Tagged `v1.0.0` on `main`, two months ahead of the late-November target, at the owner's call.
+- `build/phase-1` was fast-forwarded into `main`: `main` was still the initial commit and every commit on
+  the branch descends from it, so the history stays linear and the branch is left in place.
+- Annotated tag plus a GitHub release with notes drawn from `docs/marketplace.md`.
+- Every gate green at the tag: 348 tests, Pint, PHPStan, `composer validate`, and `npm run build`
+  reproduces the committed bundle byte for byte.
+- No version field in `composer.json`, on purpose: Packagist and the Statamic Marketplace read it from
+  the tag.
+
+**Not in the release, still true:**
+- `.claude/settings.json` carries a local, uncommitted change (git push moved from deny to allow).
+  It is dev tooling, not the product, and was left out of the tag deliberately.
+- SPEC.md §4's queued job and 1 December schedule are still a site's own `routes/console.php` line, as
+  the README shows. Nothing in the addon schedules itself.
+- Statamic Pro was never enabled on the dev site, so `RevisionsHistorySource` is covered by tests against
+  real revision files but has not been exercised against a Pro site's live revisions.
