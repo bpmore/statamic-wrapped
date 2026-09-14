@@ -148,6 +148,29 @@ enum Period: string
     }
 
     /**
+     * Whether a quarter or month number is one this period has. A year has no
+     * parts, so nothing is a valid part of one.
+     */
+    public function hasPart(int $part): bool
+    {
+        return $this !== self::Year && $part >= 1 && $part <= $this->parts();
+    }
+
+    /**
+     * The years a snapshot can be built for. Wider than any site will use,
+     * narrower than "any integer": a key has to stay four digits.
+     */
+    public static function isYear(int $year): bool
+    {
+        return $year >= 1970 && $year <= 9999;
+    }
+
+    public static function currentYear(): int
+    {
+        return (int) CarbonImmutable::now()->year;
+    }
+
+    /**
      * A quarterly or monthly period with no usable part is a programming
      * error, not a value to fall back from — it would write a malformed key
      * into the database or silently build the wrong span.

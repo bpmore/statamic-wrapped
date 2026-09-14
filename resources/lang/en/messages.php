@@ -26,6 +26,11 @@ return [
         'quarter' => 'Q:quarter :year',
     ],
 
+    // The toast after the Build button on the Wrapped screen has done its work.
+    'generate' => [
+        'built' => 'Built the :label Wrapped.',
+    ],
+
     'source' => [
         'logbook' => 'Statamic Logbook',
         'revisions' => 'Statamic revisions',

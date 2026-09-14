@@ -1,5 +1,6 @@
 <?php
 
+use Bpmore\Wrapped\Http\Controllers\GenerateController;
 use Bpmore\Wrapped\Http\Controllers\ShareController;
 use Bpmore\Wrapped\Http\Controllers\WrappedController;
 use Bpmore\Wrapped\Stats\CardGate;
@@ -21,6 +22,12 @@ Route::middleware('can:'.CardGate::VIEW)->group(function () {
     // stream for the preview button.
     Route::get('wrapped/video', [WrappedController::class, 'video'])->name('wrapped.video');
     Route::get('wrapped/soundtrack/{handle}', [WrappedController::class, 'soundtrack'])->name('wrapped.soundtrack');
+
+    // Building from the screen: its own permission, because it is work the
+    // server does on demand, and lands back on the Wrapped it built.
+    Route::post('wrapped/generate', [GenerateController::class, 'store'])
+        ->middleware('can:'.CardGate::GENERATE)
+        ->name('wrapped.generate');
 
     // Public links: a separate permission, because this shows the numbers to
     // everyone. The config setting is checked inside the controller.

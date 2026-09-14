@@ -13,4 +13,7 @@ return [
     'share' => 'Share publicly',
     'share_desc' => 'Make and revoke public links to a Wrapped. Only does anything when public sharing is switched on in config/wrapped.php.',
 
+    'generate' => 'Build a Wrapped',
+    'generate_desc' => 'Build or rebuild a Wrapped for a year, a quarter or a month from the Wrapped screen, instead of waiting for the schedule. Reads every entry on the site, so it takes a moment on a large one.',
+
 ];

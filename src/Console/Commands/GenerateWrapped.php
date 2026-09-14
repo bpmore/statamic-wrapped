@@ -2,29 +2,24 @@
 
 namespace Bpmore\Wrapped\Console\Commands;
 
-use Bpmore\Wrapped\History\HistorySourceResolver;
-use Bpmore\Wrapped\History\ResolvedHistory;
+use Bpmore\Wrapped\Snapshots\BuildResult;
+use Bpmore\Wrapped\Snapshots\NoReadableHistory;
 use Bpmore\Wrapped\Snapshots\Period;
-use Bpmore\Wrapped\Snapshots\Snapshot;
-use Bpmore\Wrapped\Stats\CardRunner;
-use Bpmore\Wrapped\Stats\StatContext;
+use Bpmore\Wrapped\Snapshots\SnapshotBuilder;
 use Bpmore\Wrapped\Stats\StatsResult;
-use Carbon\CarbonImmutable;
 use Illuminate\Console\Command;
 use InvalidArgumentException;
 use Statamic\Facades\Site;
 use Statamic\Facades\User;
 
 /**
- * Builds a Wrapped and caches it.
+ * Builds a Wrapped and caches it, from the terminal or a schedule.
  *
- * Aggregating across forty thousand entries on page load will not do, so this
- * does the work once and writes the answer to `wrapped_snapshots` — SPEC.md §4.
+ * The work is {@see SnapshotBuilder}'s, shared with the control panel's Build
+ * button; this is the options, the sites, and what gets printed.
  */
 class GenerateWrapped extends Command
 {
-    protected HistorySourceResolver $resolver;
-
     protected $signature = 'wrapped:generate
         {--year= : The year to build. Defaults to the current year.}
         {--quarter= : Build a single quarter (1-4) instead of the whole year.}
@@ -34,10 +29,10 @@ class GenerateWrapped extends Command
 
     protected $description = 'Build a Wrapped for a year, a quarter or a month.';
 
-    public function handle(HistorySourceResolver $resolver, CardRunner $runner): int
+    public function handle(SnapshotBuilder $builder): int
     {
         try {
-            [$period, $year, $quarter] = $this->period();
+            [$period, $year, $part] = $this->period();
             $sites = $this->sites();
         } catch (InvalidArgumentException $e) {
             $this->components->error($e->getMessage());
@@ -45,89 +40,28 @@ class GenerateWrapped extends Command
             return self::INVALID;
         }
 
-        $resolved = $resolver->resolve();
-
-        if ($resolved === null) {
-            $this->components->error('There is no readable history on this site, so there is nothing to build.');
+        try {
+            $history = $builder->history();
+        } catch (NoReadableHistory $e) {
+            $this->components->error($e->getMessage());
 
             return self::FAILURE;
         }
 
-        [$from, $to] = $period->window($year, $quarter);
-        $key = $period->key($year, $quarter);
-        $this->resolver = $resolver;
-
         $this->components->info(sprintf(
             'Building %s from %s (%s confidence).',
-            $key,
-            $resolved->name(),
-            $resolved->confidence->value,
+            $period->key($year, $part),
+            $history->name(),
+            $history->confidence->value,
         ));
 
         foreach ($sites as $site) {
-            $this->generate($runner, $resolved, $period, $key, $from, $to, $site);
+            $result = $builder->build($period, $year, $part, $site, force: (bool) $this->option('force'), by: $this->actor());
+
+            $this->components->twoColumnDetail($site, $this->summarise($result));
         }
 
         return self::SUCCESS;
-    }
-
-    protected function generate(
-        CardRunner $runner,
-        ResolvedHistory $resolved,
-        Period $period,
-        string $key,
-        CarbonImmutable $from,
-        CarbonImmutable $to,
-        string $site,
-    ): void {
-        $existing = Snapshot::query()
-            ->where('site', $site)
-            ->where('period', $period->value)
-            ->where('period_key', $key)
-            ->first();
-
-        if ($existing !== null && ! $this->option('force')) {
-            $this->components->twoColumnDetail($site, '<fg=yellow>already built, --force to rebuild</>');
-
-            return;
-        }
-
-        $result = $runner->run(new StatContext(
-            history: $resolved,
-            period: $period,
-            from: $from,
-            to: $to,
-            site: $site,
-        ));
-
-        Snapshot::query()->updateOrCreate(
-            ['site' => $site, 'period' => $period->value, 'period_key' => $key],
-            [
-                // Stored per snapshot, not derived on read: this is what the
-                // numbers were built from, whatever is installed later.
-                'history_source' => $resolved->handle(),
-                'confidence' => $resolved->confidence,
-                'stats' => $result->stats,
-                'started_at' => $this->startedAt($site, $from),
-                'generated_at' => CarbonImmutable::now(),
-                'generated_by' => $this->actor(),
-            ],
-        );
-
-        $this->components->twoColumnDetail($site, $this->summarise($result));
-    }
-
-    /**
-     * When the site began, if that was inside the period being wrapped.
-     *
-     * A site three months old has no "2026"; it has "since June". Null for a
-     * site older than the period, which is the usual case and needs no framing.
-     */
-    protected function startedAt(string $site, CarbonImmutable $from): ?CarbonImmutable
-    {
-        $earliest = $this->resolver->earliestKnown($site);
-
-        return $earliest !== null && $earliest->greaterThan($from) ? $earliest : null;
     }
 
     /**
@@ -144,7 +78,16 @@ class GenerateWrapped extends Command
         return $id === null ? null : (string) $id;
     }
 
-    protected function summarise(StatsResult $result): string
+    protected function summarise(BuildResult $result): string
+    {
+        if ($result->skipped || $result->stats === null) {
+            return '<fg=yellow>already built, --force to rebuild</>';
+        }
+
+        return $this->summariseStats($result->stats);
+    }
+
+    protected function summariseStats(StatsResult $result): string
     {
         $parts = [sprintf('%d cards', count($result->stats))];
 
@@ -169,9 +112,9 @@ class GenerateWrapped extends Command
     protected function period(): array
     {
         $year = $this->option('year');
-        $year = $year === null ? (int) CarbonImmutable::now()->year : (int) $year;
+        $year = $year === null ? Period::currentYear() : (int) $year;
 
-        if ($year < 1970 || $year > 9999) {
+        if (! Period::isYear($year)) {
             throw new InvalidArgumentException("[{$year}] is not a year this can build.");
         }
 
@@ -187,14 +130,14 @@ class GenerateWrapped extends Command
         }
 
         if ($quarter !== null) {
-            if (! is_numeric($quarter) || (int) $quarter < 1 || (int) $quarter > 4) {
+            if (! is_numeric($quarter) || ! Period::Quarter->hasPart((int) $quarter)) {
                 throw new InvalidArgumentException("[{$quarter}] is not a quarter. Use 1, 2, 3 or 4.");
             }
 
             return [Period::Quarter, $year, (int) $quarter];
         }
 
-        if (! is_numeric($month) || (int) $month < 1 || (int) $month > 12) {
+        if (! is_numeric($month) || ! Period::Month->hasPart((int) $month)) {
             throw new InvalidArgumentException("[{$month}] is not a month. Use 1 to 12.");
         }
 
