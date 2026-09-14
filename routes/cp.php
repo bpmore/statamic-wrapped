@@ -1,5 +1,6 @@
 <?php
 
+use Bpmore\Wrapped\Http\Controllers\ShareController;
 use Bpmore\Wrapped\Http\Controllers\WrappedController;
 use Bpmore\Wrapped\Stats\CardGate;
 use Illuminate\Support\Facades\Route;
@@ -20,4 +21,11 @@ Route::middleware('can:'.CardGate::VIEW)->group(function () {
     // stream for the preview button.
     Route::get('wrapped/video', [WrappedController::class, 'video'])->name('wrapped.video');
     Route::get('wrapped/soundtrack/{handle}', [WrappedController::class, 'soundtrack'])->name('wrapped.soundtrack');
+
+    // Public links: a separate permission, because this shows the numbers to
+    // everyone. The config setting is checked inside the controller.
+    Route::middleware('can:'.CardGate::SHARE)->group(function () {
+        Route::post('wrapped/share', [ShareController::class, 'store'])->name('wrapped.share.store');
+        Route::delete('wrapped/share/{share}', [ShareController::class, 'destroy'])->name('wrapped.share.destroy');
+    });
 });

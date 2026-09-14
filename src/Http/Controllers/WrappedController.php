@@ -8,8 +8,11 @@ use Bpmore\Wrapped\Export\Soundtracks;
 use Bpmore\Wrapped\Export\Theme;
 use Bpmore\Wrapped\Export\VideoSpec;
 use Bpmore\Wrapped\Export\WrappedVideo;
+use Bpmore\Wrapped\Sharing\Share;
+use Bpmore\Wrapped\Sharing\ShareLinks;
 use Bpmore\Wrapped\Snapshots\Period;
 use Bpmore\Wrapped\Snapshots\Snapshot;
+use Bpmore\Wrapped\Stats\CardGate;
 use Bpmore\Wrapped\Stats\CardPresenter;
 use Bpmore\Wrapped\Stats\ConfidenceNotice;
 use Illuminate\Http\Request;
@@ -32,7 +35,7 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
  */
 class WrappedController extends CpController
 {
-    public function index(Request $request, CardPresenter $presenter, ConfidenceNotice $notice, CardImages $images, AltText $alt, WrappedVideo $video, Soundtracks $soundtracks): Response
+    public function index(Request $request, CardPresenter $presenter, ConfidenceNotice $notice, CardImages $images, AltText $alt, WrappedVideo $video, Soundtracks $soundtracks, ShareLinks $links, CardGate $gate): Response
     {
         $site = Site::selected()->handle();
 
@@ -49,7 +52,7 @@ class WrappedController extends CpController
                 'periodKey' => $snapshot->period_key,
                 // "Since June 2026" for a site younger than the period; the
                 // bare period otherwise. SPEC.md §1's first-year framing.
-                'label' => $this->label($snapshot),
+                'label' => $snapshot->label(),
                 'generatedAt' => $snapshot->generated_at->toIso8601String(),
                 'cards' => $this->cards($presenter, $alt, $snapshot),
                 // A Wrapped never appears without saying what it was built
@@ -63,8 +66,34 @@ class WrappedController extends CpController
                 'video' => $this->videoMaker($video, $soundtracks, $snapshot),
                 'videoUrl' => $this->route('wrapped.video', $snapshot),
                 'storyUrl' => $this->route('wrapped.story', $snapshot),
+                // Null unless sharing is on and this user may do it; the
+                // panel does not appear at all otherwise.
+                'share' => $links->canShare() ? $this->sharing($links, $gate, $snapshot) : null,
             ],
         ]);
+    }
+
+    /**
+     * The live public links for this snapshot, and what is needed to make
+     * another.
+     *
+     * @return array<string, mixed>
+     */
+    protected function sharing(ShareLinks $links, CardGate $gate, Snapshot $snapshot): array
+    {
+        return [
+            'createUrl' => cp_route('wrapped.share.store'),
+            'canPeople' => $gate->canViewPeople(),
+            'maxDays' => ShareLinks::MAX_DAYS,
+            'links' => $links->liveFor($snapshot)->map(fn (Share $share) => [
+                'id' => $share->id,
+                'url' => $share->url(),
+                'createdAt' => $share->created_at->toIso8601String(),
+                'expiresAt' => $share->expires_at?->toIso8601String(),
+                'people' => $share->people,
+                'revokeUrl' => cp_route('wrapped.share.destroy', $share),
+            ])->values()->all(),
+        ];
     }
 
     /**
@@ -87,7 +116,7 @@ class WrappedController extends CpController
             ->values()
             ->map(fn (Snapshot $snapshot) => [
                 'key' => $snapshot->period_key,
-                'label' => $this->label($snapshot),
+                'label' => $snapshot->label(),
                 'url' => $this->route('wrapped.index', $snapshot),
                 'current' => $snapshot->is($current),
             ])
@@ -127,7 +156,7 @@ class WrappedController extends CpController
             throw new NotFoundHttpException('There is no Wrapped to tell yet.');
         }
 
-        $frames = [['kind' => 'intro', 'title' => __('wrapped::messages.story.intro', ['period' => $this->label($snapshot)]), 'subtitle' => $snapshot->site]];
+        $frames = [['kind' => 'intro', 'title' => __('wrapped::messages.story.intro', ['period' => $snapshot->label()]), 'subtitle' => $snapshot->site]];
 
         foreach ($presenter->present($snapshot->stats) as $card) {
             $frames[] = ['kind' => 'card', 'handle' => $card['handle'], 'heading' => $card['heading'], 'body' => $card['body']];
@@ -138,7 +167,7 @@ class WrappedController extends CpController
         return Inertia::render('wrapped::Story', [
             'theme' => $theme->toArray(),
             'site' => $snapshot->site,
-            'label' => $this->label($snapshot),
+            'label' => $snapshot->label(),
             'backUrl' => $this->route('wrapped.index', $snapshot),
             'frames' => $frames,
             'tracks' => $soundtracks->all()->values()->map(fn ($track) => $track->toArray() + [
@@ -265,13 +294,6 @@ class WrappedController extends CpController
             'Content-Type' => 'image/png',
             'Content-Disposition' => 'attachment; filename="'.$images->filename($snapshot, $card).'"',
         ]);
-    }
-
-    protected function label(Snapshot $snapshot): string
-    {
-        return $snapshot->isFirstPeriod()
-            ? __('wrapped::messages.since', ['month' => $snapshot->started_at->translatedFormat('F Y')])
-            : Period::label($snapshot->period_key);
     }
 
     /**

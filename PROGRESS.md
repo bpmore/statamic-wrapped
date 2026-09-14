@@ -55,7 +55,7 @@
 ## Phase 6 — Monthly, and a shareable link
 - [x] `Period::Month`: `2026-09` keys, month windows, `--month` on generate, human labels for every period
 - [x] Period picker on the Wrapped screen: choose which snapshot to view; story, images and video follow it
-- [ ] Share links: off by default; publish one snapshot as a frozen copy behind an unguessable, revocable token; people cards opt-in per link
+- [x] Share links: off by default; publish one snapshot as a frozen copy behind an unguessable, revocable token; people cards opt-in per link
 - [ ] The public story page: no CP chrome, noindex, the site's theme, same tap-through behaviour
 - [ ] README + release 1.2
 
@@ -1159,3 +1159,30 @@ part to design first.
   lists them, switching changes every link, the story's Done goes back to the same period, and
   `?period=2031` is a 404.
 - 490 tests, Pint and PHPStan clean, build reproducible.
+
+### Task 37 — Share links (done)
+- `config('wrapped.share.enabled')`, **false by default**, with the reasoning in the config comment.
+  `share.path` is the first URL segment (`/wrapped/{token}`).
+- A third permission, `share wrapped` ("Share publicly"), child of `view wrapped`. Making a link needs
+  the setting on *and* the permission; a super with the setting off gets 403.
+- `wrapped_shares` table: 40-hex token from `random_bytes` (unique), site, period_key, label, the cards
+  frozen as JSON (handle/heading/body), `people`, created_by/at, expires_at, revoked_at. Not a foreign key
+  to the snapshot on purpose: regenerating never changes a page somebody already posted (tested).
+- People cards: left out unless ticked for that link, and never included when the maker cannot see
+  them (`canViewPeople`), even if the request says so. A link can never show more than its maker could.
+- Expiry optional, 1–400 days. Revoke is soft (`revoked_at`); the public page is a 404 at once. Off
+  in config stops every link at once, no cache clear, because the setting is checked per request.
+  Unknown, revoked, expired and switched-off all give the same 404: a dead link does not explain why.
+- The public route is registered always but gated per request. First tried registering it only when
+  enabled; that needs the setting at boot, which Pest cannot do per directory (`uses()` refuses two
+  base classes for one path). Always-registered with a `[a-f0-9]{40}` constraint is the boring
+  answer and claims nothing a site would use.
+- Statamic turns a denied CP request into a redirect to `/cp` with "Unauthorized.", not a 403; the
+  tests assert that, and a test role needs `access cp` or every CP request redirects.
+- `Snapshot::label()` now owns the "Since June 2026" wording; the controller and VideoFrames use it.
+- CP: a "Share publicly" panel (only when on and permitted): live links with Copy and Revoke, a
+  people checkbox (only for those who may see them), an expiry select, "Make a public link". Checked
+  in the browser: made a link, opened it, revoked it, 404.
+- The public page for now is plain themed HTML with `noindex`: real text, every card. Task 38 turns it
+  into the tap-through story.
+- 518 tests, Pint and PHPStan clean. Dev site: migrated, `WRAPPED_SHARE_ENABLED=true` in its `.env`.

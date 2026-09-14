@@ -75,6 +75,18 @@ class Snapshot extends Model
     }
 
     /**
+     * How this Wrapped is titled: "Since June 2026" for a site younger than
+     * the period (SPEC.md §1's first-year framing), "September 2026" or
+     * "Q3 2026" or "2026" otherwise.
+     */
+    public function label(): string
+    {
+        return $this->isFirstPeriod()
+            ? __('wrapped::messages.since', ['month' => $this->started_at->translatedFormat('F Y')])
+            : Period::label($this->period_key);
+    }
+
+    /**
      * The first day this snapshot covers, from its key. For ordering a mix of
      * years, quarters and months; the stats themselves already know.
      */

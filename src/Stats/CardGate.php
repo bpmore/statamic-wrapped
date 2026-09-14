@@ -21,6 +21,9 @@ class CardGate
 
     public const VIEW_PEOPLE = 'view wrapped people';
 
+    /** Making public links. A separate decision from viewing: this one shows the numbers to everyone. */
+    public const SHARE = 'share wrapped';
+
     public function __construct(protected StatCardRegistry $cards) {}
 
     /**

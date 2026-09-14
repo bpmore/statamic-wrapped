@@ -117,6 +117,38 @@ return [
 
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Public sharing
+    |--------------------------------------------------------------------------
+    |
+    | Off by default, and the default is the recommendation. A Wrapped is a
+    | team's internal publishing stats, and a link to it that gets forwarded
+    | is a privacy problem you cannot take back — see SPEC.md §5.
+    |
+    | Some sites want exactly that, though: a newsroom posting "we published
+    | 4,000 stories this year" is telling its readers something. For them,
+    | set `enabled` to true and grant the "Share publicly" permission to the
+    | people who should make that call. Each link is a frozen copy of one
+    | Wrapped behind a random, unguessable token; it can be given an expiry
+    | and revoked at any time; the cards about people are left out unless the
+    | editor includes them for that link; and the page is `noindex`, so it is
+    | reached by the link and by nothing else.
+    |
+    | Switching this back off stops every existing link at once.
+    |
+    | `path` is the first segment of the public URL: /wrapped/{token}.
+    |
+    */
+
+    'share' => [
+
+        'enabled' => (bool) env('WRAPPED_SHARE_ENABLED', false),
+
+        'path' => 'wrapped',
+
+    ],
+
     'people' => [
 
         'enabled' => (bool) env('WRAPPED_PEOPLE_ENABLED', true),

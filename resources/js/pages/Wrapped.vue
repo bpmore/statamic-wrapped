@@ -3,6 +3,7 @@ import { onMounted, ref } from 'vue';
 import { Head, router } from '@statamic/cms/inertia';
 import { Button, Header, Select } from '@statamic/cms/ui';
 import { celebrate, markCelebrated, shouldCelebrate } from '../celebrate.js';
+import ShareLinks from '../components/ShareLinks.vue';
 import VideoMaker from '../components/VideoMaker.vue';
 
 const props = defineProps({
@@ -167,6 +168,16 @@ const copyAlt = async (key, text) => {
                 v-if="snapshot.video.available && snapshot.cards.length"
                 :video="snapshot.video"
                 :video-url="snapshot.videoUrl"
+            />
+
+            <!--
+                Public links. Only when sharing is on in config and this user
+                has the permission; most sites never see this.
+            -->
+            <ShareLinks
+                v-if="snapshot.share && snapshot.cards.length"
+                :share="snapshot.share"
+                :period-key="snapshot.periodKey"
             />
 
             <div v-if="snapshot.canExport && snapshot.cards.length" class="wrapped-summary">

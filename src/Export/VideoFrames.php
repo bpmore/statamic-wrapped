@@ -116,13 +116,6 @@ class VideoFrames
         return $this->render(['kind' => 'footer'], $snapshot, transparent: true);
     }
 
-    protected function label(Snapshot $snapshot): string
-    {
-        return $snapshot->isFirstPeriod()
-            ? __('wrapped::messages.since', ['month' => $snapshot->started_at->translatedFormat('F Y')])
-            : Period::label($snapshot->period_key);
-    }
-
     /**
      * @param  array<string, mixed>  $data
      */
@@ -138,7 +131,7 @@ class VideoFrames
     {
         return view('wrapped::export.frame', $data + [
             'theme' => $this->theme,
-            'period' => $this->label($snapshot),
+            'period' => $snapshot->label(),
             'site' => $snapshot->site,
             'width' => self::WIDTH,
             'height' => self::HEIGHT,
