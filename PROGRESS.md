@@ -56,7 +56,7 @@
 - [x] `Period::Month`: `2026-09` keys, month windows, `--month` on generate, human labels for every period
 - [x] Period picker on the Wrapped screen: choose which snapshot to view; story, images and video follow it
 - [x] Share links: off by default; publish one snapshot as a frozen copy behind an unguessable, revocable token; people cards opt-in per link
-- [ ] The public story page: no CP chrome, noindex, the site's theme, same tap-through behaviour
+- [x] The public story page: no CP chrome, noindex, the site's theme, same tap-through behaviour
 - [ ] README + release 1.2
 
 ## Notes
@@ -1192,3 +1192,23 @@ part to design first.
 - Now `Period::outro($key)`: year, quarter or month wording from `messages.video.outro.*`. Used by the
   story, the video (both `outro()` and the sheet the video is actually cut from) and the share page.
 - A key this version cannot read falls back to the yearly line.
+
+### Task 38 — The public story page (done)
+- `resources/views/share/story.blade.php`: plain HTML plus ~40 lines of script, because Inertia pages
+  live inside the control panel and this is the one page that must not. No CP assets, no CSRF, no
+  links into `/cp/` (tested by string).
+- Every frame is in the HTML; the script adds a `js` class and shows one at a time. Without script it
+  reads top to bottom in the same colours, so the text is there either way.
+- Same behaviour as the CP story: tap the stage or ArrowRight/Space/Enter for next, ArrowLeft for
+  back, Previous/Next buttons, one progress bar per frame, focus moves to the stage on each change,
+  footer pinned and `aria-hidden`, fade only under `prefers-reduced-motion: no-preference`. Home,
+  End, PageUp, PageDown untouched. No Escape (there is nowhere to go back to).
+- No music. The soundtracks are streamed from a CP route behind login, and a public page that starts
+  playing is bad manners anyway. Reconsider only if asked.
+- Theme as CSS variables from `Theme`; `theme-color` meta; `og:title` and `og:description` (the
+  first card) so a posted link gets a preview line. No `og:image`: nothing is hosted.
+- Browser check on the dev site: loads on frame 1; ArrowRight moves exactly one frame and focus
+  lands on the stage; Previous goes back and disables on the first frame. The Playwright screenshot
+  and evaluate tools advance the story by themselves (they click or key the page), same as they did
+  with the CP story; the accessibility snapshot straight after navigation is the honest reading.
+- 523 tests, Pint and PHPStan clean.

@@ -1,5 +1,6 @@
 <?php
 
+use Bpmore\Wrapped\Export\Theme;
 use Bpmore\Wrapped\History\Confidence;
 use Bpmore\Wrapped\Sharing\Share;
 use Bpmore\Wrapped\Sharing\ShareLinks;
@@ -194,6 +195,47 @@ describe('the public page', function () {
         $this->get(Share::sole()->url())
             ->assertSee('August 2026 Wrapped')
             ->assertSee('That was your month.');
+    });
+
+    it('is the story: one frame per card, tap-through, with nothing of the control panel', function () {
+        sharer();
+        aWrapped();
+        makeLink();
+        auth()->logout();
+
+        $html = $this->get(Share::sole()->url())->assertOk()->getContent();
+
+        expect($html)
+            // Every frame is in the HTML, so it reads as a plain page without script.
+            ->toContain('2026 Wrapped')
+            ->toContain('You published 42 entries.')
+            ->toContain('That was your year.')
+            ->toContain('role="progressbar"')
+            ->toContain('aria-valuemax="3"')
+            ->toContain('aria-label="Previous"')
+            ->toContain('aria-label="Next"')
+            // The footer is decoration for sighted readers; the frames already say it.
+            ->toContain('class="story-footer" aria-hidden="true"')
+            // A posted link gets a title and a first line.
+            ->toContain('<meta property="og:title" content="2026 Wrapped · default">')
+            ->toContain('<meta property="og:description" content="You published 42 entries.">')
+            // Nothing of the control panel: no links into it, no assets from it.
+            ->not->toContain('/cp/')
+            ->not->toContain('<script src')
+            ->not->toContain('csrf');
+    });
+
+    it('wears the site\'s theme', function () {
+        config(['wrapped.theme.background' => '#fef3c7']);
+        app()->instance(Theme::class, Theme::fromConfig());
+        sharer();
+        aWrapped();
+        makeLink();
+
+        $this->get(Share::sole()->url())
+            ->assertSee('--story-bg: #fef3c7', false)
+            ->assertSee('--story-text: #16161d', false)
+            ->assertSee('<meta name="theme-color" content="#fef3c7">', false);
     });
 
     it('is a 404 for a token that does not exist', function () {
