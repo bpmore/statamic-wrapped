@@ -58,6 +58,7 @@ If you want the full set, install Logbook. It is free, and two of the cards (fil
 php please wrapped:generate                 # this year, every site
 php please wrapped:generate --year=2025
 php please wrapped:generate --quarter=3     # Q3 of this year
+php please wrapped:generate --month=9       # September of this year
 php please wrapped:generate --site=french
 php please wrapped:generate --force         # rebuild one that already exists
 ```
@@ -70,6 +71,14 @@ To have it ready when people come looking, schedule it for the first of December
 // routes/console.php
 Schedule::command('wrapped:generate')->yearlyOn(12, 1);
 ```
+
+A busy site can add a monthly one on the first of each month, for the month just gone:
+
+```php
+Schedule::command('wrapped:generate', ['--month' => now()->subMonthNoOverflow()->month, '--year' => now()->subMonthNoOverflow()->year])->monthlyOn(1);
+```
+
+When there is more than one, a picker on the Wrapped screen chooses which to look at. The story, the images and the video follow it.
 
 ## Shareable images
 
@@ -85,7 +94,7 @@ WRAPPED_CHROME_PATH=/usr/bin/chromium
 
 Without a browser the download links simply do not appear. The screen is the real version and works regardless.
 
-**There is no public URL for a Wrapped**, and there will not be one. These are downloads, shared deliberately.
+**There is no public URL for a Wrapped unless you switch one on.** These are downloads, shared deliberately. For the sites that do want a page, see [Public links](#public-links).
 
 ## The story, and the video
 
@@ -160,10 +169,11 @@ The reasoning is in the config file, because that is the file a site owner actua
 
 ## Permissions
 
-Two, nested:
+Three, nested:
 
 - **View Wrapped** opens the screen, the widget and the downloads. Meant to be granted broadly.
 - **View people stats** additionally shows the people cards. A separate decision.
+- **Share publicly** makes and revokes public links. Only does anything when public links are switched on.
 
 Super users see everything. Everyone else needs the permission on a role.
 
@@ -171,13 +181,33 @@ Super users see everything. Everyone else needs the permission on a role.
 
 One Wrapped per site. Generate with `--site=` for one, or without it for all.
 
-## Quarterly
+## Quarterly and monthly
 
-Add `--quarter=1` through `4` for three months instead of twelve. Same cards, same screen.
+Add `--quarter=1` through `4` for three months instead of twelve, or `--month=1` through `12` for one. Same cards, same screen, and the closing line says "your quarter" or "your month" rather than "your year". The dashboard widget nudges only about the year, in December.
+
+## Public links
+
+Off by default, and the default is the recommendation: a Wrapped is a team's internal publishing stats, and a forwarded link cannot be taken back.
+
+Some sites want exactly that. A newsroom posting "we published 4,000 stories this year" is telling its readers something. For them:
+
+```dotenv
+WRAPPED_SHARE_ENABLED=true
+```
+
+then grant the **Share publicly** permission to whoever should make that call. A **Share publicly** panel appears on the Wrapped screen, and each link it makes:
+
+- is a **frozen copy** of that Wrapped at that moment. Regenerating never changes a page somebody has already posted.
+- sits behind a **random, unguessable token** (`/wrapped/0fbc2316…`, 40 hex characters).
+- **leaves the people cards out** unless you tick them for that link. A link can never show more than its maker could see.
+- can be given an **expiry** (a week to a year) and **revoked** at any time. Revoked, expired, or sharing switched back off: the page is a plain 404.
+- is the same **tap-through story** as the control panel, in your theme, with `noindex` and nothing of the control panel around it. Without JavaScript it reads as a plain page.
+
+Switching the setting back off stops every link at once. The first URL segment is `share.path` in the config.
 
 ## What it will not do
 
-No analytics. No public links. No emailing. No AI summaries. No historical backfill beyond what your history source honestly supports. The video and the images are downloads; nothing is ever hosted.
+No analytics. No emailing. No AI summaries. No historical backfill beyond what your history source honestly supports. The video and the images are downloads; nothing is hosted unless you switch public links on, and then only what you chose to publish.
 
 ## Development
 

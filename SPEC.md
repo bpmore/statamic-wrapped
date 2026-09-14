@@ -106,6 +106,8 @@ Two constraints on the export, both quick:
 
 **No public hosted URL.** A shareable link that leaks a team's internal publishing stats is a support problem and a privacy problem for a free addon. Download and share deliberately.
 
+> **Amended in 1.2.** Still the default. Public links now exist as an opt-in (`share.enabled`, off) for sites that want to post their numbers, with a permission of their own, a frozen copy per link, an unguessable token, optional expiry, revocation, people cards off unless ticked per link, and `noindex`. Off in config stops every link at once.
+
 **Dashboard nudge** in December: "Your 2026 Wrapped is ready." One widget, dismissible.
 
 **Confetti** on first view. Once, not every time.

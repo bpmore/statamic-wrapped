@@ -1,3 +1,5 @@
+ALL TASKS COMPLETE
+
 # PROGRESS — Wrapped
 
 **Spec:** `wrapped-build-spec.md` · **Package:** `bpmore/statamic-wrapped` · **Free**
@@ -57,7 +59,7 @@
 - [x] Period picker on the Wrapped screen: choose which snapshot to view; story, images and video follow it
 - [x] Share links: off by default; publish one snapshot as a frozen copy behind an unguessable, revocable token; people cards opt-in per link
 - [x] The public story page: no CP chrome, noindex, the site's theme, same tap-through behaviour
-- [ ] README + release 1.2
+- [x] README + release 1.2
 
 ## Notes
 <!-- Record surprises, decisions and blockers here. If a task is wrong or blocked, write why and stop. -->
@@ -1212,3 +1214,11 @@ part to design first.
   and evaluate tools advance the story by themselves (they click or key the page), same as they did
   with the CP story; the accessibility snapshot straight after navigation is the honest reading.
 - 523 tests, Pint and PHPStan clean.
+
+### Task 39 — README + release 1.2 (done) — **all tasks complete**
+- README: `--month`, a monthly schedule example, the picker, a Public links section, three
+  permissions, "what it will not do" reworded. Marketplace copy and feature list updated.
+- SPEC.md §5 "No public hosted URL" kept, with an amendment block saying what 1.2 changed and that
+  off is still the default. The spec stays honest about what it originally said.
+- Release: main fast-forwarded to build/phase-1, tag v1.2.0, GitHub release with notes.
+- `.claude/settings.json` (git push allowed) still deliberately uncommitted.

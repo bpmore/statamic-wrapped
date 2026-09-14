@@ -23,7 +23,7 @@ Wrapped gives your content team its own year in review. Entries published, words
 
 **It is careful about people.** Team stats are on by default and name nobody. The one card that names a person is off until you switch it on, shows exactly one person as a celebration, and never a ranked list. Nothing ranks from the bottom. A separate permission decides who may see people stats at all.
 
-**It stays out of the way.** One command builds it, one table caches it, one dashboard widget nudges in December. No public links, no emailing, no analytics, no AI summaries.
+**It stays out of the way.** One command builds it, one table caches it, one dashboard widget nudges in December. Yearly, quarterly or monthly. No emailing, no analytics, no AI summaries, and no public links unless you switch them on, in which case each one is a frozen copy behind an unguessable token that you can expire or revoke.
 
 Free. Statamic 6, PHP 8.2+.
 
@@ -41,9 +41,10 @@ Free. Statamic 6, PHP 8.2+.
 - A short vertical video for Reels, Stories and TikTok, with bundled instrumental music or your own
 - Your own background colour and logo, with text contrast worked out for you
 - Dashboard widget with a December nudge
-- Quarterly as well as yearly
+- Yearly, quarterly and monthly, with a picker to move between them
+- Public links, off by default: a frozen, revocable, noindex copy of the story behind a random token
 - Multisite: one Wrapped per site
-- Two permissions: view Wrapped, view people stats
+- Three permissions: view Wrapped, view people stats, share publicly
 
 ## Screenshots, in order
 
