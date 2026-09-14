@@ -3,6 +3,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { Head } from '@statamic/cms/inertia';
 
 const props = defineProps({
+    theme: { type: Object, required: true },
     site: { type: String, required: true },
     label: { type: String, required: true },
     backUrl: { type: String, required: true },
@@ -90,10 +91,24 @@ onBeforeUnmount(() => audio.value?.pause());
 // --- Motion, only if welcome ------------------------------------------------
 
 const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+
+// --- Look -------------------------------------------------------------------
+
+// The same theme as the images and the video, handed over as CSS variables.
+// Text and muted colours were chosen server-side for contrast; the accent is
+// only present if it could be read.
+const themeVars = computed(() => ({
+    '--story-bg': props.theme.background,
+    '--story-text': props.theme.text,
+    '--story-muted': props.theme.muted,
+    '--story-label': props.theme.accent ?? props.theme.muted,
+    // Controls sit on the background; tint them from the text colour.
+    '--story-rgb': props.theme.text === '#f7f7f8' || props.theme.text === '#ffffff' ? '247, 247, 248' : '22, 22, 29',
+}));
 </script>
 
 <template>
-    <div class="story" :class="{ 'story--still': reducedMotion }">
+    <div class="story" :class="{ 'story--still': reducedMotion }" :style="themeVars">
         <Head :title="`${label} · story`" />
 
         <!-- Progress: one bar per frame, the story-app convention. -->
@@ -122,6 +137,7 @@ const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').ma
                         <p class="story-body">{{ frame.body }}</p>
                     </template>
                     <template v-else>
+                        <img v-if="theme.logo" class="story-logo" :src="theme.logo" alt="">
                         <p class="story-title">{{ frame.title }}</p>
                         <p v-if="frame.subtitle" class="story-subtitle">{{ frame.subtitle }}</p>
                     </template>
@@ -175,8 +191,8 @@ const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').ma
     position: fixed;
     inset: 0;
     z-index: 50;
-    background: #16161d;
-    color: #f7f7f8;
+    background: var(--story-bg);
+    color: var(--story-text);
     display: flex;
     flex-direction: column;
     -webkit-font-smoothing: antialiased;
@@ -192,12 +208,12 @@ const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').ma
     flex: 1;
     height: 4px;
     border-radius: 2px;
-    background: rgba(247, 247, 248, 0.2);
+    background: rgba(var(--story-rgb), 0.2);
 }
 
 .story-progress__bar.is-done,
 .story-progress__bar.is-current {
-    background: #f7f7f8;
+    background: var(--story-text);
 }
 
 .story-stage {
@@ -211,7 +227,7 @@ const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').ma
 }
 
 .story-stage:focus-visible {
-    box-shadow: inset 0 0 0 3px rgba(247, 247, 248, 0.5);
+    box-shadow: inset 0 0 0 3px rgba(var(--story-rgb), 0.5);
 }
 
 .story-frame {
@@ -224,7 +240,7 @@ const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').ma
     font-weight: 600;
     letter-spacing: 0.14em;
     text-transform: uppercase;
-    color: #8b8b96;
+    color: var(--story-label);
     margin-bottom: 20px;
 }
 
@@ -244,8 +260,14 @@ const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').ma
 
 .story-subtitle {
     font-size: clamp(16px, 2vw, 22px);
-    color: #8b8b96;
+    color: var(--story-muted);
     margin-top: 16px;
+}
+
+.story-logo {
+    height: clamp(40px, 8vw, 72px);
+    width: auto;
+    margin-bottom: 32px;
 }
 
 .story-footer {
@@ -256,13 +278,13 @@ const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').ma
     display: flex;
     justify-content: space-between;
     font-size: 14px;
-    color: #8b8b96;
+    color: var(--story-muted);
     pointer-events: none;
 }
 
 .story-footer__period {
     font-weight: 600;
-    color: #f7f7f8;
+    color: var(--story-text);
 }
 
 .story-controls {
@@ -274,7 +296,7 @@ const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').ma
     justify-content: center;
     gap: 12px;
     padding: 16px;
-    background: linear-gradient(transparent, rgba(22, 22, 29, 0.9));
+    background: linear-gradient(transparent, var(--story-bg));
 }
 
 .story-button {
@@ -282,9 +304,9 @@ const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').ma
     min-height: 44px;
     padding: 0 16px;
     border-radius: 22px;
-    border: 1px solid rgba(247, 247, 248, 0.25);
-    background: rgba(247, 247, 248, 0.06);
-    color: #f7f7f8;
+    border: 1px solid rgba(var(--story-rgb), 0.25);
+    background: rgba(var(--story-rgb), 0.06);
+    color: var(--story-text);
     font-size: 22px;
     line-height: 1;
     cursor: pointer;
@@ -304,7 +326,7 @@ const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').ma
 }
 
 .story-button:focus-visible {
-    outline: 3px solid #f7f7f8;
+    outline: 3px solid var(--story-text);
     outline-offset: 2px;
 }
 
@@ -316,8 +338,8 @@ const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').ma
     width: min(360px, calc(100% - 32px));
     padding: 16px;
     border-radius: 12px;
-    background: #22222b;
-    border: 1px solid rgba(247, 247, 248, 0.15);
+    background: var(--story-bg);
+    border: 1px solid rgba(var(--story-rgb), 0.25);
     font-size: 14px;
 }
 
@@ -332,7 +354,7 @@ const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').ma
 
 .story-music__desc,
 .story-music__note {
-    color: #8b8b96;
+    color: var(--story-muted);
     font-size: 13px;
 }
 

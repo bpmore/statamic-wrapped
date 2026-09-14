@@ -89,6 +89,34 @@ return [
 
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Look
+    |--------------------------------------------------------------------------
+    |
+    | The background of the card images, the video and the story. Pick any
+    | colour; the text colour is worked out from it so it always clears WCAG
+    | AA's 4.5:1 contrast, whatever you choose.
+    |
+    | `accent` is optional and used sparingly (the small labels). It is dropped
+    | if it cannot be read against the background, with a note in the log.
+    |
+    | `logo` is a path on disk, a URL under this site, or a full URL. It falls
+    | back to the control panel logo in config/statamic/cp.php, and appears on
+    | the opening and closing frames.
+    |
+    */
+
+    'theme' => [
+
+        'background' => env('WRAPPED_BACKGROUND', '#16161d'),
+
+        'accent' => env('WRAPPED_ACCENT'),
+
+        'logo' => env('WRAPPED_LOGO'),
+
+    ],
+
     'people' => [
 
         'enabled' => (bool) env('WRAPPED_PEOPLE_ENABLED', true),

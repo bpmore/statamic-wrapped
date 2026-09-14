@@ -11,8 +11,8 @@
             width: {{ $width }}px;
             min-height: {{ $height }}px;
             padding: 64px;
-            background: #16161d;
-            color: #f7f7f8;
+            background: {{ $theme->background }};
+            color: {{ $theme->text }};
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             -webkit-font-smoothing: antialiased;
         }
@@ -24,7 +24,9 @@
             margin-bottom: 8px;
         }
 
-        .site { font-size: 26px; color: #8b8b96; margin-bottom: 48px; }
+        .site { font-size: 26px; color: {{ $theme->muted }}; margin-bottom: 48px; }
+
+        .logo { height: 56px; width: auto; max-width: 40%; object-fit: contain; margin-bottom: 32px; display: block; }
 
         .cards {
             display: grid;
@@ -37,7 +39,7 @@
             font-weight: 600;
             letter-spacing: 0.12em;
             text-transform: uppercase;
-            color: #8b8b96;
+            color: {{ $theme->accent ?? $theme->muted }};
             margin-bottom: 6px;
         }
 
@@ -45,6 +47,9 @@
     </style>
 </head>
 <body>
+    @if ($theme->logo)
+        <img class="logo" src="{{ $theme->logo }}" alt="">
+    @endif
     <h1>{{ $period }} Wrapped</h1>
     <p class="site">{{ $site }}</p>
 

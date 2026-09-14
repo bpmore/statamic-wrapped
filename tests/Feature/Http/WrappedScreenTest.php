@@ -1,6 +1,7 @@
 <?php
 
 use Bpmore\Wrapped\Export\ImageRenderer;
+use Bpmore\Wrapped\Export\Theme;
 use Bpmore\Wrapped\Export\VideoRenderer;
 use Bpmore\Wrapped\History\Confidence;
 use Bpmore\Wrapped\Snapshots\Period;
@@ -366,6 +367,19 @@ describe('the story', function () {
 
     it('has nothing to tell before a wrapped exists', function () {
         $this->get(cp_route('wrapped.story'))->assertNotFound();
+    });
+
+    it('is told the same theme as the images and the video', function () {
+        config(['wrapped.theme.background' => '#fef3c7']);
+        app()->instance(Theme::class, Theme::fromConfig());
+
+        storeSnapshot(['entries_published' => ['count' => 3, 'previous' => null]]);
+
+        $this->get(cp_route('wrapped.story'))
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->where('theme.background', '#fef3c7')
+                ->where('theme.text', '#16161d')
+                ->where('theme.logo', null));
     });
 
     it('is linked from the wrapped screen', function () {

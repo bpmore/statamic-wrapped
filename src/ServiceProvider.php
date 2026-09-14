@@ -7,6 +7,7 @@ use Bpmore\Wrapped\Export\ChromeRenderer;
 use Bpmore\Wrapped\Export\FfmpegRenderer;
 use Bpmore\Wrapped\Export\ImageRenderer;
 use Bpmore\Wrapped\Export\Soundtracks;
+use Bpmore\Wrapped\Export\Theme;
 use Bpmore\Wrapped\Export\VideoRenderer;
 use Bpmore\Wrapped\History\HistorySource;
 use Bpmore\Wrapped\History\HistorySourceResolver;
@@ -139,6 +140,9 @@ class ServiceProvider extends AddonServiceProvider
         // A singleton: the manifest is read and every file checked once per
         // process, not once per lookup.
         $this->app->singleton(Soundtracks::class);
+
+        // Read from config once; the logo may involve reading a file.
+        $this->app->singleton(Theme::class, fn () => Theme::fromConfig());
 
         $this->app->singleton(StatCardRegistry::class, function ($app) {
             return new StatCardRegistry(array_map(

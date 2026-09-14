@@ -28,6 +28,7 @@ class CardImages
     public function __construct(
         protected ImageRenderer $renderer,
         protected CardPresenter $presenter,
+        protected Theme $theme,
     ) {}
 
     public function isAvailable(): bool
@@ -59,6 +60,7 @@ class CardImages
         [$width, $height] = self::CARD;
 
         return $this->renderer->render(view('wrapped::export.card', [
+            'theme' => $this->theme,
             'heading' => $card['heading'],
             'body' => $card['body'],
             'period' => $snapshot->period_key,
@@ -82,6 +84,7 @@ class CardImages
         [$width, $height] = self::SUMMARY;
 
         return $this->renderer->render(view('wrapped::export.summary', [
+            'theme' => $this->theme,
             'cards' => $cards,
             'period' => $snapshot->period_key,
             'site' => $snapshot->site,

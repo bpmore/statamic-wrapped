@@ -20,8 +20,8 @@
             flex-direction: column;
             justify-content: space-between;
             padding: 72px;
-            background: #16161d;
-            color: #f7f7f8;
+            background: {{ $theme->background }};
+            color: {{ $theme->text }};
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             -webkit-font-smoothing: antialiased;
         }
@@ -31,7 +31,7 @@
             font-weight: 600;
             letter-spacing: 0.14em;
             text-transform: uppercase;
-            color: #8b8b96;
+            color: {{ $theme->accent ?? $theme->muted }};
         }
 
         .body {
@@ -46,10 +46,10 @@
             justify-content: space-between;
             align-items: baseline;
             font-size: 26px;
-            color: #8b8b96;
+            color: {{ $theme->muted }};
         }
 
-        .period { font-weight: 600; color: #f7f7f8; }
+        .period { font-weight: 600; color: {{ $theme->text }}; }
     </style>
 </head>
 <body>

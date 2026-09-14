@@ -44,6 +44,7 @@
 - [x] `WrappedVideo`: the editor chooses the cards; a default of up to eight, people unticked; intro/outro; server validates
 - [x] CP: card checkboxes with a running-time readout, track picker with preview, "Download video", the video's description
 - [x] Tappable story: the same frames as live HTML in the CP, advanced by tap, click or key, music optional — the accessible, self-paced version
+- [x] Theme: a site-chosen background, optional accent and logo; text derived for AA contrast; one look across images, video and story
 - [ ] README + release 1.1
 
 ## Notes
@@ -1009,3 +1010,35 @@ screens get their title row and their blue primary button. Swapped both in — t
 video maker's download — and deleted my own button CSS. Now the screen sits in the CP the way core screens
 do. Lesson alongside the utilities one: **for chrome the CP already has, use the CP's component, not a
 lookalike.** Screenshot refreshed.
+
+### Task 33 — Theme (done)
+`Export\Theme`, bound as a singleton from `wrapped.theme` (`background`, `accent`, `logo`). One look across
+the card images, the summary, the video frames and the story page (which gets it as CSS variables).
+
+**A site chooses the background; the addon chooses the text.** That is the whole design. Text is
+off-white or near-black, whichever reads better, and the muted label colour is the text blended toward
+the background only as far as 4.5:1 allows. Tests hold text and muted at AA across ten backgrounds from
+white to black to saturated colours.
+
+**The tests caught a real gap while writing them:** a saturated rose (`#e11d48`) gets only 4.39:1 with
+off-white and less with near-black — mid-brightness colours can defeat *both* soft options. Pure white or
+pure black always clears 4.5:1 (worst case, around 18% luminance, is 4.56:1), so those are the fallback
+when the soft pair cannot make it. Ten backgrounds are now in the test, including that one.
+
+**An accent is used only where it can be read** — on the small uppercase labels — and dropped with a log
+warning if it fails AA against the background. Colours are validated as `#rgb`/`#rrggbb` and anything else
+falls back to the default; nothing that is not a colour gets near a stylesheet.
+
+**The logo is embedded as a data: URI**, because the frames render from a `file://` page with no network
+and a URL would simply be a missing image. A path on disk, a URL under the site's public directory, or a
+full URL (fetched once, 3s timeout, skipped on failure). Falls back to `statamic.cp.custom_logo_url`, the
+one standard place a Statamic site keeps a logo. On the intro and outro frames and the summary image only.
+
+**Not done, deliberately:** reading a "site colour" from a starter kit. Statamic has no standard place for
+one; it would work on one kit and silently do nothing on the next. The README says so.
+
+**Bug caught by rendering, not by tests:** the frame body is a flex column, which stretched the logo to
+full width regardless of its proportions. `align-self: flex-start` + `object-fit: contain`. The unit tests
+could not have seen this; the real Chrome render with a light background, accent and logo did.
+
+- Verified: `vendor/bin/pest` 449 passed · `vendor/bin/pint --test` clean · `vendor/bin/phpstan analyse` no errors · real render on `#fef3c7` with accent `#b45309`: text 16.17:1, muted 4.56:1, accent 4.51:1, logo square.

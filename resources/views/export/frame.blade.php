@@ -25,8 +25,8 @@
             flex-direction: column;
             justify-content: center;
             padding: 240px 96px 300px;
-            background: {{ $kind === 'footer' ? 'transparent' : '#16161d' }};
-            color: #f7f7f8;
+            background: {{ $kind === 'footer' ? 'transparent' : $theme->background }};
+            color: {{ $theme->text }};
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             -webkit-font-smoothing: antialiased;
         }
@@ -36,7 +36,7 @@
             font-weight: 600;
             letter-spacing: 0.14em;
             text-transform: uppercase;
-            color: #8b8b96;
+            color: {{ $theme->accent ?? $theme->muted }};
             margin-bottom: 48px;
         }
 
@@ -56,8 +56,20 @@
 
         .subtitle {
             font-size: 44px;
-            color: #8b8b96;
+            color: {{ $theme->muted }};
             margin-top: 40px;
+        }
+
+        .logo {
+            height: 120px;
+            width: auto;
+            max-width: 60%;
+            /* The body is a flex column, which would otherwise stretch the
+               image to full width regardless of its own proportions. */
+            align-self: flex-start;
+            object-fit: contain;
+            margin-bottom: 72px;
+            display: block;
         }
 
         .footer {
@@ -68,10 +80,10 @@
             display: flex;
             justify-content: space-between;
             font-size: 32px;
-            color: #8b8b96;
+            color: {{ $theme->muted }};
         }
 
-        .period { font-weight: 600; color: #f7f7f8; }
+        .period { font-weight: 600; color: {{ $theme->text }}; }
     </style>
 </head>
 <body>
@@ -86,9 +98,15 @@
             <span>{{ $site }}</span>
         </div>
     @elseif ($kind === 'intro')
+        @if ($theme->logo)
+            <img class="logo" src="{{ $theme->logo }}" alt="">
+        @endif
         <p class="title">{{ $period }}<br>Wrapped</p>
         <p class="subtitle">{{ $site }}</p>
     @elseif ($kind === 'outro')
+        @if ($theme->logo)
+            <img class="logo" src="{{ $theme->logo }}" alt="">
+        @endif
         <p class="title">{{ $outro }}</p>
     @else
         <p class="heading">{{ $heading }}</p>

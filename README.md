@@ -87,6 +87,25 @@ Without a browser the download links simply do not appear. The screen is the rea
 
 **There is no public URL for a Wrapped**, and there will not be one. These are downloads, shared deliberately.
 
+## Look
+
+The images, the video and the story share one look: a background you choose, text the addon chooses.
+
+```php
+// config/wrapped.php
+'theme' => [
+    'background' => '#16161d',   // any colour
+    'accent' => null,            // optional, used sparingly
+    'logo' => null,              // falls back to the control panel logo
+],
+```
+
+Pick any background. The text colour is worked out from it so it always clears WCAG AA's 4.5:1 contrast, and the muted label colour is derived the same way. An accent that cannot be read against the background is dropped, with a note in the log, rather than used. A site cannot accidentally ship an unreadable Wrapped.
+
+The logo appears on the opening and closing frames and takes a path on disk, a URL under the site, or a full URL. If you have set `custom_logo_url` in `config/statamic/cp.php`, that is used unless you say otherwise.
+
+There is no attempt to read a "site colour" from your starter kit: Statamic has no standard place for one, and guessing would work on one kit and silently do nothing on the next.
+
 ## People stats
 
 Who did what is the most socially loaded thing this addon knows, and the defaults are cautious.

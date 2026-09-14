@@ -5,6 +5,7 @@ namespace Bpmore\Wrapped\Http\Controllers;
 use Bpmore\Wrapped\Export\AltText;
 use Bpmore\Wrapped\Export\CardImages;
 use Bpmore\Wrapped\Export\Soundtracks;
+use Bpmore\Wrapped\Export\Theme;
 use Bpmore\Wrapped\Export\VideoSpec;
 use Bpmore\Wrapped\Export\WrappedVideo;
 use Bpmore\Wrapped\Snapshots\Snapshot;
@@ -81,7 +82,7 @@ class WrappedController extends CpController
      * a keyboard; and every frame is real text a screen reader can read. The
      * MP4 is the shareable export of this.
      */
-    public function story(CardPresenter $presenter, Soundtracks $soundtracks): Response
+    public function story(CardPresenter $presenter, Soundtracks $soundtracks, Theme $theme): Response
     {
         $snapshot = $this->latest();
 
@@ -98,6 +99,7 @@ class WrappedController extends CpController
         $frames[] = ['kind' => 'outro', 'title' => __('wrapped::messages.video.outro')];
 
         return Inertia::render('wrapped::Story', [
+            'theme' => $theme->toArray(),
             'site' => $snapshot->site,
             'label' => $this->label($snapshot),
             'backUrl' => cp_route('wrapped.index'),

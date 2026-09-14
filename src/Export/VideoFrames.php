@@ -25,6 +25,7 @@ class VideoFrames
 
     public function __construct(
         protected ImageRenderer $renderer,
+        protected Theme $theme,
         protected VideoSpec $spec = new VideoSpec,
     ) {}
 
@@ -83,6 +84,7 @@ class VideoFrames
     protected function render(array $data, Snapshot $snapshot, bool $transparent = false): string
     {
         $html = view('wrapped::export.frame', $data + [
+            'theme' => $this->theme,
             'period' => $this->label($snapshot),
             'site' => $snapshot->site,
             'width' => self::WIDTH,
