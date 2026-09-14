@@ -6,6 +6,7 @@ use Bpmore\Wrapped\Console\Commands\GenerateWrapped;
 use Bpmore\Wrapped\Export\ChromeRenderer;
 use Bpmore\Wrapped\Export\FfmpegRenderer;
 use Bpmore\Wrapped\Export\ImageRenderer;
+use Bpmore\Wrapped\Export\Soundtracks;
 use Bpmore\Wrapped\Export\VideoRenderer;
 use Bpmore\Wrapped\History\HistorySource;
 use Bpmore\Wrapped\History\HistorySourceResolver;
@@ -134,6 +135,10 @@ class ServiceProvider extends AddonServiceProvider
 
         $this->app->bind(ImageRenderer::class, ChromeRenderer::class);
         $this->app->bind(VideoRenderer::class, FfmpegRenderer::class);
+
+        // A singleton: the manifest is read and every file checked once per
+        // process, not once per lookup.
+        $this->app->singleton(Soundtracks::class);
 
         $this->app->singleton(StatCardRegistry::class, function ($app) {
             return new StatCardRegistry(array_map(

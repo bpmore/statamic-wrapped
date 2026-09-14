@@ -70,6 +70,23 @@ return [
 
         'ffmpeg' => env('WRAPPED_FFMPEG_PATH'),
 
+        // The music that ships with the addon. Set false to offer only your
+        // own tracks below.
+        'bundled' => (bool) env('WRAPPED_BUNDLED_TRACKS', true),
+
+        // Your own music. Each needs a name and a path to a file PHP can read;
+        // the description is optional and shown beside the name in the picker.
+        // Your tracks are listed before the bundled ones.
+        //
+        //     'tracks' => [
+        //         'house-theme' => [
+        //             'name' => 'House Theme',
+        //             'description' => 'The jingle from the podcast.',
+        //             'path' => resource_path('audio/house-theme.mp3'),
+        //         ],
+        //     ],
+        'tracks' => [],
+
     ],
 
     'people' => [

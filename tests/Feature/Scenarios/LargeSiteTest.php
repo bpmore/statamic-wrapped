@@ -147,7 +147,7 @@ it('builds a wrapped from forty thousand audit rows inside a sensible budget', f
         ->and($snapshot->stats['people']['people'])->toBe(4)
         ->and($seconds)->toBeLessThan(30.0, "generate took {$seconds}s")
         ->and($megabytes)->toBeLessThan(256.0, "generate grew memory by {$megabytes}MB");
-})->group('large');
+})->group('scenario');
 
 it('reads the log once per window, not once per card', function () {
     logbookOf(2000);
@@ -165,7 +165,7 @@ it('reads the log once per window, not once per card', function () {
     // Sixteen cards reading independently would be well past this, and so
     // would checking the table once per read, which is what this caught.
     expect($reads)->toBeLessThanOrEqual(6, "{$reads} reads of the audit log");
-})->group('large');
+})->group('scenario');
 
 it('walks fifteen hundred real entries without loading them all at once', function () {
     contentOf(LARGE_ENTRIES);
@@ -185,4 +185,4 @@ it('walks fifteen hundred real entries without loading them all at once', functi
     // Chunked iteration, not one giant get(): the source reads through the
     // query builder's lazy() and never holds every entry at once.
     expect((new EntryDataHistorySource)->isAvailable())->toBeTrue();
-})->group('large');
+})->group('scenario');

@@ -40,7 +40,7 @@
 ## Phase 5 — Shareable video (post-1.0)
 - [x] Portrait frames (1080x1920): intro, one per card, outro — rendered by the existing image renderer
 - [x] `VideoRenderer` interface + `FfmpegRenderer`: frames + crossfade + audio -> MP4, detected like Chrome
-- [ ] Soundtracks: bundled tracks in `resources/audio/`, site-supplied tracks via config, a registry
+- [x] Soundtracks: bundled tracks in `resources/audio/`, site-supplied tracks via config, a registry
 - [ ] Card selection for video: best six to eight, people cards excluded by default, intro/outro
 - [ ] CP: track picker with preview, "Download video", the video's own description text
 - [ ] README + release 1.1
@@ -828,3 +828,36 @@ Tests read the duration from the MP4's own `mvhd` box rather than shelling out t
 depend on one binary, not two. Real-FFmpeg tests skip cleanly where it is absent.
 
 - Verified: `vendor/bin/pest` 364 passed · `vendor/bin/pint --test` clean · `vendor/bin/phpstan analyse` no errors.
+
+### Task 29 — Soundtrack registry (done)
+`Export\Soundtrack` (value object), `Export\Soundtracks` (registry, singleton), `resources/audio/tracks.php`
+(the manifest), and `wrapped.video.bundled` / `wrapped.video.tracks` in config.
+
+- **Bundled tracks are found by handle, not by filename-with-extension.** The manifest lists `open-road`;
+  the registry looks for `open-road.<any audio extension>`. A format change is a file swap, not an edit.
+- **A track whose file is missing is left out and logged, never offered.** Offering it would put a broken
+  choice in front of somebody and fail their download after they made it.
+- **Site tracks come first** and become the default; a site that added its own music wants to see it.
+  `wrapped.video.bundled => false` offers only the site's own.
+- `Soundtrack::mimeType()` states the type from the extension rather than leaving the browser to sniff,
+  because **the Suno files are Opus inside an M4A box**, which is not what `.m4a` usually means.
+  Downstream: older Safari will not play the picker preview for these. The picker task has to handle that
+  honestly (feature-detect, or transcode a preview copy). The finished video is unaffected: FFmpeg reads
+  Opus and the output is AAC.
+- **Two tests guard the shipped set:** every manifest entry has a file and every audio file has a manifest
+  entry (nothing ships unlabelled), and every bundled file still contains Suno's `made with suno` tag in its
+  first 64 KB (a file that lost it was converted somewhere it should not have been, which the terms forbid).
+- Five tracks in so far: soft-landing, open-road, ipanema-morning, kingston-slow-sunday, seoul-rooftop.
+  **Descriptions are blank in the manifest** pending the wording from the Suno brief output.
+
+**Size, flagged for a decision:** five full-length tracks are 15 MB; twelve will be ~36 MB, all inside a
+Composer package every site downloads. Options: ship as-is; trim each to ~60s with `-c copy` (no re-encode,
+metadata mapped through, but it is an edit of the file and "exactly as downloaded" is the safer reading of
+Suno's terms); or ship a few and offer the rest as a separate download. Not decided here.
+
+Pest gotchas hit and recorded: `toContain()` cannot handle a binary string (use `str_contains`);
+`test()->prop[] = x` is an "indirect modification" error (use a static in a function — a Pest file has no
+true globals); PHPUnit reserves the group names `small`/`medium`/`large`, so the scenario tests are now
+`->group('scenario')`, which also silenced three warnings on every run.
+
+- Verified: `vendor/bin/pest` 377 passed, no warnings · `vendor/bin/pint --test` clean · `vendor/bin/phpstan analyse` no errors · a real video rendered with `open-road.m4a` (AAC out, 7.8s).
