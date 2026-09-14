@@ -65,6 +65,13 @@ return [
 
     ],
 
+    'video' => [
+
+        // The last frame. Quiet credit, not a call to action.
+        'outro' => 'That was your year.',
+
+    ],
+
     'widget' => [
 
         // December, for the year that is ending.

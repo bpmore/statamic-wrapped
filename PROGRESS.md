@@ -1,5 +1,3 @@
-ALL TASKS COMPLETE
-
 # PROGRESS — Wrapped
 
 **Spec:** `wrapped-build-spec.md` · **Package:** `bpmore/statamic-wrapped` · **Free**
@@ -38,6 +36,14 @@ ALL TASKS COMPLETE
 - [x] README, screenshots, marketplace listing copy
 - [x] Test on a large fixture site and on a 3-month-old site (first-year framing)
 - [x] Tag 1.0 — target late November 2026 (tagged 13 September 2026)
+
+## Phase 5 — Shareable video (post-1.0)
+- [x] Portrait frames (1080x1920): intro, one per card, outro — rendered by the existing image renderer
+- [ ] `VideoRenderer` interface + `FfmpegRenderer`: frames + crossfade + audio -> MP4, detected like Chrome
+- [ ] Soundtracks: bundled tracks in `resources/audio/`, site-supplied tracks via config, a registry
+- [ ] Card selection for video: best six to eight, people cards excluded by default, intro/outro
+- [ ] CP: track picker with preview, "Download video", the video's own description text
+- [ ] README + release 1.1
 
 ## Notes
 <!-- Record surprises, decisions and blockers here. If a task is wrong or blocked, write why and stop. -->
@@ -768,3 +774,31 @@ Aligned. The real Logbook source was already consistent.
   the README shows. Nothing in the addon schedules itself.
 - Statamic Pro was never enabled on the dev site, so `RevisionsHistorySource` is covered by tests against
   real revision files but has not been exercised against a Pro site's live revisions.
+
+### Phase 5 — Shareable video
+
+Decided 13 September 2026 after 1.0. The model is Spotify Wrapped: one fact per full-screen frame,
+music underneath, 30-45 seconds, vertical. Built as "pictures, then FFmpeg" on top of the image export
+that already exists, rather than a second way of drawing a card.
+
+**Music licensing, checked against Suno's terms (not guessed):** on the Premier plan Suno *assigns*
+ownership of Output to the subscriber, so bundling the owner's own tracks in the addon is within their
+rights. Conditions that matter: tracks must come through Suno's own download; do not strip the embedded
+watermark/metadata; no Remix-feature tracks (no commercial rights); stay inside the monthly download
+allowance. Suno keeps the right to say publicly the tracks were AI-made; the README will say so anyway.
+`docs/suno-brief.md` is the brief handed to another Claude to write the twelve Suno prompts.
+
+### Task 27 — Portrait frames (done)
+- `resources/views/export/frame.blade.php`: one template, three kinds (intro / card / outro), 1080x1920.
+  Rendered at 2x like the cards, so 2160x3840 PNGs. Same rules: inline CSS, system fonts, nothing fetched,
+  everything escaped — tested.
+- **Text sits in the middle band on purpose.** On a phone the top tenth is under the app's chrome and the
+  bottom fifth under its caption and buttons. Padding is 240px top / 300px bottom so nothing important
+  lands where it will be covered.
+- `Export\VideoFrames` renders through the existing `ImageRenderer`, so the fake covers it in tests and
+  real Chrome covers it on the dev site. Verified by eye at phone scale: intro, card and outro all read.
+- The outro is "That was your year." — a quiet credit, not a call to action. A test asserts it contains
+  neither "install" nor "download".
+- First-year framing carries through: a young site's frames say "Since June 2026".
+
+- Verified: `vendor/bin/pest` 354 passed · `vendor/bin/pint --test` clean · `vendor/bin/phpstan analyse` no errors · three frames rendered with real Chrome from the seeded site.
