@@ -1,6 +1,7 @@
 <script setup>
 import { onMounted, ref } from 'vue';
 import { Head } from '@statamic/cms/inertia';
+import { Button, Header } from '@statamic/cms/ui';
 import { celebrate, markCelebrated, shouldCelebrate } from '../celebrate.js';
 import VideoMaker from '../components/VideoMaker.vue';
 
@@ -49,21 +50,23 @@ const copyAlt = async (key, text) => {
     <div class="wrapped">
         <Head title="Wrapped" />
 
-        <header class="wrapped-header">
-            <div>
-                <h1 class="wrapped-title">Wrapped</h1>
-                <p v-if="snapshot" class="wrapped-subtitle">
-                    {{ snapshot.label }} &middot; {{ site }}
-                </p>
-            </div>
-
+        <!--
+            Statamic's own header and button, so this sits in the control panel
+            the way its native screens do rather than as a visitor.
+        -->
+        <Header title="Wrapped">
             <!-- The tap-through version: same facts, at the reader's pace. -->
-            <a
+            <Button
                 v-if="snapshot && snapshot.cards.length"
                 :href="snapshot.storyUrl"
-                class="wrapped-button"
-            >Play it</a>
-        </header>
+                variant="primary"
+                text="Play it"
+            />
+        </Header>
+
+        <p v-if="snapshot" class="wrapped-subtitle">
+            {{ snapshot.label }} &middot; {{ site }}
+        </p>
 
         <!--
             No snapshot at all. Not an error state: nobody has run the command
@@ -169,19 +172,6 @@ const copyAlt = async (key, text) => {
     margin: 0 auto;
 }
 
-.wrapped-header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 1rem;
-    margin-bottom: 1.5rem;
-}
-
-.wrapped-title {
-    font-size: 1.5rem;
-    font-weight: 700;
-    margin: 0;
-}
 
 .wrapped-subtitle,
 .wrapped-muted {
@@ -190,26 +180,15 @@ const copyAlt = async (key, text) => {
     margin: 0.25rem 0 0;
 }
 
+.wrapped-subtitle {
+    margin: -0.75rem 0 1.5rem;
+}
+
 .dark .wrapped-subtitle,
 .dark .wrapped-muted {
     color: var(--color-gray-400);
 }
 
-.wrapped-button {
-    flex-shrink: 0;
-    padding: 0.5rem 1rem;
-    border-radius: 0.375rem;
-    background: var(--color-gray-900);
-    color: var(--color-white, #fff);
-    font-size: 0.875rem;
-    font-weight: 500;
-    text-decoration: none;
-}
-
-.dark .wrapped-button {
-    background: var(--color-white, #fff);
-    color: var(--color-gray-900);
-}
 
 .wrapped-panel,
 .wrapped-card {

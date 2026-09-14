@@ -1,5 +1,6 @@
 <script setup>
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
+import { Button } from '@statamic/cms/ui';
 
 const props = defineProps({
     video: { type: Object, required: true },
@@ -162,7 +163,7 @@ const copyDescription = async () => {
 
         <!-- Download -->
         <div class="wrapped-video__group">
-            <a v-if="chosen.length" :href="downloadUrl" class="wrapped-button">Download video</a>
+            <Button v-if="chosen.length" :href="downloadUrl" variant="primary" text="Download video" />
             <span v-else class="wrapped-muted">Pick a card to make a video.</span>
             <p class="wrapped-muted wrapped-video__hint">Takes about half a minute to make. The file is {{ video.filename }}.</p>
         </div>

@@ -1001,3 +1001,11 @@ Mistake of my own while fixing it: a scripted replace matched the *inner* `</tem
 and left the outer one dangling. Build failed loudly, so it cost a minute, not a release.
 
 - Verified: `vendor/bin/pest` 415 passed · `vendor/bin/pint --test` clean · `vendor/bin/phpstan analyse` no errors.
+
+### Fix — "Play it" looked like a visitor (done)
+Owner's screenshot: my hand-styled black pill sat flush against the top bar and looked out of place.
+**Statamic exposes its own `Header` and `Button` to addons** (`@statamic/cms/ui`), which is how its native
+screens get their title row and their blue primary button. Swapped both in — the page header, and the
+video maker's download — and deleted my own button CSS. Now the screen sits in the CP the way core screens
+do. Lesson alongside the utilities one: **for chrome the CP already has, use the CP's component, not a
+lookalike.** Screenshot refreshed.
