@@ -1,3 +1,5 @@
+ALL TASKS COMPLETE
+
 # PROGRESS — Wrapped
 
 **Spec:** `wrapped-build-spec.md` · **Package:** `bpmore/statamic-wrapped` · **Free**
@@ -45,7 +47,7 @@
 - [x] CP: card checkboxes with a running-time readout, track picker with preview, "Download video", the video's description
 - [x] Tappable story: the same frames as live HTML in the CP, advanced by tap, click or key, music optional — the accessible, self-paced version
 - [x] Theme: a site-chosen background, optional accent and logo; text derived for AA contrast; one look across images, video and story
-- [ ] README + release 1.1
+- [x] README + release 1.1 (tagged 14 September 2026)
 
 ## Notes
 <!-- Record surprises, decisions and blockers here. If a task is wrong or blocked, write why and stop. -->
@@ -1042,3 +1044,27 @@ full width regardless of its proportions. `align-self: flex-start` + `object-fit
 could not have seen this; the real Chrome render with a light background, accent and logo did.
 
 - Verified: `vendor/bin/pest` 449 passed · `vendor/bin/pint --test` clean · `vendor/bin/phpstan analyse` no errors · real render on `#fef3c7` with accent `#b45309`: text 16.17:1, muted 4.56:1, accent 4.51:1, logo square.
+
+### Task 34 — Release 1.1 (done) — **all tasks complete**
+- README gained "The story, and the video" (with the FFmpeg env var, the music section and the Suno
+  disclosure promised in task 29) and the "Look" section from task 33; the requirements line now says both
+  Chrome and FFmpeg are optional. Marketplace copy updated to match.
+- Every gate green at the tag: 449 tests, no warnings, Pint, PHPStan, `composer validate`, and
+  `npm run build` reproduces the committed bundle byte for byte.
+- `build/phase-1` fast-forwarded into `main` the same way as 1.0 (`git push origin build/phase-1:main`,
+  then `git fetch origin main:main`), because `.claude/settings.json` still carries the local, uncommitted
+  git-push change and a checkout would trip on it. Tagged `v1.1.0` on `main`, GitHub release with notes.
+
+**Shipped in 1.1, in one line each:**
+- The story: tap-through, self-paced, keyboard and screen-reader friendly. The accessible canonical form.
+- The video: vertical MP4, editor-chosen cards, reading-pace timing, pinned footer, under 30s by default.
+- Five bundled Suno tracks (of a planned twelve — the rest drop into `resources/audio/` and the manifest).
+- A site-chosen theme with text derived for AA contrast, and the site's logo on the title frames.
+- The control panel screens use Statamic's own Header and Button and carry their own CSS.
+
+**Still true, still not in the release:**
+- `.claude/settings.json`'s local change. Dev tooling, left out on purpose.
+- Rendering is ~30s for a six-card video, almost all Chrome starting once per frame. One Chrome session
+  for all frames would make it a few seconds. Written down since task 30; do it if anyone complains.
+- The repo is private and not on Packagist. Making it public is the owner's call.
+- Seven more Suno tracks to come. Each is a file drop plus a manifest entry; two tests enforce the pairing.

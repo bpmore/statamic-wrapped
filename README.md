@@ -2,7 +2,7 @@
 
 A year in review for your content team. What you published, when you were busiest, which page has been quietly doing its job since 2021. A dozen cards on a control panel screen, each one downloadable as a shareable image.
 
-Free. Statamic 6. PHP 8.2+.
+Free. Statamic 6. PHP 8.2+. Chrome for images and FFmpeg for video, both optional.
 
 ![The Wrapped screen in the Statamic control panel](docs/screenshots/cp-screen.png)
 
@@ -87,6 +87,40 @@ Without a browser the download links simply do not appear. The screen is the rea
 
 **There is no public URL for a Wrapped**, and there will not be one. These are downloads, shared deliberately.
 
+## The story, and the video
+
+**Play it** on the Wrapped screen opens the story: the same facts, one per screen, advanced by tap, click or arrow key. Nothing moves until the reader says so, it works from a keyboard, and a screen reader is read each fact as it appears. Music is off until asked. This is the accessible version, and the one the video is made from.
+
+**Make a video** turns it into a short vertical MP4 for Reels, Stories and TikTok. The editor ticks which cards go in (six by default, people cards never by default), picks a track, and downloads. Each card stays on screen for as long as its words take to read, so the pacing meets WCAG 2.1 AA; a running-time readout shows the length as boxes are ticked, and a typical Wrapped lands under thirty seconds.
+
+Video needs FFmpeg. If it is installed in a usual place it is found automatically; otherwise:
+
+```dotenv
+WRAPPED_FFMPEG_PATH=/usr/bin/ffmpeg
+```
+
+Without it the video maker does not appear. The story and the images work regardless.
+
+### Music
+
+The addon ships with a small set of instrumental tracks, made with [Suno](https://suno.com) on a plan that assigns ownership of the output, and shipped exactly as downloaded so Suno's own metadata stays in the files. Add your own, or offer only your own:
+
+```php
+// config/wrapped.php
+'video' => [
+    'bundled' => true,
+    'tracks' => [
+        'house-theme' => [
+            'name' => 'House Theme',
+            'description' => 'The jingle from the podcast.',
+            'path' => resource_path('audio/house-theme.mp3'),
+        ],
+    ],
+],
+```
+
+Your tracks are listed first.
+
 ## Look
 
 The images, the video and the story share one look: a background you choose, text the addon chooses.
@@ -143,7 +177,7 @@ Add `--quarter=1` through `4` for three months instead of twelve. Same cards, sa
 
 ## What it will not do
 
-No analytics. No public links. No emailing. No AI summaries. No historical backfill beyond what your history source honestly supports.
+No analytics. No public links. No emailing. No AI summaries. No historical backfill beyond what your history source honestly supports. The video and the images are downloads; nothing is ever hosted.
 
 ## Development
 

@@ -37,6 +37,9 @@ Free. Statamic 6, PHP 8.2+.
 - Reads Statamic Logbook, revisions, entry data or file times, and says which
 - Cards left out rather than guessed when history is thin
 - Shareable PNG per card and for the whole thing, with suggested alt text
+- A tap-through story: one fact per screen, at the reader's pace, keyboard and screen-reader friendly
+- A short vertical video for Reels, Stories and TikTok, with bundled instrumental music or your own
+- Your own background colour and logo, with text contrast worked out for you
 - Dashboard widget with a December nudge
 - Quarterly as well as yearly
 - Multisite: one Wrapped per site
@@ -53,7 +56,7 @@ Free. Statamic 6, PHP 8.2+.
 
 ## Requirements line
 
-Statamic 6 · PHP 8.2 · Chrome or Chromium for image downloads (optional)
+Statamic 6 · PHP 8.2 · Chrome or Chromium for images and FFmpeg for video (both optional)
 
 ## Categories
 
