@@ -39,6 +39,49 @@ class ChromeRenderer implements ImageRenderer
 
     public function render(string $html, int $width, int $height, bool $transparent = false): string
     {
+        return $this->screenshot($html, $width, $height, $transparent, scale: 2);
+    }
+
+    /**
+     * Each document goes in an <iframe srcdoc> cell so it keeps its own styles
+     * and cannot bleed into its neighbours. The sheet is captured at 1x: a
+     * video frame is output size already, and doubling ten of them would push
+     * the capture past what Chrome will screenshot in one go.
+     */
+    public function renderSheet(array $htmls, int $width, int $height, int $columns, bool $transparent = false): string
+    {
+        if ($htmls === []) {
+            throw new RuntimeException('A sheet needs at least one page.');
+        }
+
+        $columns = max(1, min($columns, count($htmls)));
+        $rows = (int) ceil(count($htmls) / $columns);
+
+        $cells = implode('', array_map(
+            fn (string $html) => '<iframe srcdoc="'.htmlspecialchars($html, ENT_QUOTES | ENT_HTML5).'"></iframe>',
+            $htmls,
+        ));
+
+        $sheet = <<<HTML
+        <!DOCTYPE html>
+        <html><head><meta charset="utf-8"><style>
+            * { margin: 0; padding: 0; }
+            html, body { background: transparent; }
+            body { width: {$this->px($width * $columns)}; height: {$this->px($height * $rows)}; display: grid; grid-template-columns: repeat({$columns}, {$this->px($width)}); grid-auto-rows: {$this->px($height)}; }
+            iframe { width: {$this->px($width)}; height: {$this->px($height)}; border: 0; display: block; overflow: hidden; }
+        </style></head><body>{$cells}</body></html>
+        HTML;
+
+        return $this->screenshot($sheet, $width * $columns, $height * $rows, $transparent, scale: 1);
+    }
+
+    protected function px(int $n): string
+    {
+        return $n.'px';
+    }
+
+    protected function screenshot(string $html, int $width, int $height, bool $transparent, int $scale): string
+    {
         $binary = $this->binary();
 
         if ($binary === null) {
@@ -59,7 +102,7 @@ class ChromeRenderer implements ImageRenderer
                 // Containers give Chrome a 64MB /dev/shm, which is not enough.
                 '--disable-dev-shm-usage',
                 '--hide-scrollbars',
-                '--force-device-scale-factor=2',
+                "--force-device-scale-factor={$scale}",
                 // Opaque white unless told otherwise; an overlay needs the
                 // alpha channel kept.
                 '--default-background-color='.($transparent ? '00000000' : 'ffffffff'),

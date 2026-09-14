@@ -134,3 +134,24 @@ describe('the chrome renderer', function () {
             ->and(strlen($png))->toBeGreaterThan(100);
     });
 });
+
+describe('the chrome renderer, as a sheet', function () {
+    it('captures several pages in one launch and keeps the footer cell transparent', function () {
+        $renderer = new ChromeRenderer;
+
+        if (! $renderer->isAvailable()) {
+            test()->markTestSkipped('No Chrome on this machine.');
+        }
+
+        $opaque = '<html><body style="margin:0;background:#123456;width:40px;height:20px"></body></html>';
+        $clear = '<html><body style="margin:0;background:transparent;width:40px;height:20px"></body></html>';
+
+        $png = $renderer->renderSheet([$opaque, $opaque, $clear], 40, 20, 2, transparent: true);
+
+        // 2 columns, 2 rows of 40x20 at 1x: 80x40, RGBA.
+        expect(substr($png, 1, 3))->toBe('PNG')
+            ->and(unpack('N', substr($png, 16, 4))[1])->toBe(80)
+            ->and(unpack('N', substr($png, 20, 4))[1])->toBe(40)
+            ->and(ord($png[25]))->toBe(6);
+    });
+});

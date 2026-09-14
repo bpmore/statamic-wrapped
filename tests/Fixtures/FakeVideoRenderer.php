@@ -30,6 +30,11 @@ class FakeVideoRenderer implements VideoRenderer
         return $this->available;
     }
 
+    public function split(string $sheet, int $width, int $height, int $count, int $columns): array
+    {
+        return array_map(fn (int $i) => "CELL:{$i}:of:{$sheet}", range(0, $count - 1));
+    }
+
     public function render(array $frames, ?string $overlay, ?string $audio, VideoSpec $spec): string
     {
         if ($this->fails !== null) {

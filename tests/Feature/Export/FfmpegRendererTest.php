@@ -178,3 +178,41 @@ describe('with real ffmpeg', function () {
         expect(count(glob(sys_get_temp_dir().'/wrapped-video-*') ?: []))->toBe($before);
     });
 });
+
+describe('slicing a sheet', function () {
+    it('cuts a grid back into its cells, in reading order, alpha kept', function () {
+        $renderer = withRealFfmpeg();
+
+        // A 2x2 sheet of 4x4 cells, each a different solid colour, drawn by ffmpeg itself.
+        $sheet = sys_get_temp_dir().'/wrapped-sheet-'.bin2hex(random_bytes(4)).'.png';
+        exec(sprintf(
+            '%s -hide_banner -loglevel error -y -f lavfi -i "color=red:s=4x4" -f lavfi -i "color=green:s=4x4" -f lavfi -i "color=blue:s=4x4" -f lavfi -i "color=black@0.0:s=4x4,format=rgba" -filter_complex "[0][1]hstack[t];[2][3]hstack[b];[t][b]vstack,format=rgba" -frames:v 1 %s',
+            escapeshellarg(config('wrapped.video.ffmpeg') ?: '/opt/homebrew/bin/ffmpeg'),
+            escapeshellarg($sheet),
+        ));
+
+        if (! is_file($sheet)) {
+            test()->markTestSkipped('Could not draw a test sheet.');
+        }
+
+        try {
+            $cells = $renderer->split((string) file_get_contents($sheet), 4, 4, 4, 2);
+        } finally {
+            @unlink($sheet);
+        }
+
+        expect($cells)->toHaveCount(4);
+
+        foreach ($cells as $cell) {
+            expect(substr($cell, 1, 3))->toBe('PNG');
+        }
+
+        // The fourth cell was transparent black; a PNG with an alpha channel
+        // says so in its IHDR colour type (6 = RGBA).
+        expect(ord($cells[3][25]))->toBe(6);
+    });
+
+    it('returns nothing for a count of nothing', function () {
+        expect(withRealFfmpeg()->split('not even a png', 4, 4, 0, 2))->toBe([]);
+    });
+});

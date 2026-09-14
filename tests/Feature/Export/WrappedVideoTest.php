@@ -123,16 +123,40 @@ describe('rendering', function () {
             ->and($this->videoRenderer->frames)->toHaveCount(4);
     });
 
-    it('pins the footer over every frame rather than drawing it on each', function () {
+    it('renders every frame and the footer from one sheet, in one browser launch', function () {
+        video()->render(aFullWrapped(), ['busiest_time', 'entries_published']);
+
+        $images = app(ImageRenderer::class);
+
+        // Intro, two cards, outro, footer: five pages on one sheet.
+        expect($images->sheet)->toHaveCount(5)
+            ->and($images->sheet[0])->toContain('2026')
+            ->and($images->sheet[1])->toContain('You publish most on Tuesday')
+            ->and($images->sheet[2])->toContain('You published 47 entries')
+            ->and($images->sheet[3])->toContain('That was your year.')
+            ->and($images->sheet[4])->toContain('class="footer"')
+            // The sheet is captured with alpha so the footer cell stays see-through.
+            ->and($images->transparent)->toBeTrue();
+    });
+
+    it('pins the last cell, the footer, over the rest', function () {
         video()->render(aFullWrapped(), ['busiest_time']);
 
-        expect($this->videoRenderer->overlay)->toBe('PNG:1080x1920:transparent');
+        // Four frames (intro, card, outro) plus the footer as the overlay, and
+        // the footer is the last cell cut from the sheet, not one of the frames.
+        expect($this->videoRenderer->frames)->toHaveCount(3)
+            ->and($this->videoRenderer->overlay)->toBe('CELL:3:of:SHEET:4:3')
+            ->and($this->videoRenderer->frames[0]->png)->toBe('CELL:0:of:SHEET:4:3');
+    });
 
-        // Exactly one transparent render: the footer. The frames are opaque.
-        $renders = collect(app(ImageRenderer::class)->renders);
+    it('times the sliced frames the same way as the single ones', function () {
+        video()->render(aFullWrapped(), ['busiest_time']);
 
-        expect($renders->where('transparent', true))->toHaveCount(1)
-            ->and($renders->where('transparent', false))->toHaveCount(3);
+        $frames = $this->videoRenderer->frames;
+
+        expect($frames[0]->seconds)->toBe(2.5)
+            ->and($frames[1]->seconds)->toBe(5.9)
+            ->and($frames[2]->seconds)->toBe(2.5);
     });
 
     it('uses the default soundtrack unless told otherwise', function () {

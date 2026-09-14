@@ -31,6 +31,25 @@ class FakeImageRenderer implements ImageRenderer
 
     public ?bool $transparent = null;
 
+    /** @var list<string> */
+    public array $sheet = [];
+
+    public function renderSheet(array $htmls, int $width, int $height, int $columns, bool $transparent = false): string
+    {
+        if ($this->fails !== null) {
+            throw new RuntimeException($this->fails);
+        }
+
+        $this->sheet = $htmls;
+        $this->transparent = $transparent;
+
+        foreach ($htmls as $html) {
+            $this->renders[] = ['html' => $html, 'transparent' => $transparent];
+        }
+
+        return 'SHEET:'.count($htmls).':'.$columns;
+    }
+
     public function render(string $html, int $width, int $height, bool $transparent = false): string
     {
         if ($this->fails !== null) {

@@ -1,5 +1,3 @@
-ALL TASKS COMPLETE
-
 # PROGRESS — Wrapped
 
 **Spec:** `wrapped-build-spec.md` · **Package:** `bpmore/statamic-wrapped` · **Free**
@@ -48,6 +46,11 @@ ALL TASKS COMPLETE
 - [x] Tappable story: the same frames as live HTML in the CP, advanced by tap, click or key, music optional — the accessible, self-paced version
 - [x] Theme: a site-chosen background, optional accent and logo; text derived for AA contrast; one look across images, video and story
 - [x] README + release 1.1 (tagged 14 September 2026)
+
+## Post-1.1
+- [x] Video rendering: one browser launch for every frame (30s -> 8s)
+- [ ] Decision: a public, shareable story URL (reverses SPEC.md §5 — see the assessment under Notes)
+- [ ] Decision: monthly periods alongside yearly and quarterly
 
 ## Notes
 <!-- Record surprises, decisions and blockers here. If a task is wrong or blocked, write why and stop. -->
@@ -1068,3 +1071,46 @@ could not have seen this; the real Chrome render with a light background, accent
   for all frames would make it a few seconds. Written down since task 30; do it if anyone complains.
 - The repo is private and not on Packagist. Making it public is the owner's call.
 - Seven more Suno tracks to come. Each is a file drop plus a manifest entry; two tests enforce the pairing.
+
+### Post-1.1 — Video rendering fix (done)
+**30.1s -> 8.2s for the same six-card video, identical output.** The time was never the drawing; it was
+Chrome starting once per frame (ten launches at ~2.5s). Now every page — intro, cards, outro and the
+footer — goes on one contact sheet of `<iframe srcdoc>` cells, Chrome captures it once at 1x (a video
+frame is output size already; 2x on ten frames would exceed what Chrome will screenshot in one go), and
+FFmpeg slices it back into cells in a single process (`split` + one `crop` per cell, alpha kept).
+
+- `ImageRenderer::renderSheet()` — many documents, one PNG. Iframes keep each page's styles to itself.
+- `VideoRenderer::split()` — the slicing lives on the video renderer because that is the path that has
+  FFmpeg. GD was the alternative and is present here, but a 66 MB image in a web request at a 128 MB
+  memory limit is a bad bet; FFmpeg's memory is its own.
+- The sheet is captured with alpha so the footer cell stays transparent; every other page paints its own
+  opaque background and is unaffected.
+- `VideoFrames::sheet()` is the new path; the single-frame methods stay for the card image and tests.
+- **Verified the same three ways as before:** duration exact (28.6s), a frame pulled mid-card reads
+  correctly, and the pinned-footer measurement still holds (0.07/255 mean drift, 2 pixels).
+  Real Chrome and real FFmpeg both have sheet tests that skip cleanly where absent.
+
+**Holding at five tracks**, at the owner's call. The manifest and tests are ready for more.
+
+### Assessment — a public, shareable story URL (not built; owner's decision)
+SPEC.md §5 says no public URL, and gives the reason: a link that leaks a team's internal publishing
+stats is a support problem and a privacy problem for a free addon. That reasoning still stands. What has
+changed is that the story is now genuinely worth sharing, so the question is whether it can be done
+without the harm. It can, opt-in, with guardrails:
+- Off by default; a site turns it on in config, and an editor publishes one snapshot at a time.
+- An unguessable token in the URL, revocable from the CP, with the option of an expiry.
+- People cards never included unless the editor ticks them for that link, same as the video.
+- `noindex`, no sitemap, no CP chrome, the site's theme.
+- Published means a copy of the snapshot at that moment, so a regenerate does not silently change a
+  link somebody already sent.
+Roughly a day. Recommendation: yes, built that way — but it is a reversal of the spec, so it is the
+owner's call, not mine.
+
+### Assessment — monthly periods (not built; owner's decision)
+Quarterly already exists. Monthly is cheap at the data layer: a `Period::Month` case, a `2026-09` key,
+`window()` and `previousWindow()` by month; every card's thresholds still make sense at a month.
+The real cost is the screen: it shows the most recent snapshot, so a site generating monthly *and*
+yearly would see September's Wrapped in December instead of the year's. Monthly needs a period picker on
+the screen, the widget nudging only for the yearly one, and the story/video labelled "September 2026".
+About half a day. Recommendation: yes, if the owner wants four-plus moments a year; the picker is the
+part to design first.

@@ -23,4 +23,15 @@ interface ImageRenderer
      * @throws \RuntimeException When the render fails.
      */
     public function render(string $html, int $width, int $height, bool $transparent = false): string;
+
+    /**
+     * Many pages on one PNG, laid out in a grid of $columns, each cell exactly
+     * $width by $height. One browser launch instead of one per page, which is
+     * where nearly all the time went when a video was rendered a frame at a
+     * time. The caller slices the result.
+     *
+     * @param  list<string>  $htmls  Independent documents, each rendered in its own cell.
+     * @return string Raw PNG bytes, at 1x — the cells are already output size.
+     */
+    public function renderSheet(array $htmls, int $width, int $height, int $columns, bool $transparent = false): string;
 }

@@ -23,11 +23,55 @@ class VideoFrames
 
     public const HEIGHT = 1920;
 
+    /** Cells across the contact sheet. Three keeps ten frames at 3240x7680, comfortably inside what Chrome will capture. */
+    public const SHEET_COLUMNS = 3;
+
     public function __construct(
         protected ImageRenderer $renderer,
+        protected VideoRenderer $video,
         protected Theme $theme,
         protected VideoSpec $spec = new VideoSpec,
     ) {}
+
+    /**
+     * Every frame for a video, plus the footer, from one browser launch.
+     *
+     * The intro, each card, the outro and the footer are laid out on one
+     * contact sheet, captured once, and sliced apart. Rendering them one at a
+     * time cost a browser start per frame — nearly all of a thirty-second
+     * render — and produced exactly the same pixels.
+     *
+     * @param  list<array{handle: string, heading: string, body: string}>  $cards
+     * @return array{frames: list<Frame>, footer: string}
+     */
+    public function sheet(Snapshot $snapshot, array $cards): array
+    {
+        $pages = [['kind' => 'intro'], ...array_map(
+            fn (array $card) => ['kind' => 'card', 'heading' => $card['heading'], 'body' => $card['body']],
+            $cards,
+        ), ['kind' => 'outro', 'outro' => __('wrapped::messages.video.outro')], ['kind' => 'footer']];
+
+        $htmls = array_map(fn (array $page) => $this->html($page, $snapshot), $pages);
+
+        // Transparent, so the footer cell keeps its alpha. Every other page
+        // paints its own opaque background, so they are unaffected.
+        $sheet = $this->renderer->renderSheet($htmls, self::WIDTH, self::HEIGHT, self::SHEET_COLUMNS, transparent: true);
+        $cells = $this->video->split($sheet, self::WIDTH, self::HEIGHT, count($pages), self::SHEET_COLUMNS);
+
+        $footer = array_pop($cells);
+        $frames = [];
+
+        foreach ($cells as $i => $png) {
+            $page = $pages[$i];
+
+            $frames[] = new Frame($png, match ($page['kind']) {
+                'card' => $this->spec->secondsFor($page['body']),
+                default => $this->spec->titleSeconds,
+            });
+        }
+
+        return ['frames' => $frames, 'footer' => $footer];
+    }
 
     public function intro(Snapshot $snapshot): Frame
     {
@@ -83,14 +127,20 @@ class VideoFrames
      */
     protected function render(array $data, Snapshot $snapshot, bool $transparent = false): string
     {
-        $html = view('wrapped::export.frame', $data + [
+        return $this->renderer->render($this->html($data, $snapshot), self::WIDTH, self::HEIGHT, $transparent);
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     */
+    protected function html(array $data, Snapshot $snapshot): string
+    {
+        return view('wrapped::export.frame', $data + [
             'theme' => $this->theme,
             'period' => $this->label($snapshot),
             'site' => $snapshot->site,
             'width' => self::WIDTH,
             'height' => self::HEIGHT,
         ])->render();
-
-        return $this->renderer->render($html, self::WIDTH, self::HEIGHT, $transparent);
     }
 }

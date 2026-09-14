@@ -91,6 +91,71 @@ class FfmpegRenderer implements VideoRenderer
         }
     }
 
+    public function split(string $sheet, int $width, int $height, int $count, int $columns): array
+    {
+        if ($count < 1) {
+            return [];
+        }
+
+        $binary = $this->binary();
+
+        if ($binary === null) {
+            throw new RuntimeException('No FFmpeg binary was found. Set wrapped.video.ffmpeg to its path.');
+        }
+
+        $columns = max(1, $columns);
+        $directory = $this->workspace();
+        $source = $directory.'/sheet.png';
+
+        try {
+            file_put_contents($source, $sheet);
+
+            // One process: fan the sheet out and crop every cell, alpha kept.
+            $graph = sprintf('[0:v]format=rgba,split=%d', $count);
+            $outputs = [];
+
+            for ($i = 0; $i < $count; $i++) {
+                $graph .= "[s{$i}]";
+            }
+
+            for ($i = 0; $i < $count; $i++) {
+                $x = ($i % $columns) * $width;
+                $y = intdiv($i, $columns) * $height;
+                $graph .= sprintf(';[s%d]crop=%d:%d:%d:%d[c%d]', $i, $width, $height, $x, $y, $i);
+                $outputs[] = sprintf('%s/cell-%03d.png', $directory, $i);
+            }
+
+            $command = [$binary, '-hide_banner', '-loglevel', 'error', '-y', '-i', $source, '-filter_complex', $graph];
+
+            foreach ($outputs as $i => $path) {
+                array_push($command, '-map', "[c{$i}]", '-frames:v', '1', $path);
+            }
+
+            (new Process($command, timeout: $this->timeout))->mustRun();
+
+            $cells = [];
+
+            foreach ($outputs as $path) {
+                $bytes = is_file($path) ? file_get_contents($path) : false;
+
+                if ($bytes === false || $bytes === '') {
+                    throw new RuntimeException('FFmpeg did not produce every frame from the sheet.');
+                }
+
+                $cells[] = $bytes;
+            }
+
+            return $cells;
+        } catch (ProcessFailedException $e) {
+            throw new RuntimeException('FFmpeg failed to slice the sheet: '.$e->getProcess()->getErrorOutput(), previous: $e);
+        } finally {
+            foreach (glob($directory.'/*') ?: [] as $file) {
+                @unlink($file);
+            }
+            @rmdir($directory);
+        }
+    }
+
     /**
      * The full FFmpeg invocation.
      *
