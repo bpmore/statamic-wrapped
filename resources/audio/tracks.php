@@ -20,27 +20,27 @@ return [
 
     'soft-landing' => [
         'name' => 'Soft Landing',
-        'description' => '',
+        'description' => 'Light electronic groove, clean and bright, anywhere.',
     ],
 
     'open-road' => [
         'name' => 'Open Road',
-        'description' => '',
+        'description' => 'Light electronic groove, clean and bright, anywhere.',
     ],
 
     'ipanema-morning' => [
         'name' => 'Ipanema Morning',
-        'description' => '',
+        'description' => 'Soft nylon guitar and brushed drums, unhurried, Brazil.',
     ],
 
     'kingston-slow-sunday' => [
         'name' => 'Kingston Slow Sunday',
-        'description' => '',
+        'description' => 'Mellow reggae groove, sunny and relaxed, Jamaica.',
     ],
 
     'seoul-rooftop' => [
         'name' => 'Seoul Rooftop',
-        'description' => '',
+        'description' => 'Light funky synths and guitar, fresh and upbeat, Korea.',
     ],
 
 ];
