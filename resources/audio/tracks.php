@@ -20,7 +20,7 @@ return [
 
     'soft-landing' => [
         'name' => 'Soft Landing',
-        'description' => 'Light electronic groove, clean and bright, anywhere.',
+        'description' => 'Electronic groove, cheerful and clean, anywhere.',
     ],
 
     'open-road' => [
