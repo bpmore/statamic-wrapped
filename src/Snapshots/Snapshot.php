@@ -6,6 +6,7 @@ use Bpmore\Wrapped\History\Confidence;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Model;
 use RuntimeException;
+use Statamic\Facades\Site;
 
 /**
  * One generated Wrapped, cached.
@@ -84,6 +85,19 @@ class Snapshot extends Model
         return $this->isFirstPeriod()
             ? __('wrapped::messages.since', ['month' => $this->started_at->translatedFormat('F Y')])
             : Period::label($this->period_key);
+    }
+
+    /**
+     * The site as a person knows it: "Had A Farm", not `default`.
+     *
+     * `site` is the handle, which is what lookups and filenames want. Anything
+     * a reader sees wants the name, looked up now rather than stored: a site
+     * renamed since the snapshot was built should read as its current name.
+     * The handle stands in for a site that no longer exists.
+     */
+    public function siteName(): string
+    {
+        return Site::get($this->site)?->name() ?? $this->site;
     }
 
     /**

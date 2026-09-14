@@ -217,7 +217,7 @@ describe('the public page', function () {
             // The footer is decoration for sighted readers; the frames already say it.
             ->toContain('class="story-footer" aria-hidden="true"')
             // A posted link gets a title and a first line.
-            ->toContain('<meta property="og:title" content="2026 Wrapped · default">')
+            ->toContain('<meta property="og:title" content="2026 Wrapped · Laravel">')
             ->toContain('<meta property="og:description" content="You published 42 entries.">')
             // Nothing of the control panel: no links into it, no assets from it.
             ->not->toContain('/cp/')

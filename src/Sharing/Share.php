@@ -5,6 +5,7 @@ namespace Bpmore\Wrapped\Sharing;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Statamic\Facades\Site;
 
 /**
  * One public link to one Wrapped, frozen at the moment it was made.
@@ -63,6 +64,15 @@ class Share extends Model
     /**
      * Still serving: not revoked, and not past its expiry.
      */
+    /**
+     * The site as a person knows it, for the page's title and its intro. The
+     * handle stands in for a site that no longer exists.
+     */
+    public function siteName(): string
+    {
+        return Site::get($this->site)?->name() ?? $this->site;
+    }
+
     public function isLive(): bool
     {
         return $this->revoked_at === null

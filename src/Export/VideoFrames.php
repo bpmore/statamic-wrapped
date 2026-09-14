@@ -132,7 +132,7 @@ class VideoFrames
         return view('wrapped::export.frame', $data + [
             'theme' => $this->theme,
             'period' => $snapshot->label(),
-            'site' => $snapshot->site,
+            'site' => $snapshot->siteName(),
             'width' => self::WIDTH,
             'height' => self::HEIGHT,
         ])->render();

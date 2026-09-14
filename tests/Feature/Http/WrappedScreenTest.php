@@ -49,7 +49,7 @@ it('renders the wrapped screen', function () {
         ->assertOk()
         ->assertInertia(fn (AssertableInertia $page) => $page
             ->component('wrapped::Wrapped')
-            ->where('site', 'default')
+            ->where('site', 'Laravel')
             ->where('snapshot.periodKey', '2026')
             ->where('snapshot.history.confidence', 'high')
             ->where('snapshot.history.source', 'logbook')
@@ -221,8 +221,8 @@ it('hands over suggested alt text with every image', function () {
 
     $this->get(cp_route('wrapped.index'))
         ->assertInertia(fn (AssertableInertia $page) => $page
-            ->where('snapshot.cards.0.alt', 'Entries published: You published 42 entries. From the 2026 Wrapped for default.')
-            ->where('snapshot.summaryAlt', 'The 2026 Wrapped for default. Entries published: You published 42 entries.')
+            ->where('snapshot.cards.0.alt', 'Entries published: You published 42 entries. From the 2026 Wrapped for Laravel.')
+            ->where('snapshot.summaryAlt', 'The 2026 Wrapped for Laravel. Entries published: You published 42 entries.')
         );
 });
 
@@ -255,7 +255,7 @@ describe('the video maker', function () {
                 ->where('snapshot.video.crossfade', 0.8)
                 ->where('snapshot.video.defaultTrack', 'soft-landing')
                 ->where('snapshot.video.filename', 'wrapped-2026-default.mp4')
-                ->where('snapshot.video.descriptionLead', 'A short video of the 2026 Wrapped for default, one fact per screen, with music.')
+                ->where('snapshot.video.descriptionLead', 'A short video of the 2026 Wrapped for Laravel, one fact per screen, with music.')
                 ->has('snapshot.video.tracks', 5)
                 ->where('snapshot.video.tracks.0.handle', 'soft-landing')
                 ->where('snapshot.video.tracks.0.mimeType', 'audio/mp4')
@@ -324,12 +324,12 @@ describe('the story', function () {
             ->assertInertia(fn (AssertableInertia $page) => $page
                 ->component('wrapped::Story')
                 ->where('label', '2026')
-                ->where('site', 'default')
+                ->where('site', 'Laravel')
                 ->where('backUrl', cp_route('wrapped.index', ['period' => '2026']))
                 ->has('frames', 4)
                 ->where('frames.0.kind', 'intro')
                 ->where('frames.0.title', '2026 Wrapped')
-                ->where('frames.0.subtitle', 'default')
+                ->where('frames.0.subtitle', 'Laravel')
                 ->where('frames.1.kind', 'card')
                 ->where('frames.1.heading', 'Entries published')
                 ->where('frames.1.body', 'You published 42 entries.')

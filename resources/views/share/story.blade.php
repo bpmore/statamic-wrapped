@@ -16,7 +16,7 @@
 --}}
 @php
     $frames = [
-        ['kind' => 'intro', 'title' => __('wrapped::messages.story.intro', ['period' => $share->label]), 'subtitle' => $share->site],
+        ['kind' => 'intro', 'title' => __('wrapped::messages.story.intro', ['period' => $share->label]), 'subtitle' => $share->siteName()],
         ...array_map(fn ($card) => ['kind' => 'card'] + $card, $share->cards),
         ['kind' => 'outro', 'title' => \Bpmore\Wrapped\Snapshots\Period::outro($share->period_key)],
     ];
@@ -30,10 +30,10 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex, nofollow">
-    <title>{{ $share->label }} Wrapped · {{ $share->site }}</title>
+    <title>{{ $share->label }} Wrapped · {{ $share->siteName() }}</title>
 
     {{-- A posted link gets a title and a line, not an image: nothing is hosted. --}}
-    <meta property="og:title" content="{{ $share->label }} Wrapped · {{ $share->site }}">
+    <meta property="og:title" content="{{ $share->label }} Wrapped · {{ $share->siteName() }}">
     @if ($lead !== '')
         <meta property="og:description" content="{{ $lead }}">
         <meta name="description" content="{{ $lead }}">
@@ -215,7 +215,7 @@
 
         <div class="story-footer" aria-hidden="true">
             <span class="story-footer__period">{{ $share->label }}</span>
-            <span>{{ $share->site }}</span>
+            <span>{{ $share->siteName() }}</span>
         </div>
 
         {{-- Visible controls too, for anyone who has not guessed the convention. --}}

@@ -69,7 +69,7 @@ it('renders the footer once, on a transparent ground, to be pinned over everythi
     expect($png)->toBe('PNG:1080x1920:transparent')
         ->and($renderer->transparent)->toBeTrue()
         ->and($renderer->html)->toContain('2026')
-        ->and($renderer->html)->toContain('default')
+        ->and($renderer->html)->toContain('Laravel')
         ->and($renderer->html)->toContain('background: transparent');
 });
 
@@ -88,7 +88,7 @@ it('opens with whose year it is', function () {
 
     expect($renderer->html)->toContain('2026')
         ->and($renderer->html)->toContain('Wrapped')
-        ->and($renderer->html)->toContain('default');
+        ->and($renderer->html)->toContain('Laravel');
 });
 
 it('puts one fact on a card frame', function () {
