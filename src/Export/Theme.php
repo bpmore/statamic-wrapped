@@ -3,6 +3,7 @@
 namespace Bpmore\Wrapped\Export;
 
 use Illuminate\Support\Facades\Log;
+use Statamic\Assets\Asset;
 use Throwable;
 
 /**
@@ -39,17 +40,38 @@ class Theme
         public readonly ?string $logo,
     ) {}
 
+    /**
+     * From the config file alone, ignoring anything saved on the settings
+     * screen. What a site gets before anyone has opened that screen.
+     */
     public static function fromConfig(): self
     {
-        $background = static::colour(config('wrapped.theme.background')) ?? self::DEFAULT_BACKGROUND;
+        return static::fromValues((array) config('wrapped.theme', []));
+    }
+
+    /**
+     * From the config file with the settings screen laid over it: whatever
+     * somebody saved there wins, and the file answers for the rest.
+     */
+    public static function fromSettings(): self
+    {
+        return static::fromValues(ThemeSettings::values());
+    }
+
+    /**
+     * @param  array{background?: mixed, accent?: mixed, logo?: mixed}  $values
+     */
+    public static function fromValues(array $values): self
+    {
+        $background = static::colour($values['background'] ?? null) ?? self::DEFAULT_BACKGROUND;
         $text = static::textFor($background);
 
         return new self(
             background: $background,
             text: $text,
             muted: static::mutedFor($background, $text),
-            accent: static::accentFor(static::colour(config('wrapped.theme.accent')), $background),
-            logo: static::logoFrom(config('wrapped.theme.logo') ?? config('statamic.cp.custom_logo_url')),
+            accent: static::accentFor(static::colour($values['accent'] ?? null), $background),
+            logo: static::logoFrom($values['logo'] ?? config('statamic.cp.custom_logo_url')),
         );
     }
 
@@ -143,11 +165,16 @@ class Theme
      *
      * Rendering happens from a file:// page with no network, so a URL would
      * simply be a missing image. A path on disk is read directly; a URL under
-     * the site's own public directory is mapped to disk; anything else is
+     * the site's own public directory is mapped to disk; an asset chosen on
+     * the settings screen is read from its container; anything else is
      * fetched once, briefly, and skipped on failure.
      */
     protected static function logoFrom(mixed $logo): ?string
     {
+        if ($logo instanceof Asset) {
+            $logo = static::assetLocation($logo);
+        }
+
         if (! is_string($logo) || trim($logo) === '') {
             return null;
         }
@@ -184,6 +211,25 @@ class Theme
         }
 
         return 'data:'.$mime.';base64,'.base64_encode($bytes);
+    }
+
+    /**
+     * Where an asset's bytes are: its path on a local disk, or its URL for a
+     * disk that is somewhere else, which the fetch below handles.
+     */
+    protected static function assetLocation(Asset $asset): ?string
+    {
+        try {
+            $path = $asset->resolvedPath();
+
+            if (is_file($path)) {
+                return $path;
+            }
+
+            return $asset->absoluteUrl();
+        } catch (Throwable) {
+            return null;
+        }
     }
 
     protected static function mimeFromBytes(string $bytes): string

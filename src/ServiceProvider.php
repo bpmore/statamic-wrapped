@@ -36,8 +36,10 @@ use Bpmore\Wrapped\Stats\StatCard;
 use Bpmore\Wrapped\Stats\StatCardRegistry;
 use Bpmore\Wrapped\Widgets\WrappedWidget;
 use Illuminate\Console\Command;
+use Statamic\Facades\AssetContainer;
 use Statamic\Facades\CP\Nav;
 use Statamic\Facades\Permission;
+use Statamic\Facades\YAML;
 use Statamic\Providers\AddonServiceProvider;
 use Statamic\Widgets\Widget;
 
@@ -141,8 +143,11 @@ class ServiceProvider extends AddonServiceProvider
         // process, not once per lookup.
         $this->app->singleton(Soundtracks::class);
 
-        // Read from config once; the logo may involve reading a file.
-        $this->app->singleton(Theme::class, fn () => Theme::fromConfig());
+        // Read once per process; the logo may involve reading a file. The
+        // settings screen lays over the config file — see ThemeSettings. A
+        // long-lived worker (Octane, a queue) holds this until it restarts,
+        // the same as any config change.
+        $this->app->singleton(Theme::class, fn () => Theme::fromSettings());
 
         $this->app->singleton(StatCardRegistry::class, function ($app) {
             return new StatCardRegistry(array_map(
@@ -160,6 +165,54 @@ class ServiceProvider extends AddonServiceProvider
 
         $this->bootPermissions();
         $this->bootNav();
+        $this->bootSettings();
+    }
+
+    /**
+     * The settings form, from resources/blueprints/settings.yaml with one
+     * thing filled in: which asset container the logo field offers.
+     *
+     * Statamic registers that file on its own, but an assets field with no
+     * container works only on a site with exactly one and throws on any
+     * other, and the file cannot know the site. So the same file is
+     * registered again here, through a closure that runs when the form is
+     * drawn, with the site's first container named; a site with none gets a
+     * plain text field for a path or URL instead.
+     */
+    protected function bootSettings(): void
+    {
+        $this->registerSettingsBlueprint(function () {
+            $blueprint = YAML::file(__DIR__.'/../resources/blueprints/settings.yaml')->parse();
+
+            foreach ($blueprint['tabs']['main']['sections'] as &$section) {
+                foreach ($section['fields'] as &$field) {
+                    if (($field['handle'] ?? null) === 'logo') {
+                        $field['field'] = $this->logoField($field['field']);
+                    }
+                }
+            }
+
+            return $blueprint;
+        });
+    }
+
+    /**
+     * @param  array<string, mixed>  $field
+     * @return array<string, mixed>
+     */
+    protected function logoField(array $field): array
+    {
+        $container = AssetContainer::all()->sortBy(fn ($container) => $container->handle())->first();
+
+        if ($container === null) {
+            return [
+                'type' => 'text',
+                'display' => $field['display'],
+                'instructions' => 'A picture on this site, as its address (starting with /), or a full web address. Shown on the opening and closing frames. Leave it empty to use the control panel logo, if the site has one.',
+            ];
+        }
+
+        return $field + ['container' => $container->handle()];
     }
 
     /**

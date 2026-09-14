@@ -1,0 +1,51 @@
+# The addon's settings, as a form in the control panel.
+#
+# The look of the images, the video and the story was a PHP file and three
+# environment variables until somebody pointed out who ends up holding a site:
+# a developer installs the addon and hands over, and the person left with it
+# cannot edit config/wrapped.php. A background colour is exactly the kind of
+# thing that person wants to change.
+#
+# Statamic gives this screen for free: this file is the form, and it appears
+# at Addons, Wrapped, Settings. The service provider fills in which asset
+# container the logo comes from, because that differs per site.
+#
+# Every instruction here is written for that person. No handles, no file
+# paths, no words like "blueprint" where "form" will do. Whatever is saved here
+# wins over the config file; until something is saved, the config file answers.
+
+tabs:
+  main:
+    display: Settings
+    sections:
+      -
+        display: 'Look'
+        instructions: 'The card images, the video and the story share one look. Pick a background; the text colour is worked out from it so it can always be read.'
+        fields:
+          -
+            handle: background
+            field:
+              type: color
+              display: 'Background'
+              instructions: 'Any colour. Light or dark text is chosen for you, whichever reads better on it.'
+              allow_any: true
+              default: '#16161d'
+              width: 50
+          -
+            handle: accent
+            field:
+              type: color
+              display: 'Accent'
+              instructions: 'Optional, and used sparingly, for the small labels. If it cannot be read against the background it is left out rather than used.'
+              allow_any: true
+              width: 50
+          -
+            handle: logo
+            field:
+              type: assets
+              display: 'Logo'
+              instructions: 'Shown on the opening and closing frames. Leave it empty to use the control panel logo, if the site has one.'
+              max_files: 1
+              mode: list
+              restrict: false
+              allow_uploads: true
