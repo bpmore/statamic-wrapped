@@ -982,3 +982,22 @@ what was being verified, and it is.
 404 before a Wrapped exists, the link from the screen).
 
 - Verified: `vendor/bin/pest` 415 passed · `vendor/bin/pint --test` clean · `vendor/bin/phpstan analyse` no errors.
+
+### Fix — text flush against the card borders (done)
+Owner's screenshot: no padding inside the cards. **Cause, confirmed by grepping the CP's built stylesheet:
+Statamic's control panel ships only the Tailwind utility classes its own screens happen to use.** `p-4` and
+`p-6` exist; `p-5`, which the cards used, does not. Every other utility I had leaned on was working by luck.
+
+Fix: the Wrapped page, the video maker and the widget now carry their own CSS (`wrapped-*` classes),
+written out, using the CP's colour tokens (`--color-gray-*`) so dark mode follows the site. Nothing
+layout-critical depends on a utility that may or may not be in the bundle. The story page already did this.
+
+Verified in the live CP: cards padded, video section padded 20px with its border, badge coloured, readout
+intact. Screenshot refreshed.
+
+Lesson for any Statamic 6 addon screen: **do not use Tailwind utilities in addon Vue for anything that
+matters. The CP's bundle is purged to its own usage, and an addon gets whatever survived.**
+Mistake of my own while fixing it: a scripted replace matched the *inner* `</template>` (the `v-else` block)
+and left the outer one dangling. Build failed loudly, so it cost a minute, not a release.
+
+- Verified: `vendor/bin/pest` 415 passed · `vendor/bin/pint --test` clean · `vendor/bin/phpstan analyse` no errors.

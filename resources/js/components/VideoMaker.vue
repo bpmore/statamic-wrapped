@@ -92,29 +92,29 @@ const copyDescription = async () => {
 </script>
 
 <template>
-    <section class="mt-10 p-5 border rounded-lg" aria-labelledby="wrapped-video-heading">
-        <h2 id="wrapped-video-heading" class="font-medium text-lg">Make a video</h2>
-        <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
+    <section class="wrapped-panel wrapped-video" aria-labelledby="wrapped-video-heading">
+        <h2 id="wrapped-video-heading" class="wrapped-video__title">Make a video</h2>
+        <p class="wrapped-muted">
             One fact per screen, music underneath, sized for Reels, Stories and TikTok. Downloaded, never hosted.
         </p>
 
         <!-- Cards -->
-        <fieldset class="mt-6">
-            <legend class="text-sm font-medium">Which cards</legend>
+        <fieldset class="wrapped-video__group">
+            <legend class="wrapped-video__legend">Which cards</legend>
 
-            <ul class="mt-2 space-y-2">
+            <ul class="wrapped-video__list">
                 <li v-for="c in video.choices" :key="c.handle">
-                    <label class="flex items-start gap-3 cursor-pointer">
-                        <input type="checkbox" :value="c.handle" v-model="ticked" class="mt-1">
+                    <label class="wrapped-video__option">
+                        <input type="checkbox" :value="c.handle" v-model="ticked">
                         <span>
-                            <span class="font-medium">{{ c.heading }}</span>
+                            <span class="wrapped-video__name">{{ c.heading }}</span>
                             <!--
                                 A leading space inside the text, not just a
                                 margin: without it a screen reader runs the
                                 two together as "The teamnames people".
                             -->
-                            <span v-if="c.people" class="ml-2 text-xs px-1.5 py-0.5 rounded bg-yellow-50 dark:bg-yellow-900/20 text-yellow-900 dark:text-yellow-200"> (names people)</span>
-                            <span class="block text-sm text-gray-600 dark:text-gray-400">{{ c.body }}</span>
+                            <span v-if="c.people" class="wrapped-video__badge"> (names people)</span>
+                            <span class="wrapped-muted">{{ c.body }}</span>
                         </span>
                     </label>
                 </li>
@@ -125,57 +125,152 @@ const copyDescription = async () => {
                 watches to the end. aria-live so a screen reader hears it change
                 too.
             -->
-            <p class="mt-3 text-sm" aria-live="polite">
+            <p class="wrapped-video__readout" aria-live="polite">
                 <span v-if="chosen.length === 0">Pick at least one card.</span>
                 <span v-else>About {{ seconds }} seconds.</span>
-                <span v-if="overLong" class="text-yellow-900 dark:text-yellow-200">
+                <span v-if="overLong" class="wrapped-video__warn">
                     Over thirty; attention on short-video platforms runs out around there.
                 </span>
             </p>
         </fieldset>
 
         <!-- Music -->
-        <fieldset class="mt-6" v-if="video.tracks.length">
-            <legend class="text-sm font-medium">Music</legend>
+        <fieldset class="wrapped-video__group" v-if="video.tracks.length">
+            <legend class="wrapped-video__legend">Music</legend>
 
-            <ul class="mt-2 space-y-2">
-                <li v-for="t in video.tracks" :key="t.handle" class="flex items-start gap-3">
-                    <label class="flex items-start gap-3 cursor-pointer flex-1">
-                        <input type="radio" name="wrapped-track" :value="t.handle" v-model="track" class="mt-1">
+            <ul class="wrapped-video__list">
+                <li v-for="t in video.tracks" :key="t.handle" class="wrapped-video__track">
+                    <label class="wrapped-video__option">
+                        <input type="radio" name="wrapped-track" :value="t.handle" v-model="track">
                         <span>
-                            <span class="font-medium">{{ t.name }}</span>
-                            <span v-if="t.description" class="block text-sm text-gray-600 dark:text-gray-400">{{ t.description }}</span>
+                            <span class="wrapped-video__name">{{ t.name }}</span>
+                            <span v-if="t.description" class="wrapped-muted">{{ t.description }}</span>
                         </span>
                     </label>
 
                     <button
                         v-if="canPreview(t)"
                         type="button"
-                        class="text-sm underline shrink-0"
+                        class="wrapped-link"
                         :aria-pressed="playing === t.handle"
                         @click="preview(t)"
                     >{{ playing === t.handle ? 'Stop' : 'Preview' }}</button>
-                    <span v-else class="text-xs text-gray-500 shrink-0">Preview not supported in this browser</span>
+                    <span v-else class="wrapped-muted wrapped-video__unsupported">Preview not supported in this browser</span>
                 </li>
             </ul>
         </fieldset>
 
         <!-- Download -->
-        <div class="mt-6">
-            <a
-                v-if="chosen.length"
-                :href="downloadUrl"
-                class="inline-block px-4 py-2 rounded bg-gray-900 text-white dark:bg-white dark:text-gray-900 text-sm font-medium"
-            >Download video</a>
-            <span v-else class="text-sm text-gray-500">Pick a card to make a video.</span>
-            <p class="text-xs text-gray-500 mt-2">Takes about half a minute to make. The file is {{ video.filename }}.</p>
+        <div class="wrapped-video__group">
+            <a v-if="chosen.length" :href="downloadUrl" class="wrapped-button">Download video</a>
+            <span v-else class="wrapped-muted">Pick a card to make a video.</span>
+            <p class="wrapped-muted wrapped-video__hint">Takes about half a minute to make. The file is {{ video.filename }}.</p>
         </div>
 
         <!-- Description -->
-        <details v-if="chosen.length" class="mt-4">
-            <summary class="text-sm cursor-pointer text-gray-600 dark:text-gray-400">Suggested description for posting</summary>
-            <p class="text-sm mt-2 text-gray-600 dark:text-gray-400">{{ description }}</p>
-            <button type="button" class="text-sm underline mt-2" @click="copyDescription">{{ copied ? 'Copied' : 'Copy' }}</button>
+        <details v-if="chosen.length" class="wrapped-details">
+            <summary>Suggested description for posting</summary>
+            <p class="wrapped-muted">{{ description }}</p>
+            <button type="button" class="wrapped-link" @click="copyDescription">{{ copied ? 'Copied' : 'Copy' }}</button>
         </details>
     </section>
 </template>
+
+<style>
+/* Shares the `wrapped-*` vocabulary from the page; see the note there. */
+.wrapped-video {
+    margin-top: 2.5rem;
+}
+
+.wrapped-video__title {
+    font-size: 1.125rem;
+    font-weight: 500;
+    margin: 0;
+}
+
+.wrapped-video__group {
+    margin-top: 1.5rem;
+    padding: 0;
+    border: 0;
+}
+
+.wrapped-video__legend {
+    font-size: 0.875rem;
+    font-weight: 500;
+    padding: 0;
+}
+
+.wrapped-video__list {
+    list-style: none;
+    margin: 0.5rem 0 0;
+    padding: 0;
+}
+
+.wrapped-video__list > li + li {
+    margin-top: 0.5rem;
+}
+
+.wrapped-video__option {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    cursor: pointer;
+    flex: 1;
+}
+
+.wrapped-video__option > input {
+    margin-top: 0.25rem;
+}
+
+.wrapped-video__option .wrapped-muted {
+    display: block;
+    margin: 0;
+}
+
+.wrapped-video__name {
+    font-weight: 500;
+}
+
+.wrapped-video__badge {
+    margin-left: 0.5rem;
+    font-size: 0.75rem;
+    padding: 0.125rem 0.375rem;
+    border-radius: 0.25rem;
+    background: #fefce8;
+    color: #713f12;
+}
+
+.dark .wrapped-video__badge {
+    background: rgba(113, 63, 18, 0.2);
+    color: #fef08a;
+}
+
+.wrapped-video__track {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+}
+
+.wrapped-video__unsupported {
+    font-size: 0.75rem;
+    flex-shrink: 0;
+}
+
+.wrapped-video__readout {
+    font-size: 0.875rem;
+    margin: 0.75rem 0 0;
+}
+
+.wrapped-video__warn {
+    color: #713f12;
+}
+
+.dark .wrapped-video__warn {
+    color: #fef08a;
+}
+
+.wrapped-video__hint {
+    font-size: 0.75rem;
+    margin-top: 0.5rem;
+}
+</style>

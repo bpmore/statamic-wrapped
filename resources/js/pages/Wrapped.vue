@@ -46,13 +46,13 @@ const copyAlt = async (key, text) => {
 </script>
 
 <template>
-    <div class="max-w-5xl mx-auto">
+    <div class="wrapped">
         <Head title="Wrapped" />
 
-        <header class="mb-6 flex items-start justify-between gap-4">
+        <header class="wrapped-header">
             <div>
-                <h1 class="text-2xl font-bold">Wrapped</h1>
-                <p v-if="snapshot" class="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                <h1 class="wrapped-title">Wrapped</h1>
+                <p v-if="snapshot" class="wrapped-subtitle">
                     {{ snapshot.label }} &middot; {{ site }}
                 </p>
             </div>
@@ -61,7 +61,7 @@ const copyAlt = async (key, text) => {
             <a
                 v-if="snapshot && snapshot.cards.length"
                 :href="snapshot.storyUrl"
-                class="shrink-0 px-4 py-2 rounded bg-gray-900 text-white dark:bg-white dark:text-gray-900 text-sm font-medium"
+                class="wrapped-button"
             >Play it</a>
         </header>
 
@@ -69,9 +69,9 @@ const copyAlt = async (key, text) => {
             No snapshot at all. Not an error state: nobody has run the command
             yet, and saying so plainly beats an empty page.
         -->
-        <div v-if="!snapshot" class="p-6 border rounded-lg">
-            <h2 class="font-medium mb-2">Nothing here yet</h2>
-            <p class="text-sm">
+        <div v-if="!snapshot" class="wrapped-panel">
+            <h2 class="wrapped-panel__heading">Nothing here yet</h2>
+            <p class="wrapped-muted">
                 Run <code>php please wrapped:generate</code> to build one.
             </p>
         </div>
@@ -84,12 +84,7 @@ const copyAlt = async (key, text) => {
                 an alert: thin history is not an error and not the reader's
                 fault.
             -->
-            <p
-                class="text-sm mb-6 px-4 py-3 rounded-lg"
-                :class="snapshot.history.limited
-                    ? 'bg-yellow-50 dark:bg-yellow-900/20 text-yellow-900 dark:text-yellow-200'
-                    : 'text-gray-600 dark:text-gray-400'"
-            >
+            <p class="wrapped-notice" :class="{ 'wrapped-notice--limited': snapshot.history.limited }">
                 {{ snapshot.history.notice }}
                 <span v-if="snapshot.history.suggestion">{{ snapshot.history.suggestion }}</span>
             </p>
@@ -98,8 +93,8 @@ const copyAlt = async (key, text) => {
                 A snapshot whose cards were all left out. The notice above has
                 already explained why, so this only has to not look broken.
             -->
-            <div v-if="snapshot.cards.length === 0" class="p-6 border rounded-lg">
-                <h2 class="font-medium">No cards this time</h2>
+            <div v-if="snapshot.cards.length === 0" class="wrapped-panel">
+                <h2 class="wrapped-panel__heading">No cards this time</h2>
             </div>
 
             <!--
@@ -107,39 +102,29 @@ const copyAlt = async (key, text) => {
                 term and its explanation, which is what a screen reader should
                 hear.
             -->
-            <dl v-else class="grid gap-4 md:grid-cols-2">
-                <div
-                    v-for="card in snapshot.cards"
-                    :key="card.handle"
-                    class="p-5 border rounded-lg flex flex-col"
-                >
-                    <dt class="text-sm font-medium text-gray-600 dark:text-gray-400">
-                        {{ card.heading }}
-                    </dt>
-                    <dd class="mt-1 text-lg flex-1">{{ card.body }}</dd>
+            <dl v-else class="wrapped-cards">
+                <div v-for="card in snapshot.cards" :key="card.handle" class="wrapped-card">
+                    <dt class="wrapped-card__heading">{{ card.heading }}</dt>
+                    <dd class="wrapped-card__body">{{ card.body }}</dd>
 
                     <!--
                         A download, not a link to a hosted image. The picture is
                         a convenience; this page is the real version.
                     -->
-                    <div v-if="snapshot.canExport" class="mt-3">
-                        <a :href="`${imageUrl}/${card.handle}`" class="text-sm underline">Download image</a>
+                    <div v-if="snapshot.canExport" class="wrapped-card__actions">
+                        <a :href="`${imageUrl}/${card.handle}`" class="wrapped-link">Download image</a>
 
                         <!--
                             Suggested alt text, written out rather than hidden
                             behind the button, so it can be read and edited
                             before it goes anywhere.
                         -->
-                        <details class="mt-2">
-                            <summary class="text-sm cursor-pointer text-gray-600 dark:text-gray-400">
-                                Suggested alt text
-                            </summary>
-                            <p class="text-sm mt-2 text-gray-600 dark:text-gray-400">{{ card.alt }}</p>
-                            <button
-                                type="button"
-                                class="text-sm underline mt-2"
-                                @click="copyAlt(card.handle, card.alt)"
-                            >{{ copied === card.handle ? 'Copied' : 'Copy' }}</button>
+                        <details class="wrapped-details">
+                            <summary>Suggested alt text</summary>
+                            <p class="wrapped-muted">{{ card.alt }}</p>
+                            <button type="button" class="wrapped-link" @click="copyAlt(card.handle, card.alt)">
+                                {{ copied === card.handle ? 'Copied' : 'Copy' }}
+                            </button>
                         </details>
                     </div>
                 </div>
@@ -156,21 +141,185 @@ const copyAlt = async (key, text) => {
                 :video-url="videoUrl"
             />
 
-            <div v-if="snapshot.canExport && snapshot.cards.length" class="mt-6">
-                <a :href="imageUrl" class="text-sm underline">Download all of it as one image</a>
+            <div v-if="snapshot.canExport && snapshot.cards.length" class="wrapped-summary">
+                <a :href="imageUrl" class="wrapped-link">Download all of it as one image</a>
 
-                <details class="mt-2">
-                    <summary class="text-sm cursor-pointer text-gray-600 dark:text-gray-400">
-                        Suggested alt text
-                    </summary>
-                    <p class="text-sm mt-2 text-gray-600 dark:text-gray-400">{{ snapshot.summaryAlt }}</p>
-                    <button
-                        type="button"
-                        class="text-sm underline mt-2"
-                        @click="copyAlt('summary', snapshot.summaryAlt)"
-                    >{{ copied === 'summary' ? 'Copied' : 'Copy' }}</button>
+                <details class="wrapped-details">
+                    <summary>Suggested alt text</summary>
+                    <p class="wrapped-muted">{{ snapshot.summaryAlt }}</p>
+                    <button type="button" class="wrapped-link" @click="copyAlt('summary', snapshot.summaryAlt)">
+                        {{ copied === 'summary' ? 'Copied' : 'Copy' }}
+                    </button>
                 </details>
             </div>
         </template>
     </div>
 </template>
+
+<style>
+/*
+ * Not scoped, and not Tailwind utilities: the control panel ships only the
+ * utility classes its own screens happen to use (p-4 and p-6 exist, p-5 does
+ * not), so anything layout-critical is written out here. Unscoped so the
+ * VideoMaker child can share the same vocabulary. Colours come from the
+ * control panel's own tokens, so dark mode follows the site's setting.
+ */
+.wrapped {
+    max-width: 64rem;
+    margin: 0 auto;
+}
+
+.wrapped-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.wrapped-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+.wrapped-subtitle,
+.wrapped-muted {
+    color: var(--color-gray-600);
+    font-size: 0.875rem;
+    margin: 0.25rem 0 0;
+}
+
+.dark .wrapped-subtitle,
+.dark .wrapped-muted {
+    color: var(--color-gray-400);
+}
+
+.wrapped-button {
+    flex-shrink: 0;
+    padding: 0.5rem 1rem;
+    border-radius: 0.375rem;
+    background: var(--color-gray-900);
+    color: var(--color-white, #fff);
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-decoration: none;
+}
+
+.dark .wrapped-button {
+    background: var(--color-white, #fff);
+    color: var(--color-gray-900);
+}
+
+.wrapped-panel,
+.wrapped-card {
+    padding: 1.25rem;
+    border: 1px solid var(--color-gray-200);
+    border-radius: 0.5rem;
+}
+
+.dark .wrapped-panel,
+.dark .wrapped-card {
+    border-color: var(--color-gray-700);
+}
+
+.wrapped-panel__heading {
+    font-weight: 500;
+    margin: 0 0 0.5rem;
+}
+
+.wrapped-notice {
+    font-size: 0.875rem;
+    margin: 0 0 1.5rem;
+    padding: 0.75rem 1rem;
+    border-radius: 0.5rem;
+    color: var(--color-gray-600);
+}
+
+.dark .wrapped-notice {
+    color: var(--color-gray-400);
+}
+
+.wrapped-notice--limited {
+    background: #fefce8;
+    color: #713f12;
+}
+
+.dark .wrapped-notice--limited {
+    background: rgba(113, 63, 18, 0.2);
+    color: #fef08a;
+}
+
+.wrapped-cards {
+    display: grid;
+    gap: 1rem;
+    margin: 0;
+}
+
+@media (min-width: 768px) {
+    .wrapped-cards {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+.wrapped-card {
+    display: flex;
+    flex-direction: column;
+}
+
+.wrapped-card__heading {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--color-gray-600);
+}
+
+.dark .wrapped-card__heading {
+    color: var(--color-gray-400);
+}
+
+.wrapped-card__body {
+    font-size: 1.125rem;
+    margin: 0.25rem 0 0;
+    flex: 1;
+}
+
+.wrapped-card__actions {
+    margin-top: 0.75rem;
+}
+
+.wrapped-link {
+    font-size: 0.875rem;
+    text-decoration: underline;
+    background: none;
+    border: 0;
+    padding: 0;
+    color: inherit;
+    cursor: pointer;
+}
+
+.wrapped-details {
+    margin-top: 0.5rem;
+}
+
+.wrapped-details > summary {
+    font-size: 0.875rem;
+    cursor: pointer;
+    color: var(--color-gray-600);
+}
+
+.dark .wrapped-details > summary {
+    color: var(--color-gray-400);
+}
+
+.wrapped-details > p {
+    margin-top: 0.5rem;
+}
+
+.wrapped-details > button {
+    margin-top: 0.5rem;
+}
+
+.wrapped-summary {
+    margin-top: 1.5rem;
+}
+</style>

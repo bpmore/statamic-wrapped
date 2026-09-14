@@ -40,17 +40,17 @@ const visible = computed(() => !props.nudge || !dismissed.value);
 </script>
 
 <template>
-    <div v-if="visible" class="p-4 border rounded-lg flex items-start justify-between gap-4">
+    <div v-if="visible" class="wrapped-widget">
         <div>
-            <h2 class="font-medium">{{ title }}</h2>
-            <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">{{ headline }}</p>
-            <a :href="url" class="text-sm underline mt-2 inline-block">Take a look</a>
+            <h2 class="wrapped-widget__title">{{ title }}</h2>
+            <p class="wrapped-widget__headline">{{ headline }}</p>
+            <a :href="url" class="wrapped-widget__link">Take a look</a>
         </div>
 
         <button
             v-if="nudge"
             type="button"
-            class="text-sm text-gray-500 hover:text-gray-800 dark:hover:text-gray-200"
+            class="wrapped-widget__dismiss"
             aria-label="Dismiss"
             @click="dismiss"
         >
@@ -58,3 +58,60 @@ const visible = computed(() => !props.nudge || !dismissed.value);
         </button>
     </div>
 </template>
+
+<style>
+/* Written out, not utilities: see the note on the Wrapped page. */
+.wrapped-widget {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem;
+    border: 1px solid var(--color-gray-200);
+    border-radius: 0.5rem;
+}
+
+.dark .wrapped-widget {
+    border-color: var(--color-gray-700);
+}
+
+.wrapped-widget__title {
+    font-weight: 500;
+    margin: 0;
+}
+
+.wrapped-widget__headline {
+    font-size: 0.875rem;
+    color: var(--color-gray-600);
+    margin: 0.25rem 0 0;
+}
+
+.dark .wrapped-widget__headline {
+    color: var(--color-gray-400);
+}
+
+.wrapped-widget__link {
+    display: inline-block;
+    margin-top: 0.5rem;
+    font-size: 0.875rem;
+    text-decoration: underline;
+}
+
+.wrapped-widget__dismiss {
+    background: none;
+    border: 0;
+    padding: 0 0.25rem;
+    font-size: 1.25rem;
+    line-height: 1;
+    color: var(--color-gray-500);
+    cursor: pointer;
+}
+
+.wrapped-widget__dismiss:hover {
+    color: var(--color-gray-800);
+}
+
+.dark .wrapped-widget__dismiss:hover {
+    color: var(--color-gray-200);
+}
+</style>
