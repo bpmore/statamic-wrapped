@@ -19,6 +19,8 @@ class VideoSpec
         public readonly int $height = VideoFrames::HEIGHT,
         /** No card is shown for less than this, however short its text. */
         public readonly float $minimumSeconds = 4.0,
+        /** A title card — the intro, the outro — is a glance, not a read. */
+        public readonly float $titleSeconds = 2.5,
         /** Added per word of on-screen text. Twelve words is about 6.3 seconds. */
         public readonly float $secondsPerWord = 0.4,
         /** Fixed time before the per-word allowance starts. */

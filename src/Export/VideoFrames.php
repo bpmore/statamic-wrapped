@@ -32,7 +32,7 @@ class VideoFrames
     {
         return new Frame(
             $this->render(['kind' => 'intro'], $snapshot),
-            $this->spec->secondsFor($this->label($snapshot).' Wrapped '.$snapshot->site),
+            $this->spec->titleSeconds,
         );
     }
 
@@ -43,8 +43,9 @@ class VideoFrames
     {
         return new Frame(
             $this->render(['kind' => 'card', 'heading' => $card['heading'], 'body' => $card['body']], $snapshot),
-            // Timed on everything a reader has to take in, heading included.
-            $this->spec->secondsFor($card['heading'].' '.$card['body']),
+            // Timed on the sentence. The heading is a two-word label taken in
+            // at a glance, and the floor already covers it.
+            $this->spec->secondsFor($card['body']),
         );
     }
 
@@ -54,7 +55,7 @@ class VideoFrames
 
         return new Frame(
             $this->render(['kind' => 'outro', 'outro' => $outro], $snapshot),
-            $this->spec->secondsFor($outro),
+            $this->spec->titleSeconds,
         );
     }
 

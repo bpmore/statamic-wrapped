@@ -22,11 +22,12 @@ use RuntimeException;
 class WrappedVideo
 {
     /**
-     * How many cards the default selection reaches for. Eight cards plus an
-     * intro and outro is about thirty seconds, which is where attention runs
-     * out on the platforms this is made for.
+     * How many cards the default selection reaches for. Six cards at reading
+     * pace, plus an intro and outro, lands under thirty seconds on a typical
+     * Wrapped, which is where attention runs out on the platforms this is made
+     * for. Eight was tried first and ran to forty-seven.
      */
-    public const DEFAULT_CARDS = 8;
+    public const DEFAULT_CARDS = 6;
 
     public function __construct(
         protected VideoRenderer $renderer,
@@ -95,15 +96,15 @@ class WrappedVideo
         $spec ??= new VideoSpec;
         $cards = $this->presented($snapshot);
 
-        $times = [$spec->secondsFor($snapshot->period_key.' Wrapped '.$snapshot->site)];
+        $times = [$spec->titleSeconds];
 
         foreach (array_unique($handles) as $handle) {
             if (isset($cards[$handle])) {
-                $times[] = $spec->secondsFor($cards[$handle]['heading'].' '.$cards[$handle]['body']);
+                $times[] = $spec->secondsFor($cards[$handle]['body']);
             }
         }
 
-        $times[] = $spec->secondsFor(__('wrapped::messages.video.outro'));
+        $times[] = $spec->titleSeconds;
 
         return $spec->duration($times);
     }

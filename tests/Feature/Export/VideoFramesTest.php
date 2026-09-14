@@ -48,7 +48,15 @@ it('gives each frame time in proportion to what is on it', function () {
 
     expect($short->seconds)->toBe(4.0)
         ->and($long->seconds)->toBeGreaterThan($short->seconds)
-        ->and($long->seconds)->toBe(7.1);
+        // Eleven words in the sentence: 1.5 + 4.4. The heading is a glance.
+        ->and($long->seconds)->toBe(5.9);
+});
+
+it('gives the title cards a glance, not a read', function () {
+    $frames = framesWith(new FakeImageRenderer);
+
+    expect($frames->intro(aSnapshot())->seconds)->toBe(2.5)
+        ->and($frames->outro(aSnapshot())->seconds)->toBe(2.5);
 });
 
 it('renders the footer once, on a transparent ground, to be pinned over everything', function () {

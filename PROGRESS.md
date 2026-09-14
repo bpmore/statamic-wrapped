@@ -911,9 +911,12 @@ readout and the file always agree** (a test renders and compares).
 threshold of 16 — H.264 noise on letter edges — while the content area at the same moments differs on
 120,824 pixels. An MD5 comparison was tried first and is the wrong tool for lossy video.
 
-**Consequence to decide:** eight cards at reading pace is **47 seconds**, above the ~30s where attention
-runs out on Reels and TikTok. The default selection could drop to six (~37s), or stay at eight and let the
-running-time readout do its job. Left at eight pending the owner's view.
+**Decided: six cards, and under thirty seconds** — 28.6s on the seeded site. Got there without touching
+the per-word reading pace, through two things that were over-serving: the intro and outro are title cards
+(a glance, not a read) and now get 2.5s instead of a card's 4s floor; and cards are timed on the sentence
+rather than sentence-plus-heading, since the heading is a two-word uppercase label the eye takes in at once
+and the 4s floor already covers it. A test holds the default under 30s on the fixture Wrapped. A wordy
+Wrapped can still run over — that is correct, and the running-time readout in the picker will say so.
 
 **Third request, added as a task:** a tappable story, YouTube-Music style. An MP4 cannot be tapped
 through; this is a different artefact — the same frames as live HTML in the CP, advanced by tap, click or

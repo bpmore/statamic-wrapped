@@ -58,10 +58,10 @@ beforeEach(function () {
 });
 
 describe('the default selection', function () {
-    it('ticks up to eight cards, in screen order, and never a people card', function () {
+    it('ticks up to six cards, in screen order, and never a people card', function () {
         $selected = video()->defaultSelection(aFullWrapped());
 
-        expect($selected)->toHaveCount(8)
+        expect($selected)->toHaveCount(6)
             ->and($selected[0])->toBe('entries_published')
             ->and($selected)->not->toContain('people')
             ->and($selected)->not->toContain('top_contributor');
@@ -89,13 +89,19 @@ describe('the default selection', function () {
 
         $one = video()->duration($snapshot, ['assets_uploaded']);
         $wordy = video()->duration($snapshot, ['entries_published']);
-        $eight = video()->duration($snapshot, video()->defaultSelection($snapshot));
+        $six = video()->duration($snapshot, video()->defaultSelection($snapshot));
 
         // Intro + one card + outro; a wordier card runs longer; more cards run longer still.
-        expect($one)->toBeGreaterThan(10.0)
+        expect($one)->toBeGreaterThan(7.0)
             ->and($wordy)->toBeGreaterThan($one)
-            ->and($eight)->toBeGreaterThan($wordy)
-            ->and(video()->duration($snapshot, []))->toBe((new VideoSpec)->duration([4.0, 4.0]));
+            ->and($six)->toBeGreaterThan($wordy)
+            ->and(video()->duration($snapshot, []))->toBe((new VideoSpec)->duration([2.5, 2.5]));
+    });
+
+    it('lands the default under thirty seconds on a typical wrapped', function () {
+        $snapshot = aFullWrapped();
+
+        expect(video()->duration($snapshot, video()->defaultSelection($snapshot)))->toBeLessThanOrEqual(30.0);
     });
 
     it('agrees with itself: the readout matches what the frames would be timed at', function () {
