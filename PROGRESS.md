@@ -41,8 +41,8 @@
 - [x] Portrait frames (1080x1920): intro, one per card, outro — rendered by the existing image renderer
 - [x] `VideoRenderer` interface + `FfmpegRenderer`: frames + crossfade + audio -> MP4, detected like Chrome
 - [x] Soundtracks: bundled tracks in `resources/audio/`, site-supplied tracks via config, a registry
-- [ ] Card selection for video: best six to eight, people cards excluded by default, intro/outro
-- [ ] CP: track picker with preview, "Download video", the video's own description text
+- [x] `WrappedVideo`: the editor chooses the cards; a default of up to eight, people unticked; intro/outro; server validates
+- [ ] CP: card checkboxes with a running-time readout, track picker with preview, "Download video", the video's description
 - [ ] README + release 1.1
 
 ## Notes
@@ -861,3 +861,29 @@ true globals); PHPUnit reserves the group names `small`/`medium`/`large`, so the
 `->group('scenario')`, which also silenced three warnings on every run.
 
 - Verified: `vendor/bin/pest` 377 passed, no warnings · `vendor/bin/pint --test` clean · `vendor/bin/phpstan analyse` no errors · a real video rendered with `open-road.m4a` (AAC out, 7.8s).
+
+### Task 30 — `WrappedVideo`: the editor chooses (done)
+**Design change, at the owner's suggestion:** the editor picks the cards, not the addon. "Best eight" was
+always going to be a guess at what is interesting; the editor knows their audience. What the addon does
+instead is offer a default and check the choice.
+
+`Export\WrappedVideo`:
+- `choices()` — every card this viewer may see, in screen order, each marked `people` and `selected`.
+- **The default ticks up to eight non-people cards.** Eight cards plus intro and outro is about 30 seconds,
+  where attention runs out on the platforms this is for. **People cards are never ticked by default**: a
+  video gets forwarded in a way a screen does not, so putting a person in one should be a decision.
+- `duration(n)` — running time for n cards including intro and outro, so the picker can say so live.
+- `render(snapshot, handles, track)` — intro, the chosen cards in the order given, outro; the named
+  soundtrack or the default; silent when there are no soundtracks at all.
+- **The server validates.** A handle not on the Wrapped throws. A people card a viewer may not see is
+  simply not in the presented list to be found, so it cannot be smuggled in through a URL — tested with
+  a non-super viewer holding only `view wrapped`.
+
+**Verified for real:** the seeded site's eight default cards, real Chrome frames, real FFmpeg, and
+`ipanema-morning.m4a` produced a 24.6-second, 2.3 MB MP4 — exactly the predicted length. Sent to the owner.
+
+**Performance note for later, not now:** that render took 32s, almost all of it Chrome starting up once
+per frame (ten frames, ~2.5s each). One Chrome session rendering all frames would cut it to a few
+seconds. Fine as a synchronous download for v1.1; worth doing if anyone complains.
+
+- Verified: `vendor/bin/pest` 390 passed · `vendor/bin/pint --test` clean · `vendor/bin/phpstan analyse` no errors.
