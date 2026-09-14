@@ -17,9 +17,10 @@ interface ImageRenderer
     public function isAvailable(): bool;
 
     /**
+     * @param  bool  $transparent  Leave the page background see-through, for something laid over other frames.
      * @return string Raw PNG bytes.
      *
      * @throws \RuntimeException When the render fails.
      */
-    public function render(string $html, int $width, int $height): string;
+    public function render(string $html, int $width, int $height, bool $transparent = false): string;
 }

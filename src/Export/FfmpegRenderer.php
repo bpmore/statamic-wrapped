@@ -9,9 +9,9 @@ use Symfony\Component\Process\Process;
 /**
  * Stitches still frames into an MP4 with FFmpeg.
  *
- * Each frame is held for a few seconds with a slow push-in so it does not sit
- * dead on screen, crossfaded into the next, with the music faded out under the
- * last one. H.264 and AAC in an MP4 with the index at the front, which is the
+ * Each frame is held for as long as its text takes to read, with a slow push-in
+ * so it does not sit dead on screen, crossfaded into the next, with the footer
+ * pinned motionless over all of it and the music faded out under the last one. H.264 and AAC in an MP4 with the index at the front, which is the
  * one combination every phone and every social platform accepts without
  * re-encoding.
  *
@@ -34,7 +34,7 @@ class FfmpegRenderer implements VideoRenderer
         return $this->binary() !== null;
     }
 
-    public function render(array $frames, ?string $audio, VideoSpec $spec): string
+    public function render(array $frames, ?string $overlay, ?string $audio, VideoSpec $spec): string
     {
         if ($frames === []) {
             throw new RuntimeException('A video needs at least one frame.');
@@ -56,13 +56,19 @@ class FfmpegRenderer implements VideoRenderer
         try {
             $paths = [];
 
-            foreach ($frames as $i => $png) {
+            foreach ($frames as $i => $frame) {
                 $paths[] = $path = sprintf('%s/frame-%03d.png', $directory, $i);
-                file_put_contents($path, $png);
+                file_put_contents($path, $frame->png);
+            }
+
+            $overlayPath = null;
+
+            if ($overlay !== null) {
+                file_put_contents($overlayPath = $directory.'/overlay.png', $overlay);
             }
 
             $process = new Process(
-                $this->command($binary, $paths, $audio, $spec, $output),
+                $this->command($binary, $paths, $frames, $overlayPath, $audio, $spec, $output),
                 timeout: $this->timeout,
             );
 
@@ -88,20 +94,26 @@ class FfmpegRenderer implements VideoRenderer
     /**
      * The full FFmpeg invocation.
      *
-     * Each still is one input, looped for its on-screen time. The filter graph
-     * scales and pushes in on each, crossfades them in sequence, and fades the
-     * audio out under the last frame. Written out rather than built by a
-     * library so that what runs is exactly what can be read here.
+     * Each still is one input, looped for its own time on screen. The filter
+     * graph scales and pushes in on each, crossfades them in sequence, pins the
+     * overlay on top, and fades the audio out under the last frame. Written out
+     * rather than built by a library so that what runs is exactly what can be
+     * read here.
      *
-     * @param  list<string>  $frames
+     * @param  list<string>  $paths  Frame files, in order.
+     * @param  list<Frame>  $frames  The same frames, for their durations.
      * @return list<string>
      */
-    protected function command(string $binary, array $frames, ?string $audio, VideoSpec $spec, string $output): array
+    protected function command(string $binary, array $paths, array $frames, ?string $overlay, ?string $audio, VideoSpec $spec, string $output): array
     {
         $command = [$binary, '-hide_banner', '-loglevel', 'error', '-y'];
 
-        foreach ($frames as $frame) {
-            array_push($command, '-loop', '1', '-t', (string) $spec->secondsPerFrame, '-i', $frame);
+        foreach ($paths as $i => $path) {
+            array_push($command, '-loop', '1', '-t', (string) $frames[$i]->seconds, '-i', $path);
+        }
+
+        if ($overlay !== null) {
+            array_push($command, '-i', $overlay);
         }
 
         if ($audio !== null) {
@@ -110,7 +122,7 @@ class FfmpegRenderer implements VideoRenderer
 
         array_push(
             $command,
-            '-filter_complex', $this->filterGraph(count($frames), $audio !== null, $spec),
+            '-filter_complex', $this->filterGraph($frames, $overlay !== null, $audio !== null, $spec),
             '-map', '[video]',
         );
 
@@ -126,56 +138,72 @@ class FfmpegRenderer implements VideoRenderer
             '-pix_fmt', 'yuv420p',
             '-r', (string) $spec->fps,
             '-movflags', '+faststart',
-            '-t', (string) $spec->duration(count($frames)),
+            '-t', (string) $spec->duration($frames),
             $output,
         );
 
         return $command;
     }
 
-    protected function filterGraph(int $frames, bool $withAudio, VideoSpec $spec): string
+    /**
+     * @param  list<Frame>  $frames
+     */
+    protected function filterGraph(array $frames, bool $withOverlay, bool $withAudio, VideoSpec $spec): string
     {
-        $perFrame = (int) round($spec->secondsPerFrame * $spec->fps);
+        $count = count($frames);
         $parts = [];
 
         // Scale each still to size and push in very slightly over its life:
         // a still that does not move at all reads as a slideshow, one that
-        // moves too much reads as a screensaver.
-        for ($i = 0; $i < $frames; $i++) {
+        // moves too much reads as a screensaver. The push-in is on the frame
+        // only; the overlay pinned later never moves.
+        foreach ($frames as $i => $frame) {
             $parts[] = sprintf(
                 "[%d:v]scale=%d:%d:flags=lanczos,setsar=1,zoompan=z='min(zoom+0.0006,1.06)':d=%d:s=%dx%d:fps=%d,format=yuv420p[f%d]",
-                $i, $spec->width, $spec->height, $perFrame, $spec->width, $spec->height, $spec->fps, $i,
+                $i, $spec->width, $spec->height, (int) round($frame->seconds * $spec->fps), $spec->width, $spec->height, $spec->fps, $i,
             );
         }
 
-        // Chain the crossfades. Each fade starts where the previous frame's
-        // time ends, minus the overlap.
-        if ($frames === 1) {
-            $parts[] = '[f0]copy[video]';
+        // Chain the crossfades. Each fade starts where the previous frames'
+        // combined time ends, minus one overlap per join so far.
+        $joined = $withOverlay ? 'stitched' : 'video';
+
+        if ($count === 1) {
+            $parts[] = "[f0]copy[{$joined}]";
         } else {
             $previous = 'f0';
+            $elapsed = 0.0;
 
-            for ($i = 1; $i < $frames; $i++) {
-                $offset = $i * $spec->secondsPerFrame - $i * $spec->crossfade;
-                $label = $i === $frames - 1 ? 'video' : "x{$i}";
+            for ($i = 1; $i < $count; $i++) {
+                $elapsed += $frames[$i - 1]->seconds - $spec->crossfade;
+                $label = $i === $count - 1 ? $joined : "x{$i}";
 
                 $parts[] = sprintf(
                     '[%s][f%d]xfade=transition=fade:duration=%s:offset=%s[%s]',
-                    $previous, $i, $spec->crossfade, $offset, $label,
+                    $previous, $i, $spec->crossfade, round($elapsed, 3), $label,
                 );
 
                 $previous = $label;
             }
         }
 
+        // The overlay input comes straight after the frames.
+        if ($withOverlay) {
+            $parts[] = sprintf(
+                '[%d:v]scale=%d:%d:flags=lanczos,format=rgba[pin];[stitched][pin]overlay=0:0:format=auto[video]',
+                $count, $spec->width, $spec->height,
+            );
+        }
+
         if ($withAudio) {
             $duration = $spec->duration($frames);
             $fadeOut = max($duration - 2.0, 0);
+            $audioInput = $count + ($withOverlay ? 1 : 0);
 
             // Trim to length, fade in over the intro, out under the outro.
             $parts[] = sprintf(
                 '[%d:a]atrim=0:%s,asetpts=PTS-STARTPTS,afade=t=in:st=0:d=0.8,afade=t=out:st=%s:d=2[audio]',
-                $frames, $duration, $fadeOut,
+                $audioInput, $duration, $fadeOut,
             );
         }
 

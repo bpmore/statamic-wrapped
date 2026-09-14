@@ -1,9 +1,10 @@
 {{--
     One frame of the video: 1080x1920, portrait, for Reels, Stories and TikTok.
 
-    Three kinds, one template. The intro says whose year it is, the cards say
-    one fact each, the outro says what made it. Same rules as the card image:
-    inline styles, system fonts, nothing fetched.
+    Four kinds, one template. The intro says whose year it is, the cards say
+    one fact each, the outro closes, and the footer is a transparent overlay
+    the renderer pins over everything so it never moves. Same rules as the
+    card image: inline styles, system fonts, nothing fetched.
 
     Text is set larger and lower than instinct suggests: on a phone the top
     tenth is under the app's own chrome and the bottom fifth is under its
@@ -24,7 +25,7 @@
             flex-direction: column;
             justify-content: center;
             padding: 240px 96px 300px;
-            background: #16161d;
+            background: {{ $kind === 'footer' ? 'transparent' : '#16161d' }};
             color: #f7f7f8;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             -webkit-font-smoothing: antialiased;
@@ -74,20 +75,24 @@
     </style>
 </head>
 <body>
-    @if ($kind === 'intro')
-        <p class="title">{{ $period }}<br>Wrapped</p>
-        <p class="subtitle">{{ $site }}</p>
-    @elseif ($kind === 'outro')
-        <p class="title">{{ $outro }}</p>
-        <p class="subtitle">{{ $period }} &middot; {{ $site }}</p>
-    @else
-        <p class="heading">{{ $heading }}</p>
-        <p class="body">{{ $body }}</p>
-
+    {{--
+        The footer is its own kind, rendered once on a transparent ground and
+        laid over the whole video by the renderer. It never moves, whatever
+        the frames underneath are doing.
+    --}}
+    @if ($kind === 'footer')
         <div class="footer">
             <span class="period">{{ $period }}</span>
             <span>{{ $site }}</span>
         </div>
+    @elseif ($kind === 'intro')
+        <p class="title">{{ $period }}<br>Wrapped</p>
+        <p class="subtitle">{{ $site }}</p>
+    @elseif ($kind === 'outro')
+        <p class="title">{{ $outro }}</p>
+    @else
+        <p class="heading">{{ $heading }}</p>
+        <p class="body">{{ $body }}</p>
     @endif
 </body>
 </html>

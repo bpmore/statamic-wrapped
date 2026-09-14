@@ -1,6 +1,7 @@
 <?php
 
 use Bpmore\Wrapped\Export\FfmpegRenderer;
+use Bpmore\Wrapped\Export\Frame;
 use Bpmore\Wrapped\Export\VideoSpec;
 
 /**
@@ -9,6 +10,11 @@ use Bpmore\Wrapped\Export\VideoSpec;
 function tinyPng(): string
 {
     return base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==');
+}
+
+function frame(float $seconds = 1.0): Frame
+{
+    return new Frame(tinyPng(), $seconds);
 }
 
 function withRealFfmpeg(): FfmpegRenderer
@@ -41,18 +47,35 @@ function mp4Duration(string $mp4): float
 
 describe('the spec', function () {
     it('works out the running time with the overlaps taken off', function () {
-        $spec = new VideoSpec(secondsPerFrame: 3.0, crossfade: 0.6);
+        $spec = new VideoSpec(crossfade: 0.6);
 
-        expect($spec->duration(0))->toBe(0.0)
-            ->and($spec->duration(1))->toBe(3.0)
-            ->and($spec->duration(3))->toBe(7.8)
-            ->and($spec->duration(10))->toBe(24.6);
+        expect($spec->duration([]))->toBe(0.0)
+            ->and($spec->duration([3.0]))->toBe(3.0)
+            ->and($spec->duration([3.0, 3.0, 3.0]))->toBe(7.8)
+            ->and($spec->duration([frame(4.0), frame(6.0)]))->toBe(9.4);
     });
 
-    it('is portrait at phone size by default', function () {
+    it('gives a reader time in proportion to the words on screen', function () {
         $spec = new VideoSpec;
 
-        expect($spec->width)->toBe(1080)->and($spec->height)->toBe(1920)->and($spec->fps)->toBe(30);
+        expect($spec->secondsFor('12 files.'))->toBe(4.0)
+            // 4 words: 1.5 + 1.6 is under the floor, so the floor.
+            ->and($spec->secondsFor('You published 47 entries, against 21 the period before.'))->toBe(5.1)
+            // 9 words: 1.5 + 3.6.
+            ->and($spec->secondsFor(str_repeat('word ', 40)))->toBe(9.0);
+        // 40 words would be 17.5s; capped, because a wall of text is a design bug.
+    });
+
+    it('never rushes a short card below the floor', function () {
+        expect((new VideoSpec)->secondsFor('Hi'))->toBe(4.0)
+            ->and((new VideoSpec)->secondsFor(''))->toBe(4.0);
+    });
+
+    it('is portrait at phone size by default, with a gentle crossfade', function () {
+        $spec = new VideoSpec;
+
+        expect($spec->width)->toBe(1080)->and($spec->height)->toBe(1920)->and($spec->fps)->toBe(30)
+            ->and($spec->crossfade)->toBe(0.8);
     });
 });
 
@@ -66,44 +89,65 @@ describe('finding ffmpeg', function () {
     it('says what to do when it cannot find one', function () {
         config(['wrapped.video.ffmpeg' => '/definitely/not/ffmpeg']);
 
-        expect(fn () => (new FfmpegRenderer)->render([tinyPng()], null, new VideoSpec))
+        expect(fn () => (new FfmpegRenderer)->render([frame()], null, null, new VideoSpec))
             ->toThrow(RuntimeException::class, 'wrapped.video.ffmpeg');
     });
 });
 
 describe('refusing bad input before touching ffmpeg', function () {
     it('needs at least one frame', function () {
-        expect(fn () => (new FfmpegRenderer)->render([], null, new VideoSpec))
+        expect(fn () => (new FfmpegRenderer)->render([], null, null, new VideoSpec))
             ->toThrow(RuntimeException::class, 'at least one frame');
     });
 
     it('refuses a soundtrack that does not exist', function () {
-        expect(fn () => withRealFfmpeg()->render([tinyPng()], '/nope/track.mp3', new VideoSpec))
+        expect(fn () => withRealFfmpeg()->render([frame()], null, '/nope/track.mp3', new VideoSpec))
             ->toThrow(RuntimeException::class, 'does not exist');
     });
 });
 
 describe('with real ffmpeg', function () {
     it('produces a playable mp4 of the right length, silent', function () {
-        $spec = new VideoSpec(width: 108, height: 192, secondsPerFrame: 1.0, crossfade: 0.2, fps: 10);
+        $spec = new VideoSpec(width: 108, height: 192, crossfade: 0.2, fps: 10);
+        $frames = [frame(1.0), frame(1.5), frame(1.0)];
 
-        $mp4 = withRealFfmpeg()->render([tinyPng(), tinyPng(), tinyPng()], null, $spec);
+        $mp4 = withRealFfmpeg()->render($frames, null, null, $spec);
 
         expect(substr($mp4, 4, 4))->toBe('ftyp')
-            ->and(mp4Duration($mp4))->toEqualWithDelta($spec->duration(3), 0.15);
+            ->and(mp4Duration($mp4))->toEqualWithDelta($spec->duration($frames), 0.15);
+    });
+
+    it('holds each frame for its own time, not one time for all', function () {
+        $spec = new VideoSpec(width: 108, height: 192, crossfade: 0.2, fps: 10);
+
+        $mp4 = withRealFfmpeg()->render([frame(0.5), frame(2.0)], null, null, $spec);
+
+        // 0.5 + 2.0 - 0.2, which no single per-frame time would give.
+        expect(mp4Duration($mp4))->toEqualWithDelta(2.3, 0.15);
     });
 
     it('handles a single frame with no crossfade to make', function () {
-        $spec = new VideoSpec(width: 108, height: 192, secondsPerFrame: 1.0, crossfade: 0.2, fps: 10);
+        $spec = new VideoSpec(width: 108, height: 192, crossfade: 0.2, fps: 10);
 
-        $mp4 = withRealFfmpeg()->render([tinyPng()], null, $spec);
+        $mp4 = withRealFfmpeg()->render([frame(1.0)], null, null, $spec);
 
         expect(mp4Duration($mp4))->toEqualWithDelta(1.0, 0.15);
     });
 
+    it('pins an overlay over the frames', function () {
+        $spec = new VideoSpec(width: 108, height: 192, crossfade: 0.2, fps: 10);
+
+        // Rendering with an overlay must succeed and keep the length; whether
+        // it stays put is checked on a real render against the seeded site.
+        $mp4 = withRealFfmpeg()->render([frame(1.0), frame(1.0)], tinyPng(), null, $spec);
+
+        expect(substr($mp4, 4, 4))->toBe('ftyp')
+            ->and(mp4Duration($mp4))->toEqualWithDelta(1.8, 0.15);
+    });
+
     it('lays a soundtrack under the frames and stops when they do', function () {
         $renderer = withRealFfmpeg();
-        $spec = new VideoSpec(width: 108, height: 192, secondsPerFrame: 1.0, crossfade: 0.2, fps: 10);
+        $spec = new VideoSpec(width: 108, height: 192, crossfade: 0.2, fps: 10);
 
         // A ten-second tone, longer than the video, so the trim is exercised.
         $tone = sys_get_temp_dir().'/wrapped-tone-'.bin2hex(random_bytes(4)).'.wav';
@@ -115,7 +159,7 @@ describe('with real ffmpeg', function () {
         }
 
         try {
-            $mp4 = $renderer->render([tinyPng(), tinyPng()], $tone, $spec);
+            $mp4 = $renderer->render([frame(1.0), frame(1.0)], null, $tone, $spec);
         } finally {
             @unlink($tone);
         }
@@ -129,7 +173,7 @@ describe('with real ffmpeg', function () {
     it('cleans up after itself', function () {
         $before = count(glob(sys_get_temp_dir().'/wrapped-video-*') ?: []);
 
-        withRealFfmpeg()->render([tinyPng()], null, new VideoSpec(width: 108, height: 192, secondsPerFrame: 0.5, fps: 10));
+        withRealFfmpeg()->render([frame(0.5)], null, null, new VideoSpec(width: 108, height: 192, fps: 10));
 
         expect(count(glob(sys_get_temp_dir().'/wrapped-video-*') ?: []))->toBe($before);
     });

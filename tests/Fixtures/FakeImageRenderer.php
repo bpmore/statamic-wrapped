@@ -26,7 +26,12 @@ class FakeImageRenderer implements ImageRenderer
         return $this->available;
     }
 
-    public function render(string $html, int $width, int $height): string
+    /** Every render, in order, so a multi-frame caller can be checked. */
+    public array $renders = [];
+
+    public ?bool $transparent = null;
+
+    public function render(string $html, int $width, int $height, bool $transparent = false): string
     {
         if ($this->fails !== null) {
             throw new RuntimeException($this->fails);
@@ -35,7 +40,9 @@ class FakeImageRenderer implements ImageRenderer
         $this->html = $html;
         $this->width = $width;
         $this->height = $height;
+        $this->transparent = $transparent;
+        $this->renders[] = ['html' => $html, 'transparent' => $transparent];
 
-        return "PNG:{$width}x{$height}";
+        return "PNG:{$width}x{$height}".($transparent ? ':transparent' : '');
     }
 }

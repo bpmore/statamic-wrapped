@@ -84,12 +84,28 @@ class WrappedVideo
     }
 
     /**
-     * How long a video with these cards would run, so the picker can say so
-     * as boxes are ticked.
+     * How long a video with these cards would run, so the picker can say so as
+     * boxes are ticked. Worked out from the cards' actual text, the same way
+     * the frames are timed, so the readout and the file agree.
+     *
+     * @param  list<string>  $handles
      */
-    public function duration(int $cards, ?VideoSpec $spec = null): float
+    public function duration(Snapshot $snapshot, array $handles, ?VideoSpec $spec = null): float
     {
-        return ($spec ?? new VideoSpec)->duration($cards + 2);
+        $spec ??= new VideoSpec;
+        $cards = $this->presented($snapshot);
+
+        $times = [$spec->secondsFor($snapshot->period_key.' Wrapped '.$snapshot->site)];
+
+        foreach (array_unique($handles) as $handle) {
+            if (isset($cards[$handle])) {
+                $times[] = $spec->secondsFor($cards[$handle]['heading'].' '.$cards[$handle]['body']);
+            }
+        }
+
+        $times[] = $spec->secondsFor(__('wrapped::messages.video.outro'));
+
+        return $spec->duration($times);
     }
 
     /**
@@ -112,7 +128,10 @@ class WrappedVideo
 
         $frames[] = $this->frames->outro($snapshot);
 
-        return $this->renderer->render($frames, $soundtrack?->path, $spec ?? new VideoSpec);
+        // The period and site, pinned over every frame so they never move.
+        $footer = $this->frames->footer($snapshot);
+
+        return $this->renderer->render($frames, $footer, $soundtrack?->path, $spec ?? new VideoSpec);
     }
 
     public function filename(Snapshot $snapshot): string
@@ -134,11 +153,7 @@ class WrappedVideo
             throw new RuntimeException('A video needs at least one card.');
         }
 
-        $available = [];
-
-        foreach ($this->presenter->present($snapshot->stats) as $card) {
-            $available[$card['handle']] = $card;
-        }
+        $available = $this->presented($snapshot);
 
         $cards = [];
 
@@ -148,6 +163,20 @@ class WrappedVideo
             }
 
             $cards[] = $available[$handle];
+        }
+
+        return $cards;
+    }
+
+    /**
+     * @return array<string, array{handle: string, heading: string, body: string}>
+     */
+    protected function presented(Snapshot $snapshot): array
+    {
+        $cards = [];
+
+        foreach ($this->presenter->present($snapshot->stats) as $card) {
+            $cards[$card['handle']] = $card;
         }
 
         return $cards;

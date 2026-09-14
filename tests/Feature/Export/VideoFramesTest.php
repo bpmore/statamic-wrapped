@@ -33,11 +33,42 @@ it('renders every frame portrait, at phone size', function () {
     $renderer = new FakeImageRenderer;
     $frames = framesWith($renderer);
 
-    expect($frames->intro(aSnapshot()))->toBe('PNG:1080x1920');
-    expect($frames->card(aSnapshot(), ['handle' => 'x', 'heading' => 'H', 'body' => 'B']))->toBe('PNG:1080x1920');
-    expect($frames->outro(aSnapshot()))->toBe('PNG:1080x1920');
+    expect($frames->intro(aSnapshot())->png)->toBe('PNG:1080x1920');
+    expect($frames->card(aSnapshot(), ['handle' => 'x', 'heading' => 'H', 'body' => 'B'])->png)->toBe('PNG:1080x1920');
+    expect($frames->outro(aSnapshot())->png)->toBe('PNG:1080x1920');
 
     expect($renderer->width)->toBe(1080)->and($renderer->height)->toBe(1920);
+});
+
+it('gives each frame time in proportion to what is on it', function () {
+    $frames = framesWith(new FakeImageRenderer);
+
+    $short = $frames->card(aSnapshot(), ['handle' => 'x', 'heading' => 'Files', 'body' => '12 files.']);
+    $long = $frames->card(aSnapshot(), ['handle' => 'y', 'heading' => 'When you publish', 'body' => 'You publish most on Tuesday, and most often around 2 pm.']);
+
+    expect($short->seconds)->toBe(4.0)
+        ->and($long->seconds)->toBeGreaterThan($short->seconds)
+        ->and($long->seconds)->toBe(7.1);
+});
+
+it('renders the footer once, on a transparent ground, to be pinned over everything', function () {
+    $renderer = new FakeImageRenderer;
+
+    $png = framesWith($renderer)->footer(aSnapshot());
+
+    expect($png)->toBe('PNG:1080x1920:transparent')
+        ->and($renderer->transparent)->toBeTrue()
+        ->and($renderer->html)->toContain('2026')
+        ->and($renderer->html)->toContain('default')
+        ->and($renderer->html)->toContain('background: transparent');
+});
+
+it('leaves the footer off the card frames, since it is pinned over them instead', function () {
+    $renderer = new FakeImageRenderer;
+
+    framesWith($renderer)->card(aSnapshot(), ['handle' => 'x', 'heading' => 'H', 'body' => 'B']);
+
+    expect($renderer->html)->not->toContain('class="footer"');
 });
 
 it('opens with whose year it is', function () {
@@ -73,11 +104,16 @@ it('closes quietly, without a call to action', function () {
         ->and(strtolower($renderer->html))->not->toContain('download');
 });
 
-it('frames a young site as "since June" on every frame', function () {
+it('frames a young site as "since June" on the intro and the pinned footer', function () {
     $renderer = new FakeImageRenderer;
+    $frames = framesWith($renderer);
 
-    framesWith($renderer)->card(aSnapshot('2026-06-10'), ['handle' => 'x', 'heading' => 'H', 'body' => 'B']);
+    $frames->intro(aSnapshot('2026-06-10'));
+    expect($renderer->html)->toContain('Since June 2026');
 
+    // The footer is over every frame, so "since June" is on every frame
+    // without being drawn on each card.
+    $frames->footer(aSnapshot('2026-06-10'));
     expect($renderer->html)->toContain('Since June 2026');
 });
 

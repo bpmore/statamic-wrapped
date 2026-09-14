@@ -14,7 +14,8 @@ use Bpmore\Wrapped\Snapshots\Snapshot;
  * drawing a card.
  *
  * Every frame is text on a plain ground. That is the point: the video is the
- * facts, read at a phone's pace, with music under them.
+ * facts, read at a phone's pace, with music under them. Each frame carries its
+ * own time on screen, worked out from how much there is to read on it.
  */
 class VideoFrames
 {
@@ -22,56 +23,71 @@ class VideoFrames
 
     public const HEIGHT = 1920;
 
-    public function __construct(protected ImageRenderer $renderer) {}
+    public function __construct(
+        protected ImageRenderer $renderer,
+        protected VideoSpec $spec = new VideoSpec,
+    ) {}
 
-    /**
-     * @return string Raw PNG bytes.
-     */
-    public function intro(Snapshot $snapshot): string
+    public function intro(Snapshot $snapshot): Frame
     {
-        return $this->render(['kind' => 'intro'], $snapshot);
+        return new Frame(
+            $this->render(['kind' => 'intro'], $snapshot),
+            $this->spec->secondsFor($this->label($snapshot).' Wrapped '.$snapshot->site),
+        );
     }
 
     /**
      * @param  array{handle: string, heading: string, body: string}  $card
-     * @return string Raw PNG bytes.
      */
-    public function card(Snapshot $snapshot, array $card): string
+    public function card(Snapshot $snapshot, array $card): Frame
     {
-        return $this->render([
-            'kind' => 'card',
-            'heading' => $card['heading'],
-            'body' => $card['body'],
-        ], $snapshot);
+        return new Frame(
+            $this->render(['kind' => 'card', 'heading' => $card['heading'], 'body' => $card['body']], $snapshot),
+            // Timed on everything a reader has to take in, heading included.
+            $this->spec->secondsFor($card['heading'].' '.$card['body']),
+        );
+    }
+
+    public function outro(Snapshot $snapshot): Frame
+    {
+        $outro = __('wrapped::messages.video.outro');
+
+        return new Frame(
+            $this->render(['kind' => 'outro', 'outro' => $outro], $snapshot),
+            $this->spec->secondsFor($outro),
+        );
     }
 
     /**
-     * @return string Raw PNG bytes.
+     * The period and site, on a transparent ground, to be laid over every
+     * frame. Rendered once; it never changes and it never moves.
+     *
+     * @return string Raw PNG bytes with alpha.
      */
-    public function outro(Snapshot $snapshot): string
+    public function footer(Snapshot $snapshot): string
     {
-        return $this->render([
-            'kind' => 'outro',
-            'outro' => __('wrapped::messages.video.outro'),
-        ], $snapshot);
+        return $this->render(['kind' => 'footer'], $snapshot, transparent: true);
+    }
+
+    protected function label(Snapshot $snapshot): string
+    {
+        return $snapshot->isFirstPeriod()
+            ? __('wrapped::messages.since', ['month' => $snapshot->started_at->translatedFormat('F Y')])
+            : $snapshot->period_key;
     }
 
     /**
      * @param  array<string, mixed>  $data
      */
-    protected function render(array $data, Snapshot $snapshot): string
+    protected function render(array $data, Snapshot $snapshot, bool $transparent = false): string
     {
-        $label = $snapshot->isFirstPeriod()
-            ? __('wrapped::messages.since', ['month' => $snapshot->started_at->translatedFormat('F Y')])
-            : $snapshot->period_key;
-
         $html = view('wrapped::export.frame', $data + [
-            'period' => $label,
+            'period' => $this->label($snapshot),
             'site' => $snapshot->site,
             'width' => self::WIDTH,
             'height' => self::HEIGHT,
         ])->render();
 
-        return $this->renderer->render($html, self::WIDTH, self::HEIGHT);
+        return $this->renderer->render($html, self::WIDTH, self::HEIGHT, $transparent);
     }
 }

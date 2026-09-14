@@ -14,6 +14,8 @@ class FakeVideoRenderer implements VideoRenderer
     /** @var list<string> */
     public array $frames = [];
 
+    public ?string $overlay = null;
+
     public ?string $audio = null;
 
     public ?VideoSpec $spec = null;
@@ -28,13 +30,14 @@ class FakeVideoRenderer implements VideoRenderer
         return $this->available;
     }
 
-    public function render(array $frames, ?string $audio, VideoSpec $spec): string
+    public function render(array $frames, ?string $overlay, ?string $audio, VideoSpec $spec): string
     {
         if ($this->fails !== null) {
             throw new RuntimeException($this->fails);
         }
 
         $this->frames = $frames;
+        $this->overlay = $overlay;
         $this->audio = $audio;
         $this->spec = $spec;
 

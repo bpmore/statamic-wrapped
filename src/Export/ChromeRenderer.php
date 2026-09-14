@@ -37,7 +37,7 @@ class ChromeRenderer implements ImageRenderer
         return $this->binary() !== null;
     }
 
-    public function render(string $html, int $width, int $height): string
+    public function render(string $html, int $width, int $height, bool $transparent = false): string
     {
         $binary = $this->binary();
 
@@ -60,6 +60,9 @@ class ChromeRenderer implements ImageRenderer
                 '--disable-dev-shm-usage',
                 '--hide-scrollbars',
                 '--force-device-scale-factor=2',
+                // Opaque white unless told otherwise; an overlay needs the
+                // alpha channel kept.
+                '--default-background-color='.($transparent ? '00000000' : 'ffffffff'),
                 "--window-size={$width},{$height}",
                 "--screenshot={$image}",
                 'file://'.$page,

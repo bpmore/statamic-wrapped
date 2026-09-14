@@ -43,6 +43,7 @@
 - [x] Soundtracks: bundled tracks in `resources/audio/`, site-supplied tracks via config, a registry
 - [x] `WrappedVideo`: the editor chooses the cards; a default of up to eight, people unticked; intro/outro; server validates
 - [ ] CP: card checkboxes with a running-time readout, track picker with preview, "Download video", the video's description
+- [ ] Tappable story: the same frames as live HTML in the CP, advanced by tap, click or key, music optional — the accessible, self-paced version
 - [ ] README + release 1.1
 
 ## Notes
@@ -887,3 +888,37 @@ per frame (ten frames, ~2.5s each). One Chrome session rendering all frames woul
 seconds. Fine as a synchronous download for v1.1; worth doing if anyone complains.
 
 - Verified: `vendor/bin/pest` 390 passed · `vendor/bin/pint --test` clean · `vendor/bin/phpstan analyse` no errors.
+
+### Task 30b — Pacing for WCAG 2.1 AA, and a pinned footer (done)
+Owner's review of the first real video: transitions too fast, the video must meet WCAG 2.1 AA, and the
+period/site footer must never move.
+
+**Timing is now per frame, from the words on it.** WCAG gives no seconds-per-word figure; the principle
+(2.2.1, 2.2.2) is that a reader must have enough time, and reading speed for a phone in a feed is well
+below prose speed. `VideoSpec::secondsFor(text)` = 1.5s + 0.4s per word, floored at 4s, capped at 9s.
+Twelve words is 6.3s; "12 files, 7.2 MB in all." is 4s. Crossfade 0.6 -> 0.8s. Each `Frame` now carries
+its own seconds, and `WrappedVideo::duration()` is worked out from the actual card text so **the picker's
+readout and the file always agree** (a test renders and compares).
+
+**Contrast checked, not assumed:** the grey heading/footer (#8b8b96 on #16161d) is **5.34:1**, above AA's
+4.5:1 even for small text.
+
+**The footer is an overlay, pinned.** It is rendered once on a transparent ground (Chrome
+`--default-background-color=00000000`; confirmed RGBA out) and laid over the finished stitch with FFmpeg's
+`overlay` filter, after the zoom and crossfades. It never moves because it is never part of what moves.
+**Proved on the real render, numerically:** the footer strip cropped at five moments across the video
+(including mid-dissolve) differs by 0.01–0.07/255 on average with 2–3 pixels out of 151,200 above a
+threshold of 16 — H.264 noise on letter edges — while the content area at the same moments differs on
+120,824 pixels. An MD5 comparison was tried first and is the wrong tool for lossy video.
+
+**Consequence to decide:** eight cards at reading pace is **47 seconds**, above the ~30s where attention
+runs out on Reels and TikTok. The default selection could drop to six (~37s), or stay at eight and let the
+running-time readout do its job. Left at eight pending the owner's view.
+
+**Third request, added as a task:** a tappable story, YouTube-Music style. An MP4 cannot be tapped
+through; this is a different artefact — the same frames as live HTML in the CP, advanced by tap, click or
+key, with music optional. It is also the properly accessible version: self-paced (2.2.1/2.2.2 by design),
+keyboard operable, real text for a screen reader, reduced-motion respected. Recommended as the canonical
+form, with the MP4 as the shareable export.
+
+- Verified: `vendor/bin/pest` 399 passed · `vendor/bin/pint --test` clean · `vendor/bin/phpstan analyse` no errors · real 47.2s render sent to the owner.

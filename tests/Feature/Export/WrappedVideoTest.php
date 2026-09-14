@@ -84,20 +84,49 @@ describe('the default selection', function () {
         expect(video()->defaultSelection($snapshot))->toHaveCount(3);
     });
 
-    it('says how long a choice would run, intro and outro included', function () {
-        expect(video()->duration(8))->toBe((new VideoSpec)->duration(10))
-            ->and(video()->duration(1))->toBe((new VideoSpec)->duration(3));
+    it('says how long a choice would run, from the actual words on the cards', function () {
+        $snapshot = aFullWrapped();
+
+        $one = video()->duration($snapshot, ['assets_uploaded']);
+        $wordy = video()->duration($snapshot, ['entries_published']);
+        $eight = video()->duration($snapshot, video()->defaultSelection($snapshot));
+
+        // Intro + one card + outro; a wordier card runs longer; more cards run longer still.
+        expect($one)->toBeGreaterThan(10.0)
+            ->and($wordy)->toBeGreaterThan($one)
+            ->and($eight)->toBeGreaterThan($wordy)
+            ->and(video()->duration($snapshot, []))->toBe((new VideoSpec)->duration([4.0, 4.0]));
+    });
+
+    it('agrees with itself: the readout matches what the frames would be timed at', function () {
+        $snapshot = aFullWrapped();
+        $handles = ['busiest_time', 'entries_published'];
+
+        video()->render($snapshot, $handles);
+
+        expect(video()->duration($snapshot, $handles))
+            ->toBe((new VideoSpec)->duration($this->videoRenderer->frames));
     });
 });
 
 describe('rendering', function () {
     it('wraps the chosen cards in an intro and an outro, in the order chosen', function () {
-        $renderer = app(ImageRenderer::class);
-
         $mp4 = video()->render(aFullWrapped(), ['busiest_time', 'entries_published']);
 
         expect($mp4)->toBe('MP4:4frames:soft-landing.m4a')
             ->and($this->videoRenderer->frames)->toHaveCount(4);
+    });
+
+    it('pins the footer over every frame rather than drawing it on each', function () {
+        video()->render(aFullWrapped(), ['busiest_time']);
+
+        expect($this->videoRenderer->overlay)->toBe('PNG:1080x1920:transparent');
+
+        // Exactly one transparent render: the footer. The frames are opaque.
+        $renders = collect(app(ImageRenderer::class)->renders);
+
+        expect($renders->where('transparent', true))->toHaveCount(1)
+            ->and($renders->where('transparent', false))->toHaveCount(3);
     });
 
     it('uses the default soundtrack unless told otherwise', function () {
