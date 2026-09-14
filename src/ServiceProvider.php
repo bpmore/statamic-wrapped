@@ -189,12 +189,17 @@ class ServiceProvider extends AddonServiceProvider
         });
     }
 
+    /**
+     * A present, from Statamic's own icon set. The name has to be one the
+     * control panel ships: an unknown name is not an error, it is a nav item
+     * with a blank where the icon goes, which is what `sparkles` was.
+     */
     protected function bootNav(): void
     {
         Nav::extend(function ($nav) {
             $nav->content('Wrapped')
                 ->route('wrapped.index')
-                ->icon('sparkles')
+                ->icon('gift-present-surprise')
                 ->can(CardGate::VIEW);
         });
     }
