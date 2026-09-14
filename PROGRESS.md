@@ -54,6 +54,11 @@ ALL TASKS COMPLETE
 - [x] Decision: a public, shareable story URL — **yes**, opt-in and off by default (news sites want to post stats)
 - [x] Decision: monthly periods — **yes** (large, high-volume sites)
 
+## Phase 7 — From the control panel (1.3)
+- [x] Nav icon: `gift-present-surprise`, one the control panel ships; `sparkles` was not, and rendered blank. A test that the name resolves to a file.
+- [x] Build from the screen: `SnapshotBuilder` shared by the command and a new `POST wrapped/generate`; a `generate wrapped` permission; a Build form (period, year, quarter/month) on the Wrapped screen, in the empty state and under an existing Wrapped
+- [x] Settings screen at Addons → Wrapped: background, accent, logo (assets picker, container filled in at boot); saved values win over config, an emptied field falls back to it
+
 ## Phase 6 — Monthly, and a shareable link
 - [x] `Period::Month`: `2026-09` keys, month windows, `--month` on generate, human labels for every period
 - [x] Period picker on the Wrapped screen: choose which snapshot to view; story, images and video follow it

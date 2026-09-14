@@ -65,6 +65,8 @@ php please wrapped:generate --force         # rebuild one that already exists
 
 One snapshot per site per period, cached in a table. Nothing is computed on page load.
 
+There is a **Build** form on the Wrapped screen too, for a year, a quarter or a month of the site the control panel is looking at. It does the same work as the command and lands on what it built. It needs the **Build a Wrapped** permission, because it reads every entry on the site on demand; the schedule is still the usual way.
+
 To have it ready when people come looking, schedule it for the first of December:
 
 ```php
@@ -134,6 +136,8 @@ Your tracks are listed first.
 
 The images, the video and the story share one look: a background you choose, text the addon chooses.
 
+Set it on the settings screen, under **Addons → Wrapped** in the control panel: a background, an optional accent, and a logo picked from your assets. Whatever is saved there wins. Until something is saved, the config file answers, and a field left empty on the screen goes back to the file:
+
 ```php
 // config/wrapped.php
 'theme' => [
@@ -169,11 +173,12 @@ The reasoning is in the config file, because that is the file a site owner actua
 
 ## Permissions
 
-Three, nested:
+Four, nested:
 
 - **View Wrapped** opens the screen, the widget and the downloads. Meant to be granted broadly.
 - **View people stats** additionally shows the people cards. A separate decision.
 - **Share publicly** makes and revokes public links. Only does anything when public links are switched on.
+- **Build a Wrapped** shows the Build form on the screen. Reads every entry on the site, so it is work the server does on demand.
 
 Super users see everything. Everyone else needs the permission on a role.
 
@@ -183,7 +188,7 @@ One Wrapped per site. Generate with `--site=` for one, or without it for all.
 
 ## Quarterly and monthly
 
-Add `--quarter=1` through `4` for three months instead of twelve, or `--month=1` through `12` for one. Same cards, same screen, and the closing line says "your quarter" or "your month" rather than "your year". The dashboard widget nudges only about the year, in December.
+Add `--quarter=1` through `4` for three months instead of twelve, or `--month=1` through `12` for one, or choose them on the Build form. Same cards, same screen, and the closing line says "your quarter" or "your month" rather than "your year". The dashboard widget nudges only about the year, in December.
 
 ## Public links
 
