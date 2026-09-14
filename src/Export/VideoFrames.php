@@ -2,6 +2,7 @@
 
 namespace Bpmore\Wrapped\Export;
 
+use Bpmore\Wrapped\Snapshots\Period;
 use Bpmore\Wrapped\Snapshots\Snapshot;
 
 /**
@@ -119,7 +120,7 @@ class VideoFrames
     {
         return $snapshot->isFirstPeriod()
             ? __('wrapped::messages.since', ['month' => $snapshot->started_at->translatedFormat('F Y')])
-            : $snapshot->period_key;
+            : Period::label($snapshot->period_key);
     }
 
     /**

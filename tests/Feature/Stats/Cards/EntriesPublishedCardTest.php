@@ -65,6 +65,22 @@ it('compares against the previous quarter for a quarterly wrapped', function () 
     expect($card)->toBe(['count' => 2, 'previous' => 1]);
 });
 
+it('compares against the previous month for a monthly wrapped', function () {
+    $card = (new EntriesPublishedCard)->compute(cardContext(
+        [
+            wasPublished('jul', '2026-07-31 23:00:00'),
+            wasPublished('aug-a', '2026-08-01 00:30:00'),
+            wasPublished('aug-b', '2026-08-31 23:30:00'),
+            wasPublished('sep', '2026-09-01 00:30:00'),
+        ],
+        period: Period::Month,
+        from: '2026-09-01 00:00:00',
+        to: '2026-09-30 23:59:59',
+    ));
+
+    expect($card)->toBe(['count' => 1, 'previous' => 2]);
+});
+
 it('does not say "up from zero" about a site that did not exist yet', function () {
     $card = (new EntriesPublishedCard)->compute(cardContext([
         wasPublished('a', '2026-02-01 09:00:00'),

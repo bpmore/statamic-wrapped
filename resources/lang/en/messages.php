@@ -21,6 +21,11 @@ return [
     // site that began in June did not have a 2026; it had "since June".
     'since' => 'Since :month',
 
+    // How a period key reads on screen. Months come from Carbon, translated.
+    'period' => [
+        'quarter' => 'Q:quarter :year',
+    ],
+
     'source' => [
         'logbook' => 'Statamic Logbook',
         'revisions' => 'Statamic revisions',

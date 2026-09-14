@@ -88,6 +88,34 @@ it('refuses a quarter that is not one', function (string $quarter) {
     expect(Snapshot::count())->toBe(0);
 })->with(['0', '5', 'autumn']);
 
+it('builds a single month', function () {
+    historyOf(aYearOfWork());
+
+    $this->artisan('wrapped:generate', ['--year' => 2026, '--month' => 2])->assertSuccessful();
+
+    $snapshot = Snapshot::sole();
+
+    expect($snapshot->period)->toBe(Period::Month)
+        ->and($snapshot->period_key)->toBe('2026-02')
+        ->and($snapshot->stats['entries_published']['count'])->toBe(2);
+});
+
+it('refuses a month that is not one', function (string $month) {
+    historyOf(aYearOfWork());
+
+    $this->artisan('wrapped:generate', ['--month' => $month])->assertExitCode(Command::INVALID);
+
+    expect(Snapshot::count())->toBe(0);
+})->with(['0', '13', 'june']);
+
+it('refuses a month and a quarter together', function () {
+    historyOf(aYearOfWork());
+
+    $this->artisan('wrapped:generate', ['--quarter' => 1, '--month' => 2])->assertExitCode(Command::INVALID);
+
+    expect(Snapshot::count())->toBe(0);
+});
+
 it('refuses a site it does not have', function () {
     historyOf(aYearOfWork());
 

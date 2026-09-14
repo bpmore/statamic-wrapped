@@ -101,3 +101,56 @@ it('builds a quarter key', function () {
 it('refuses a quarterly key without a usable quarter', function (?int $quarter) {
     expect(fn () => Period::Quarter->key(2026, $quarter))->toThrow(InvalidArgumentException::class);
 })->with([null, 0, 5]);
+
+it('builds a month key with a leading zero, so keys sort as text', function () {
+    expect(Period::Month->key(2026, 9))->toBe('2026-09')
+        ->and(Period::Month->key(2026, 12))->toBe('2026-12');
+});
+
+it('refuses a monthly key without a usable month', function (?int $month) {
+    expect(fn () => Period::Month->key(2026, $month))->toThrow(InvalidArgumentException::class);
+})->with([null, 0, 13]);
+
+it('bounds a month from its first midnight to its last second', function () {
+    [$from, $to] = Period::Month->window(2026, 2);
+
+    expect($from->format('Y-m-d H:i:s'))->toBe('2026-02-01 00:00:00')
+        ->and($to->format('Y-m-d H:i:s'))->toBe('2026-02-28 23:59:59');
+});
+
+it('bounds a quarter and a year the same way', function () {
+    [$from, $to] = Period::Quarter->window(2026, 4);
+    [$yearFrom, $yearTo] = Period::Year->window(2026);
+
+    expect($from->format('Y-m-d H:i:s'))->toBe('2026-10-01 00:00:00')
+        ->and($to->format('Y-m-d H:i:s'))->toBe('2026-12-31 23:59:59')
+        ->and($yearFrom->format('Y-m-d H:i:s'))->toBe('2026-01-01 00:00:00')
+        ->and($yearTo->format('Y-m-d H:i:s'))->toBe('2026-12-31 23:59:59');
+});
+
+it('steps a month back to the whole previous month, not to thirty-one days earlier', function () {
+    [$from, $to] = Period::Month->window(2026, 3);
+    [$previousFrom, $previousTo] = Period::Month->previous($from, $to);
+
+    // March has 31 days and February 28: subtracting the window's length
+    // would start the previous window on 29 January.
+    expect($previousFrom->format('Y-m-d H:i:s'))->toBe('2026-02-01 00:00:00')
+        ->and($previousTo->format('Y-m-d H:i:s'))->toBe('2026-02-28 23:59:59');
+});
+
+it('steps January back into the previous year', function () {
+    [$from, $to] = Period::Month->window(2026, 1);
+    [$previousFrom, $previousTo] = Period::Month->previous($from, $to);
+
+    expect($previousFrom->format('Y-m-d'))->toBe('2025-12-01')
+        ->and($previousTo->format('Y-m-d'))->toBe('2025-12-31');
+});
+
+it('turns every kind of period key into words', function (string $key, string $label) {
+    expect(Period::label($key))->toBe($label);
+})->with([
+    ['2026', '2026'],
+    ['2026-Q3', 'Q3 2026'],
+    ['2026-09', 'September 2026'],
+    ['2026-01', 'January 2026'],
+]);

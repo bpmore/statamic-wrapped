@@ -2,6 +2,7 @@
 
 namespace Bpmore\Wrapped\Export;
 
+use Bpmore\Wrapped\Snapshots\Period;
 use Bpmore\Wrapped\Snapshots\Snapshot;
 use Bpmore\Wrapped\Stats\CardPresenter;
 
@@ -29,7 +30,7 @@ class AltText
         return __('wrapped::messages.alt.card', [
             'heading' => $card['heading'],
             'body' => $card['body'],
-            'period' => $snapshot->period_key,
+            'period' => Period::label($snapshot->period_key),
             'site' => $snapshot->site,
         ]);
     }
@@ -50,7 +51,7 @@ class AltText
         // Trimmed: an empty Wrapped would otherwise leave the sentence
         // trailing a space where the cards should have been.
         return trim(__('wrapped::messages.alt.summary', [
-            'period' => $snapshot->period_key,
+            'period' => Period::label($snapshot->period_key),
             'site' => $snapshot->site,
             'cards' => implode(' ', $sentences),
         ]));

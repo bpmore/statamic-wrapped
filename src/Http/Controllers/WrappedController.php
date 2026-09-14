@@ -8,6 +8,7 @@ use Bpmore\Wrapped\Export\Soundtracks;
 use Bpmore\Wrapped\Export\Theme;
 use Bpmore\Wrapped\Export\VideoSpec;
 use Bpmore\Wrapped\Export\WrappedVideo;
+use Bpmore\Wrapped\Snapshots\Period;
 use Bpmore\Wrapped\Snapshots\Snapshot;
 use Bpmore\Wrapped\Stats\CardPresenter;
 use Bpmore\Wrapped\Stats\ConfidenceNotice;
@@ -142,7 +143,7 @@ class WrappedController extends CpController
             // The opening line of the video's description; the client appends
             // the chosen cards' own sentences to it.
             'descriptionLead' => __('wrapped::messages.alt.video', [
-                'period' => $snapshot->period_key,
+                'period' => Period::label($snapshot->period_key),
                 'site' => $snapshot->site,
             ]),
             'filename' => $video->filename($snapshot),
@@ -234,7 +235,7 @@ class WrappedController extends CpController
     {
         return $snapshot->isFirstPeriod()
             ? __('wrapped::messages.since', ['month' => $snapshot->started_at->translatedFormat('F Y')])
-            : $snapshot->period_key;
+            : Period::label($snapshot->period_key);
     }
 
     protected function latest(): ?Snapshot

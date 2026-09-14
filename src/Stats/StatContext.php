@@ -43,10 +43,7 @@ class StatContext
      */
     public function previousWindow(): array
     {
-        return match ($this->period) {
-            Period::Year => [$this->from->subYear(), $this->to->subYear()],
-            Period::Quarter => [$this->from->subMonthsNoOverflow(3), $this->to->subMonthsNoOverflow(3)],
-        };
+        return $this->period->previous($this->from, $this->to);
     }
 
     /**

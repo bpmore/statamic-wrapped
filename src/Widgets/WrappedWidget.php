@@ -55,8 +55,8 @@ class WrappedWidget extends Widget
         return VueComponent::render('wrapped-widget', [
             'key' => $snapshot->period_key,
             'title' => $nudging
-                ? __('wrapped::messages.widget.ready', ['period' => $snapshot->period_key])
-                : __('wrapped::messages.widget.title', ['period' => $snapshot->period_key]),
+                ? __('wrapped::messages.widget.ready', ['period' => Period::label($snapshot->period_key)])
+                : __('wrapped::messages.widget.title', ['period' => Period::label($snapshot->period_key)]),
             'headline' => $this->headline($snapshot),
             'url' => cp_route('wrapped.index'),
             'nudge' => $nudging,

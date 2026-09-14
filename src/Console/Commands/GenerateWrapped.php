@@ -28,10 +28,11 @@ class GenerateWrapped extends Command
     protected $signature = 'wrapped:generate
         {--year= : The year to build. Defaults to the current year.}
         {--quarter= : Build a single quarter (1-4) instead of the whole year.}
+        {--month= : Build a single month (1-12) instead of the whole year.}
         {--site= : Build one site. Defaults to every site.}
         {--force : Rebuild a snapshot that already exists.}';
 
-    protected $description = 'Build a Wrapped for a year or a quarter.';
+    protected $description = 'Build a Wrapped for a year, a quarter or a month.';
 
     public function handle(HistorySourceResolver $resolver, CardRunner $runner): int
     {
@@ -175,16 +176,29 @@ class GenerateWrapped extends Command
         }
 
         $quarter = $this->option('quarter');
+        $month = $this->option('month');
 
-        if ($quarter === null) {
+        if ($quarter !== null && $month !== null) {
+            throw new InvalidArgumentException('Build a quarter or a month, not both.');
+        }
+
+        if ($quarter === null && $month === null) {
             return [Period::Year, $year, null];
         }
 
-        if (! is_numeric($quarter) || (int) $quarter < 1 || (int) $quarter > 4) {
-            throw new InvalidArgumentException("[{$quarter}] is not a quarter. Use 1, 2, 3 or 4.");
+        if ($quarter !== null) {
+            if (! is_numeric($quarter) || (int) $quarter < 1 || (int) $quarter > 4) {
+                throw new InvalidArgumentException("[{$quarter}] is not a quarter. Use 1, 2, 3 or 4.");
+            }
+
+            return [Period::Quarter, $year, (int) $quarter];
         }
 
-        return [Period::Quarter, $year, (int) $quarter];
+        if (! is_numeric($month) || (int) $month < 1 || (int) $month > 12) {
+            throw new InvalidArgumentException("[{$month}] is not a month. Use 1 to 12.");
+        }
+
+        return [Period::Month, $year, (int) $month];
     }
 
     /**

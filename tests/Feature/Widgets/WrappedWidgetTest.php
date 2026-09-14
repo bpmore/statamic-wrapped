@@ -86,6 +86,18 @@ it('does not nudge about a quarter', function () {
     expect(widgetProps()['nudge'])->toBeFalse();
 });
 
+it('names a month or quarter in words, not by its key', function () {
+    CarbonImmutable::setTestNow('2026-10-05 09:00:00');
+    widgetSnapshot(
+        ['entries_published' => ['count' => 42, 'previous' => null]],
+        key: '2026-09',
+        period: Period::Month,
+    );
+
+    expect(widgetProps()['title'])->toBe('Your September 2026 Wrapped')
+        ->and(widgetProps()['nudge'])->toBeFalse();
+});
+
 it('leads with the published count, which is the fact people came for', function () {
     CarbonImmutable::setTestNow('2026-12-05 09:00:00');
     widgetSnapshot([

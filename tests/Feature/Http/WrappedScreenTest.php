@@ -112,6 +112,24 @@ it('shows the most recent snapshot for the site', function () {
         ->assertInertia(fn (AssertableInertia $page) => $page->where('snapshot.periodKey', '2026-Q4'));
 });
 
+it('labels a monthly snapshot with the month in words', function () {
+    Snapshot::create([
+        'site' => 'default',
+        'period' => Period::Month,
+        'period_key' => '2026-09',
+        'history_source' => 'logbook',
+        'confidence' => Confidence::High,
+        'stats' => ['entries_published' => ['count' => 9, 'previous' => null]],
+        'generated_at' => CarbonImmutable::parse('2026-10-01 09:00:00'),
+        'generated_by' => null,
+    ]);
+
+    $this->get(cp_route('wrapped.index'))
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('snapshot.periodKey', '2026-09')
+            ->where('snapshot.label', 'September 2026'));
+});
+
 it('leaves out a card it has no wording for, rather than printing a translation key', function () {
     storeSnapshot([
         'entries_published' => ['count' => 4, 'previous' => null],

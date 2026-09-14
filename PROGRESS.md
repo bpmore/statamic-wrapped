@@ -49,8 +49,15 @@
 
 ## Post-1.1
 - [x] Video rendering: one browser launch for every frame (30s -> 8s)
-- [ ] Decision: a public, shareable story URL (reverses SPEC.md §5 — see the assessment under Notes)
-- [ ] Decision: monthly periods alongside yearly and quarterly
+- [x] Decision: a public, shareable story URL — **yes**, opt-in and off by default (news sites want to post stats)
+- [x] Decision: monthly periods — **yes** (large, high-volume sites)
+
+## Phase 6 — Monthly, and a shareable link
+- [x] `Period::Month`: `2026-09` keys, month windows, `--month` on generate, human labels for every period
+- [ ] Period picker on the Wrapped screen: choose which snapshot to view; story, images and video follow it
+- [ ] Share links: off by default; publish one snapshot as a frozen copy behind an unguessable, revocable token; people cards opt-in per link
+- [ ] The public story page: no CP chrome, noindex, the site's theme, same tap-through behaviour
+- [ ] README + release 1.2
 
 ## Notes
 <!-- Record surprises, decisions and blockers here. If a task is wrong or blocked, write why and stop. -->
@@ -1114,3 +1121,21 @@ yearly would see September's Wrapped in December instead of the year's. Monthly 
 the screen, the widget nudging only for the yearly one, and the story/video labelled "September 2026".
 About half a day. Recommendation: yes, if the owner wants four-plus moments a year; the picker is the
 part to design first.
+
+### Task 35 — `Period::Month` (done)
+- `Period` now owns the whole calendar: `key()`, `window()`, `previous()` (moved out of `StatContext`,
+  which just delegates) and a static `label()`. `assertQuarter()` became `assertPart()` with the count
+  per period (1, 4, 12), so the same guard covers months.
+- `previous()` for a month recomputes the end of the previous month rather than subtracting a month
+  from both ends: 31 March minus a month is 3 March in Carbon's no-overflow mode, not 28 February.
+  Tested with March → February and January → December.
+- Keys zero-pad the month (`2026-09`) so text sorting and the unique index behave.
+- `--month` on `wrapped:generate`, refused together with `--quarter`, refused outside 1–12.
+- `Period::label()` turns keys into words: "2026", "Q3 2026", "September 2026" (Carbon's translated
+  month, so the CP locale decides). Used everywhere a key reached a person: the screen label, the
+  widget title, alt text, the card/summary image footers, the video description lead and the video
+  intro. Filenames keep the raw key (`wrapped-2026-09-default.mp4`), because those must stay stable.
+- Real run on the dev site: `--month=8` built `2026-08` from Logbook, 12 cards. **The screen now shows
+  August 2026, not 2026**, because it picks the newest snapshot — exactly the reason task 36 (the
+  period picker) is next. Left the August snapshot in place as test data for it.
+- 474 tests, Pint and PHPStan clean.

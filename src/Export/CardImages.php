@@ -2,6 +2,7 @@
 
 namespace Bpmore\Wrapped\Export;
 
+use Bpmore\Wrapped\Snapshots\Period;
 use Bpmore\Wrapped\Snapshots\Snapshot;
 use Bpmore\Wrapped\Stats\CardPresenter;
 use RuntimeException;
@@ -63,7 +64,7 @@ class CardImages
             'theme' => $this->theme,
             'heading' => $card['heading'],
             'body' => $card['body'],
-            'period' => $snapshot->period_key,
+            'period' => Period::label($snapshot->period_key),
             'site' => $snapshot->site,
             'width' => $width,
             'height' => $height,
@@ -86,7 +87,7 @@ class CardImages
         return $this->renderer->render(view('wrapped::export.summary', [
             'theme' => $this->theme,
             'cards' => $cards,
-            'period' => $snapshot->period_key,
+            'period' => Period::label($snapshot->period_key),
             'site' => $snapshot->site,
             'width' => $width,
             'height' => $height,
