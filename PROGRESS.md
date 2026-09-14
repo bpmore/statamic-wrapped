@@ -39,7 +39,7 @@
 
 ## Phase 5 — Shareable video (post-1.0)
 - [x] Portrait frames (1080x1920): intro, one per card, outro — rendered by the existing image renderer
-- [ ] `VideoRenderer` interface + `FfmpegRenderer`: frames + crossfade + audio -> MP4, detected like Chrome
+- [x] `VideoRenderer` interface + `FfmpegRenderer`: frames + crossfade + audio -> MP4, detected like Chrome
 - [ ] Soundtracks: bundled tracks in `resources/audio/`, site-supplied tracks via config, a registry
 - [ ] Card selection for video: best six to eight, people cards excluded by default, intro/outro
 - [ ] CP: track picker with preview, "Download video", the video's own description text
@@ -802,3 +802,29 @@ allowance. Suno keeps the right to say publicly the tracks were AI-made; the REA
 - First-year framing carries through: a young site's frames say "Since June 2026".
 
 - Verified: `vendor/bin/pest` 354 passed · `vendor/bin/pint --test` clean · `vendor/bin/phpstan analyse` no errors · three frames rendered with real Chrome from the seeded site.
+
+### Task 28 — FFmpeg renderer (done)
+`Export\VideoRenderer` (interface), `Export\VideoSpec` (size, seconds per frame, crossfade, fps, and the
+running-time arithmetic), `Export\FfmpegRenderer`. Bound in the provider; `wrapped.video.ffmpeg` in config,
+usual install paths checked otherwise, **missing FFmpeg means no video, never a failed request** — same
+contract as Chrome.
+
+**The output is H.264 + AAC in an MP4 with `+faststart`.** That is the one combination every phone and
+every social platform accepts without re-encoding. 1080x1920 at 30fps.
+
+**The filter graph, in plain words:** each still is one looped input held for its on-screen time, scaled
+with lanczos, given a very slight push-in via `zoompan` (`+0.0006` per frame up to 1.06x — a still that
+does not move reads as a slideshow, one that moves too much reads as a screensaver), then chained through
+`xfade=fade` with each fade's offset at `i × seconds − i × crossfade`. Audio is trimmed to the video's
+length, faded in over the intro and out over the last two seconds. Written out by hand rather than through
+a library so what runs is exactly what can be read in `filterGraph()`.
+
+**Verified for real, three ways:** the seeded site's intro/card/outro frames plus a synthesised tone
+produced a 555 KB MP4 in 1.6s; `ffprobe` confirmed h264 1080x1920 30fps + aac at exactly the 7.8s the spec
+computed; and a frame pulled from t=2.7s shows "2026 Wrapped" dissolving into the card, so the crossfade is
+real and not just accepted by FFmpeg.
+
+Tests read the duration from the MP4's own `mvhd` box rather than shelling out to `ffprobe`, so they
+depend on one binary, not two. Real-FFmpeg tests skip cleanly where it is absent.
+
+- Verified: `vendor/bin/pest` 364 passed · `vendor/bin/pint --test` clean · `vendor/bin/phpstan analyse` no errors.

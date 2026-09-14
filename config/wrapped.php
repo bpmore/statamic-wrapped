@@ -55,6 +55,23 @@ return [
 
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Shareable video
+    |--------------------------------------------------------------------------
+    |
+    | The frames are stitched into an MP4 by FFmpeg, found the same way Chrome
+    | is. Leave `ffmpeg` null to check the usual places. Without it the video
+    | download is unavailable; the screen and the images still work.
+    |
+    */
+
+    'video' => [
+
+        'ffmpeg' => env('WRAPPED_FFMPEG_PATH'),
+
+    ],
+
     'people' => [
 
         'enabled' => (bool) env('WRAPPED_PEOPLE_ENABLED', true),

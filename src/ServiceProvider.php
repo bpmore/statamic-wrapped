@@ -4,7 +4,9 @@ namespace Bpmore\Wrapped;
 
 use Bpmore\Wrapped\Console\Commands\GenerateWrapped;
 use Bpmore\Wrapped\Export\ChromeRenderer;
+use Bpmore\Wrapped\Export\FfmpegRenderer;
 use Bpmore\Wrapped\Export\ImageRenderer;
+use Bpmore\Wrapped\Export\VideoRenderer;
 use Bpmore\Wrapped\History\HistorySource;
 use Bpmore\Wrapped\History\HistorySourceResolver;
 use Bpmore\Wrapped\History\Sources\EntryDataHistorySource;
@@ -131,6 +133,7 @@ class ServiceProvider extends AddonServiceProvider
         });
 
         $this->app->bind(ImageRenderer::class, ChromeRenderer::class);
+        $this->app->bind(VideoRenderer::class, FfmpegRenderer::class);
 
         $this->app->singleton(StatCardRegistry::class, function ($app) {
             return new StatCardRegistry(array_map(
