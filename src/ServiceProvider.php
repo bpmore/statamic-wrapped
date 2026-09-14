@@ -163,10 +163,11 @@ class ServiceProvider extends AddonServiceProvider
     }
 
     /**
-     * Three permissions, nested so neither child can be granted without
+     * Four permissions, nested so no child can be granted without
      * `view wrapped`, which is meant to be granted broadly. The people one is
      * a separate decision — see config/wrapped.php for why — and so is
-     * sharing, which shows the numbers to everyone.
+     * sharing, which shows the numbers to everyone. Building is work the
+     * server does on demand, so that is its own decision too.
      */
     protected function bootPermissions(): void
     {
@@ -183,6 +184,9 @@ class ServiceProvider extends AddonServiceProvider
                             Permission::make(CardGate::SHARE)
                                 ->label(__('wrapped::permissions.share'))
                                 ->description(__('wrapped::permissions.share_desc')),
+                            Permission::make(CardGate::GENERATE)
+                                ->label(__('wrapped::permissions.generate'))
+                                ->description(__('wrapped::permissions.generate_desc')),
                         ]);
                 });
             });

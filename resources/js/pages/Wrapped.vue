@@ -3,6 +3,7 @@ import { onMounted, ref } from 'vue';
 import { Head, router } from '@statamic/cms/inertia';
 import { Button, Header, Select } from '@statamic/cms/ui';
 import { celebrate, markCelebrated, shouldCelebrate } from '../celebrate.js';
+import GenerateForm from '../components/GenerateForm.vue';
 import ShareLinks from '../components/ShareLinks.vue';
 import VideoMaker from '../components/VideoMaker.vue';
 
@@ -10,8 +11,12 @@ const props = defineProps({
     site: { type: String, required: true },
     // Every snapshot the site has: { key, label, url, current }.
     periods: { type: Array, default: () => [] },
+    // { url, year, quarter, month } for someone who may build one; null otherwise.
+    generate: { type: Object, default: null },
     snapshot: { type: Object, default: null },
 });
+
+const existingKeys = props.periods.map((p) => p.key);
 
 // The picker. Choosing a period is navigation, not state: the URL carries
 // it, so the story, images and video links on the new page all follow.
@@ -95,12 +100,17 @@ const copyAlt = async (key, text) => {
         </p>
 
         <!--
-            No snapshot at all. Not an error state: nobody has run the command
-            yet, and saying so plainly beats an empty page.
+            No snapshot at all. Not an error state: nobody has built one yet,
+            and saying so plainly beats an empty page. Someone who may build
+            gets the form right here; anyone else is told what to run.
         -->
         <div v-if="!snapshot" class="wrapped-panel">
             <h2 class="wrapped-panel__heading">Nothing here yet</h2>
-            <p class="wrapped-muted">
+            <template v-if="generate">
+                <p class="wrapped-muted wrapped-generate__lead">Build the first one for {{ site }}.</p>
+                <GenerateForm :generate="generate" :existing="existingKeys" />
+            </template>
+            <p v-else class="wrapped-muted">
                 Run <code>php please wrapped:generate</code> to build one.
             </p>
         </div>
@@ -191,6 +201,18 @@ const copyAlt = async (key, text) => {
                     </button>
                 </details>
             </div>
+
+            <!--
+                Another period, or this one again. Only for someone with the
+                permission; the schedule is still the usual way.
+            -->
+            <section v-if="generate" class="wrapped-panel wrapped-build" aria-labelledby="wrapped-build-heading">
+                <h2 id="wrapped-build-heading" class="wrapped-panel__heading">Build another</h2>
+                <p class="wrapped-muted wrapped-generate__lead">
+                    A year, a quarter or a month for {{ site }}. The picker at the top lists what has been built.
+                </p>
+                <GenerateForm :generate="generate" :existing="existingKeys" />
+            </section>
         </template>
     </div>
 </template>
@@ -341,5 +363,13 @@ const copyAlt = async (key, text) => {
 
 .wrapped-summary {
     margin-top: 1.5rem;
+}
+
+.wrapped-build {
+    margin-top: 1.5rem;
+}
+
+.wrapped-generate__lead {
+    margin-bottom: 1rem;
 }
 </style>

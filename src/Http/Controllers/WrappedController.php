@@ -15,6 +15,7 @@ use Bpmore\Wrapped\Snapshots\Snapshot;
 use Bpmore\Wrapped\Stats\CardGate;
 use Bpmore\Wrapped\Stats\CardPresenter;
 use Bpmore\Wrapped\Stats\ConfidenceNotice;
+use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response as HttpResponse;
 use Inertia\Inertia;
@@ -47,6 +48,9 @@ class WrappedController extends CpController
             // monthly and yearly has a dozen-plus, and the newest built is
             // not always the one someone came for.
             'periods' => $snapshot === null ? [] : $this->periods($snapshot),
+            // The Build form, for someone allowed to press it; null keeps the
+            // form off the screen for everyone else.
+            'generate' => $gate->canGenerate() ? $this->generating() : null,
             'snapshot' => $snapshot === null ? null : [
                 'period' => $snapshot->period->value,
                 'periodKey' => $snapshot->period_key,
@@ -71,6 +75,24 @@ class WrappedController extends CpController
                 'share' => $links->canShare() ? $this->sharing($links, $gate, $snapshot) : null,
             ],
         ]);
+    }
+
+    /**
+     * What the Build form needs: where to post, and today's year, quarter and
+     * month so its pickers open on the period most likely wanted.
+     *
+     * @return array{url: string, year: int, quarter: int, month: int}
+     */
+    protected function generating(): array
+    {
+        $now = CarbonImmutable::now();
+
+        return [
+            'url' => cp_route('wrapped.generate'),
+            'year' => (int) $now->year,
+            'quarter' => (int) $now->quarter,
+            'month' => (int) $now->month,
+        ];
     }
 
     /**

@@ -24,6 +24,9 @@ class CardGate
     /** Making public links. A separate decision from viewing: this one shows the numbers to everyone. */
     public const SHARE = 'share wrapped';
 
+    /** Building a Wrapped from the control panel, which reads every entry on the site. */
+    public const GENERATE = 'generate wrapped';
+
     public function __construct(protected StatCardRegistry $cards) {}
 
     /**
@@ -43,6 +46,16 @@ class CardGate
     public function canViewPeople(): bool
     {
         return Gate::allows(self::VIEW_PEOPLE);
+    }
+
+    /**
+     * Building is work — every entry on the site, read once per card — so it
+     * is a permission of its own rather than something every viewer can set
+     * off. Nobody logged in may build.
+     */
+    public function canGenerate(): bool
+    {
+        return Gate::allows(self::GENERATE);
     }
 
     /**
