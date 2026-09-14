@@ -101,6 +101,18 @@ enum Period: string
     }
 
     /**
+     * The closing line for a Wrapped of this key: "That was your year."
+     * for a year, quarter or month as fits. A key this version cannot read
+     * gets the yearly line, which is the one that always existed.
+     */
+    public static function outro(string $key): string
+    {
+        $period = self::fromKey($key)[0] ?? self::Year;
+
+        return __('wrapped::messages.video.outro.'.$period->value);
+    }
+
+    /**
      * A stored key back into its parts, or null for a key this version does
      * not recognise. The inverse of `key()`.
      *

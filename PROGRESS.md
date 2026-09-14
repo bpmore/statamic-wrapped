@@ -1186,3 +1186,9 @@ part to design first.
 - The public page for now is plain themed HTML with `noindex`: real text, every card. Task 38 turns it
   into the tap-through story.
 - 518 tests, Pint and PHPStan clean. Dev site: migrated, `WRAPPED_SHARE_ENABLED=true` in its `.env`.
+
+### Fix — "That was your year." on a quarter or a month (done)
+- Reported by the owner on the Q3 and August stories. The closing line was one fixed string.
+- Now `Period::outro($key)`: year, quarter or month wording from `messages.video.outro.*`. Used by the
+  story, the video (both `outro()` and the sheet the video is actually cut from) and the share page.
+- A key this version cannot read falls back to the yearly line.

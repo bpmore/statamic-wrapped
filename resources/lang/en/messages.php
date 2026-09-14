@@ -76,8 +76,13 @@ return [
 
     'video' => [
 
-        // The last frame. Quiet credit, not a call to action.
-        'outro' => 'That was your year.',
+        // The last frame. Quiet credit, not a call to action. One per kind
+        // of period, because "your year" on a monthly Wrapped is wrong.
+        'outro' => [
+            'year' => 'That was your year.',
+            'quarter' => 'That was your quarter.',
+            'month' => 'That was your month.',
+        ],
 
     ],
 

@@ -50,7 +50,7 @@ class VideoFrames
         $pages = [['kind' => 'intro'], ...array_map(
             fn (array $card) => ['kind' => 'card', 'heading' => $card['heading'], 'body' => $card['body']],
             $cards,
-        ), ['kind' => 'outro', 'outro' => __('wrapped::messages.video.outro')], ['kind' => 'footer']];
+        ), ['kind' => 'outro', 'outro' => Period::outro($snapshot->period_key)], ['kind' => 'footer']];
 
         $htmls = array_map(fn (array $page) => $this->html($page, $snapshot), $pages);
 
@@ -97,7 +97,7 @@ class VideoFrames
 
     public function outro(Snapshot $snapshot): Frame
     {
-        $outro = __('wrapped::messages.video.outro');
+        $outro = Period::outro($snapshot->period_key);
 
         return new Frame(
             $this->render(['kind' => 'outro', 'outro' => $outro], $snapshot),

@@ -49,7 +49,7 @@
             @endforeach
         </dl>
 
-        <footer>{{ __('wrapped::messages.video.outro') }}</footer>
+        <footer>{{ \Bpmore\Wrapped\Snapshots\Period::outro($share->period_key) }}</footer>
     </main>
 </body>
 </html>

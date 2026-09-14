@@ -400,6 +400,39 @@ describe('the story', function () {
                 ->where('theme.logo', null));
     });
 
+    it('closes a quarter or a month with its own line, not "your year"', function () {
+        Snapshot::create([
+            'site' => 'default',
+            'period' => Period::Month,
+            'period_key' => '2026-08',
+            'history_source' => 'logbook',
+            'confidence' => Confidence::High,
+            'stats' => ['entries_published' => ['count' => 4, 'previous' => null]],
+            'generated_at' => CarbonImmutable::parse('2026-09-01 09:00:00'),
+            'generated_by' => null,
+        ]);
+        Snapshot::create([
+            'site' => 'default',
+            'period' => Period::Quarter,
+            'period_key' => '2026-Q3',
+            'history_source' => 'logbook',
+            'confidence' => Confidence::High,
+            'stats' => ['entries_published' => ['count' => 16, 'previous' => null]],
+            'generated_at' => CarbonImmutable::parse('2026-10-01 09:00:00'),
+            'generated_by' => null,
+        ]);
+
+        $this->get(cp_route('wrapped.story', ['period' => '2026-08']))
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->where('frames.0.title', 'August 2026 Wrapped')
+                ->where('frames.2.title', 'That was your month.'));
+
+        $this->get(cp_route('wrapped.story', ['period' => '2026-Q3']))
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->where('frames.0.title', 'Q3 2026 Wrapped')
+                ->where('frames.2.title', 'That was your quarter.'));
+    });
+
     it('is linked from the wrapped screen, for the same period', function () {
         storeSnapshot(['entries_published' => ['count' => 42, 'previous' => null]]);
 

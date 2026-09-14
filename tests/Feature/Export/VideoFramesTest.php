@@ -2,10 +2,12 @@
 
 use Bpmore\Wrapped\Export\ImageRenderer;
 use Bpmore\Wrapped\Export\VideoFrames;
+use Bpmore\Wrapped\Export\VideoRenderer;
 use Bpmore\Wrapped\History\Confidence;
 use Bpmore\Wrapped\Snapshots\Period;
 use Bpmore\Wrapped\Snapshots\Snapshot;
 use Bpmore\Wrapped\Tests\Fixtures\FakeImageRenderer;
+use Bpmore\Wrapped\Tests\Fixtures\FakeVideoRenderer;
 use Carbon\CarbonImmutable;
 
 function framesWith(FakeImageRenderer $renderer): VideoFrames
@@ -110,6 +112,28 @@ it('closes quietly, without a call to action', function () {
     expect($renderer->html)->toContain('That was your year.')
         ->and(strtolower($renderer->html))->not->toContain('install')
         ->and(strtolower($renderer->html))->not->toContain('download');
+});
+
+it('closes a month or a quarter with its own line', function () {
+    $renderer = new FakeImageRenderer;
+    $frames = framesWith($renderer);
+
+    $month = aSnapshot();
+    $month->period = Period::Month;
+    $month->period_key = '2026-08';
+
+    $frames->outro($month);
+    expect($renderer->html)->toContain('That was your month.');
+
+    $quarter = aSnapshot();
+    $quarter->period = Period::Quarter;
+    $quarter->period_key = '2026-Q3';
+
+    // The whole sheet too, since the video is cut from that, not from outro().
+    app()->instance(VideoRenderer::class, new FakeVideoRenderer);
+    app(VideoFrames::class)->sheet($quarter, []);
+    expect($renderer->sheet[1])->toContain('That was your quarter.')
+        ->and($renderer->sheet[1])->not->toContain('your year');
 });
 
 it('frames a young site as "since June" on the intro and the pinned footer', function () {

@@ -162,7 +162,7 @@ class WrappedController extends CpController
             $frames[] = ['kind' => 'card', 'handle' => $card['handle'], 'heading' => $card['heading'], 'body' => $card['body']];
         }
 
-        $frames[] = ['kind' => 'outro', 'title' => __('wrapped::messages.video.outro')];
+        $frames[] = ['kind' => 'outro', 'title' => Period::outro($snapshot->period_key)];
 
         return Inertia::render('wrapped::Story', [
             'theme' => $theme->toArray(),

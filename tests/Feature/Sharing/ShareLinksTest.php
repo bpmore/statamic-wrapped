@@ -184,6 +184,18 @@ describe('the public page', function () {
             ->assertSee('noindex', false);
     });
 
+    it('closes with the line for its period', function () {
+        sharer();
+        aWrapped(key: '2026-08');
+        Snapshot::where('period_key', '2026-08')->update(['period' => Period::Month]);
+
+        makeLink(['period' => '2026-08']);
+
+        $this->get(Share::sole()->url())
+            ->assertSee('August 2026 Wrapped')
+            ->assertSee('That was your month.');
+    });
+
     it('is a 404 for a token that does not exist', function () {
         $this->get(route('wrapped.share.show', ['token' => str_repeat('a', 40)]))->assertNotFound();
     });
