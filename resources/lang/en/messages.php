@@ -63,6 +63,10 @@ return [
 
         'summary' => 'The :period Wrapped for :site. :cards',
 
+        // The video's description opens with this; the cards' own sentences
+        // follow, in the order they play.
+        'video' => 'A short video of the :period Wrapped for :site, one fact per screen, with music.',
+
     ],
 
     'video' => [

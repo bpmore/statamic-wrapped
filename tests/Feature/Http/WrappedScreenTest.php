@@ -1,10 +1,12 @@
 <?php
 
 use Bpmore\Wrapped\Export\ImageRenderer;
+use Bpmore\Wrapped\Export\VideoRenderer;
 use Bpmore\Wrapped\History\Confidence;
 use Bpmore\Wrapped\Snapshots\Period;
 use Bpmore\Wrapped\Snapshots\Snapshot;
 use Bpmore\Wrapped\Tests\Fixtures\FakeImageRenderer;
+use Bpmore\Wrapped\Tests\Fixtures\FakeVideoRenderer;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia;
@@ -200,4 +202,90 @@ it('hands over suggested alt text with every image', function () {
             ->where('snapshot.cards.0.alt', 'Entries published: You published 42 entries. From the 2026 Wrapped for default.')
             ->where('snapshot.summaryAlt', 'The 2026 Wrapped for default. Entries published: You published 42 entries.')
         );
+});
+
+describe('the video maker', function () {
+    beforeEach(function () {
+        app()->instance(ImageRenderer::class, new FakeImageRenderer);
+        app()->instance(VideoRenderer::class, $this->videoRenderer = new FakeVideoRenderer);
+
+        storeSnapshot([
+            'entries_published' => ['count' => 42, 'previous' => null],
+            'busiest_time' => ['day' => 2, 'day_count' => 9, 'hour' => 14, 'hour_count' => 7, 'from' => 20],
+            'people' => ['people' => 3, 'entries' => 42, 'unattributed' => 0],
+        ]);
+    });
+
+    it('hands the screen everything it needs to let the editor choose', function () {
+        $this->get(cp_route('wrapped.index'))
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->where('snapshot.video.available', true)
+                ->has('snapshot.video.choices', 3)
+                ->where('snapshot.video.choices.0.handle', 'entries_published')
+                ->where('snapshot.video.choices.0.selected', true)
+                ->where('snapshot.video.choices.0.people', false)
+                // 4.0 in PHP, 4 once it has been through JSON.
+                ->where('snapshot.video.choices.0.seconds', 4)
+                ->where('snapshot.video.choices.2.handle', 'people')
+                ->where('snapshot.video.choices.2.people', true)
+                ->where('snapshot.video.choices.2.selected', false)
+                ->where('snapshot.video.titleSeconds', 2.5)
+                ->where('snapshot.video.crossfade', 0.8)
+                ->where('snapshot.video.defaultTrack', 'soft-landing')
+                ->where('snapshot.video.filename', 'wrapped-2026-default.mp4')
+                ->where('snapshot.video.descriptionLead', 'A short video of the 2026 Wrapped for default, one fact per screen, with music.')
+                ->has('snapshot.video.tracks', 5)
+                ->where('snapshot.video.tracks.0.handle', 'soft-landing')
+                ->where('snapshot.video.tracks.0.mimeType', 'audio/mp4')
+                ->where('snapshot.video.tracks.0.previewUrl', cp_route('wrapped.soundtrack', 'soft-landing'))
+                ->missing('snapshot.video.tracks.0.path'));
+    });
+
+    it('says the video is unavailable without ffmpeg', function () {
+        app()->instance(
+            VideoRenderer::class,
+            new FakeVideoRenderer(available: false),
+        );
+
+        $this->get(cp_route('wrapped.index'))
+            ->assertInertia(fn (AssertableInertia $page) => $page->where('snapshot.video.available', false));
+    });
+
+    it('downloads a video of the chosen cards with the chosen track', function () {
+        $this->get(cp_route('wrapped.video', ['cards' => ['busiest_time', 'entries_published'], 'track' => 'seoul-rooftop']))
+            ->assertOk()
+            ->assertHeader('content-type', 'video/mp4')
+            ->assertHeader('content-disposition', 'attachment; filename="wrapped-2026-default.mp4"');
+
+        expect($this->videoRenderer->frames)->toHaveCount(4)
+            ->and($this->videoRenderer->audio)->toEndWith('seoul-rooftop.m4a');
+    });
+
+    it('falls back to the default track', function () {
+        $this->get(cp_route('wrapped.video', ['cards' => ['entries_published']]))->assertOk();
+
+        expect($this->videoRenderer->audio)->toEndWith('soft-landing.m4a');
+    });
+
+    it('refuses a video with no cards', function () {
+        $this->get(cp_route('wrapped.video'))->assertNotFound();
+    });
+
+    it('refuses a card that is not on the wrapped', function () {
+        $this->get(cp_route('wrapped.video', ['cards' => ['nonsense']]))->assertNotFound();
+    });
+
+    it('refuses a track it does not have', function () {
+        $this->get(cp_route('wrapped.video', ['cards' => ['entries_published'], 'track' => 'nope']))->assertNotFound();
+    });
+
+    it('streams a soundtrack for the preview button', function () {
+        $this->get(cp_route('wrapped.soundtrack', 'open-road'))
+            ->assertOk()
+            ->assertHeader('content-type', 'audio/mp4');
+    });
+
+    it('does not stream a soundtrack it does not have', function () {
+        $this->get(cp_route('wrapped.soundtrack', 'nope'))->assertNotFound();
+    });
 });

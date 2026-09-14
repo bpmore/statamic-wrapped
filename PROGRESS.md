@@ -42,7 +42,7 @@
 - [x] `VideoRenderer` interface + `FfmpegRenderer`: frames + crossfade + audio -> MP4, detected like Chrome
 - [x] Soundtracks: bundled tracks in `resources/audio/`, site-supplied tracks via config, a registry
 - [x] `WrappedVideo`: the editor chooses the cards; a default of up to eight, people unticked; intro/outro; server validates
-- [ ] CP: card checkboxes with a running-time readout, track picker with preview, "Download video", the video's description
+- [x] CP: card checkboxes with a running-time readout, track picker with preview, "Download video", the video's description
 - [ ] Tappable story: the same frames as live HTML in the CP, advanced by tap, click or key, music optional — the accessible, self-paced version
 - [ ] README + release 1.1
 
@@ -925,3 +925,27 @@ keyboard operable, real text for a screen reader, reduced-motion respected. Reco
 form, with the MP4 as the shareable export.
 
 - Verified: `vendor/bin/pest` 399 passed · `vendor/bin/pint --test` clean · `vendor/bin/phpstan analyse` no errors · real 47.2s render sent to the owner.
+
+### Task 31 — The video maker in the control panel (done)
+`resources/js/components/VideoMaker.vue`, mounted on the Wrapped screen when FFmpeg is present and there
+is something to put in a video. Two new routes under the same `view wrapped` gate: `wrapped.video`
+(the MP4, editor's choice in the query, `Content-Disposition: attachment`) and `wrapped.soundtrack/{handle}`
+(streams a track for the preview button from wherever it lives — never copied into `public/`).
+
+- **Checkboxes, six ticked by default, people cards unticked and badged.** Screen order is kept whatever
+  order boxes are ticked, so the video reads the way the page does.
+- **Running time, live**, from the same numbers the server uses: per-card seconds plus the two constants
+  are sent as props and added up client-side, so the readout and the file agree. `aria-live="polite"` so
+  a screen reader hears it change. Over thirty seconds gets a one-line warning, not a block.
+  Verified in the real CP: default reads "About 29 seconds", ticking a seventh card reads 34 with the warning.
+- **Preview asks rather than assumes.** `canPlayType('audio/mp4; codecs="opus"')`, because the bundled
+  files are Opus in an M4A box and older Safari cannot play that. Where it can't, the button says so
+  instead of showing a broken player. One `<audio>` element, reused; paused on unmount and on track change.
+- **The description is server-authored, client-joined.** The lead sentence and every card sentence come
+  from the lang file via props; the client only concatenates them in play order.
+- **Accessibility bug caught in the live snapshot:** the "names people" badge ran into the heading, so a
+  screen reader would say "The teamnames people". Fixed with a leading space in the text (a margin alone
+  does not separate words for assistive tech).
+- JSON turns `4.0` into `4`; the client's arithmetic does not care, and the test asserts the JSON form.
+
+- Verified: `vendor/bin/pest` 410 passed · `vendor/bin/pint --test` clean · `vendor/bin/phpstan analyse` no errors · exercised in the real CP with Playwright: checkboxes, live readout, previews, download link.

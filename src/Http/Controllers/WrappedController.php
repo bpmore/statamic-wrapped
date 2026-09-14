@@ -4,15 +4,20 @@ namespace Bpmore\Wrapped\Http\Controllers;
 
 use Bpmore\Wrapped\Export\AltText;
 use Bpmore\Wrapped\Export\CardImages;
+use Bpmore\Wrapped\Export\Soundtracks;
+use Bpmore\Wrapped\Export\VideoSpec;
+use Bpmore\Wrapped\Export\WrappedVideo;
 use Bpmore\Wrapped\Snapshots\Snapshot;
 use Bpmore\Wrapped\Stats\CardPresenter;
 use Bpmore\Wrapped\Stats\ConfidenceNotice;
+use Illuminate\Http\Request;
 use Illuminate\Http\Response as HttpResponse;
 use Inertia\Inertia;
 use Inertia\Response;
 use RuntimeException;
 use Statamic\Facades\Site;
 use Statamic\Http\Controllers\CP\CpController;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
@@ -25,7 +30,7 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
  */
 class WrappedController extends CpController
 {
-    public function index(CardPresenter $presenter, ConfidenceNotice $notice, CardImages $images, AltText $alt): Response
+    public function index(CardPresenter $presenter, ConfidenceNotice $notice, CardImages $images, AltText $alt, WrappedVideo $video, Soundtracks $soundtracks): Response
     {
         $site = Site::selected()->handle();
 
@@ -48,6 +53,7 @@ class WrappedController extends CpController
                 // version and works either way.
                 'canExport' => $images->isAvailable(),
                 'summaryAlt' => $alt->forSummary($snapshot),
+                'video' => $this->videoMaker($video, $soundtracks, $snapshot),
             ],
         ]);
     }
@@ -63,6 +69,95 @@ class WrappedController extends CpController
             fn (array $card) => $card + ['alt' => $alt->forCard($snapshot, $card)],
             $presenter->present($snapshot->stats),
         );
+    }
+
+    /**
+     * Everything the video maker needs to let the editor choose, and to say
+     * how long the result will run before they commit to it.
+     *
+     * The per-card seconds and the two constants are sent so the running time
+     * can be added up on the client as boxes are ticked. The server remains
+     * the authority when the file is actually made.
+     *
+     * @return array<string, mixed>
+     */
+    protected function videoMaker(WrappedVideo $video, Soundtracks $soundtracks, Snapshot $snapshot): array
+    {
+        $spec = new VideoSpec;
+
+        return [
+            'available' => $video->isAvailable(),
+            'choices' => array_map(
+                fn (array $choice) => $choice + ['seconds' => $spec->secondsFor($choice['body'])],
+                $video->choices($snapshot),
+            ),
+            'titleSeconds' => $spec->titleSeconds,
+            'crossfade' => $spec->crossfade,
+            'tracks' => $soundtracks->all()->values()->map(fn ($track) => $track->toArray() + [
+                'mimeType' => $track->mimeType(),
+                'previewUrl' => cp_route('wrapped.soundtrack', $track->handle),
+            ])->all(),
+            'defaultTrack' => $soundtracks->default()?->handle,
+            // The opening line of the video's description; the client appends
+            // the chosen cards' own sentences to it.
+            'descriptionLead' => __('wrapped::messages.alt.video', [
+                'period' => $snapshot->period_key,
+                'site' => $snapshot->site,
+            ]),
+            'filename' => $video->filename($snapshot),
+        ];
+    }
+
+    /**
+     * The video, downloaded rather than hosted, with the editor's choice of
+     * cards and track carried in the query. Same rules as the images: no
+     * public URL, ever.
+     */
+    public function video(Request $request, WrappedVideo $video): HttpResponse
+    {
+        $snapshot = $this->latest();
+
+        if ($snapshot === null) {
+            throw new NotFoundHttpException('There is no Wrapped to make a video from yet.');
+        }
+
+        $cards = array_values(array_filter(
+            (array) $request->query('cards', []),
+            fn ($card) => is_string($card) && $card !== '',
+        ));
+
+        $track = $request->query('track');
+        $track = is_string($track) && $track !== '' ? $track : null;
+
+        try {
+            $mp4 = $video->render($snapshot, $cards, $track);
+        } catch (RuntimeException $e) {
+            throw new NotFoundHttpException($e->getMessage(), $e);
+        }
+
+        return response($mp4, 200, [
+            'Content-Type' => 'video/mp4',
+            'Content-Disposition' => 'attachment; filename="'.$video->filename($snapshot).'"',
+        ]);
+    }
+
+    /**
+     * A soundtrack, for the preview button. Streamed from wherever the file
+     * lives — the addon's own directory, or the site's — never copied into
+     * public/. Sits behind the same permission as the screen.
+     */
+    public function soundtrack(Soundtracks $soundtracks, string $handle): BinaryFileResponse
+    {
+        $track = $soundtracks->find($handle);
+
+        if ($track === null) {
+            throw new NotFoundHttpException("There is no soundtrack called [{$handle}].");
+        }
+
+        return response()->file($track->path, [
+            'Content-Type' => $track->mimeType(),
+            'Cache-Control' => 'private, max-age=3600',
+        ]);
     }
 
     /**

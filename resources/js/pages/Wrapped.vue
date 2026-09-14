@@ -2,6 +2,7 @@
 import { onMounted, ref } from 'vue';
 import { Head } from '@statamic/cms/inertia';
 import { celebrate, markCelebrated, shouldCelebrate } from '../celebrate.js';
+import VideoMaker from '../components/VideoMaker.vue';
 
 const props = defineProps({
     site: { type: String, required: true },
@@ -23,6 +24,7 @@ onMounted(() => {
 // Built from the current path so it survives however the control panel is
 // mounted, rather than being hardcoded to /cp.
 const imageUrl = `${window.location.pathname.replace(/\/$/, '')}/image`;
+const videoUrl = `${window.location.pathname.replace(/\/$/, '')}/video`;
 
 // Which alt text was last copied, so the button can confirm it worked.
 const copied = ref(null);
@@ -133,6 +135,17 @@ const copyAlt = async (key, text) => {
                     </div>
                 </div>
             </dl>
+
+            <!--
+                Only when FFmpeg is there and there is something to put in it.
+                No browser, no images; no FFmpeg, no video. The screen is the
+                real version either way.
+            -->
+            <VideoMaker
+                v-if="snapshot.video.available && snapshot.cards.length"
+                :video="snapshot.video"
+                :video-url="videoUrl"
+            />
 
             <div v-if="snapshot.canExport && snapshot.cards.length" class="mt-6">
                 <a :href="imageUrl" class="text-sm underline">Download all of it as one image</a>
