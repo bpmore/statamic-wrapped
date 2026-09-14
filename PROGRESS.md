@@ -43,7 +43,7 @@
 - [x] Soundtracks: bundled tracks in `resources/audio/`, site-supplied tracks via config, a registry
 - [x] `WrappedVideo`: the editor chooses the cards; a default of up to eight, people unticked; intro/outro; server validates
 - [x] CP: card checkboxes with a running-time readout, track picker with preview, "Download video", the video's description
-- [ ] Tappable story: the same frames as live HTML in the CP, advanced by tap, click or key, music optional — the accessible, self-paced version
+- [x] Tappable story: the same frames as live HTML in the CP, advanced by tap, click or key, music optional — the accessible, self-paced version
 - [ ] README + release 1.1
 
 ## Notes
@@ -949,3 +949,36 @@ is something to put in a video. Two new routes under the same `view wrapped` gat
 - JSON turns `4.0` into `4`; the client's arithmetic does not care, and the test asserts the JSON form.
 
 - Verified: `vendor/bin/pest` 410 passed · `vendor/bin/pint --test` clean · `vendor/bin/phpstan analyse` no errors · exercised in the real CP with Playwright: checkboxes, live readout, previews, download link.
+
+### Task 32 — The tappable story (done)
+`/cp/wrapped/story`, an Inertia page (`resources/js/pages/Story.vue`) reached from a "Play it" button on the
+Wrapped screen. Same permission gate. The same frames as the video — intro, one per visible card, outro,
+the pinned footer — as live HTML, one at a time, advanced by the reader.
+
+**This is the accessible form, and arguably the canonical one; the MP4 is its shareable export.**
+- Nothing advances on a timer. WCAG 2.2.1 and 2.2.2 are met by design rather than by a pacing formula.
+- Tap or click the stage, or ArrowRight / Space / Enter; ArrowLeft goes back; Escape leaves.
+  **Deliberately few keys.** Home, End, Page Up and Page Down are how a screen reader user moves around a
+  page, and Backspace once meant "go back"; taking those over would break more than it helps. The first
+  draft bound them and the Playwright tooling — which sends End/PageDown while capturing — jumped the story
+  around, which is exactly what an AT user would have experienced. Removed.
+- Visible Previous / Next buttons too (44px targets), for switch users and anyone who has not guessed the
+  convention. Enter on "Done" follows the link; the key handler leaves the controls alone.
+- **Focus moves to the new frame on every change** (`tabindex="-1"` region, labelled "Frame 4 of 16"), so a
+  screen reader reads the new fact without being asked. A progressbar carries `aria-valuetext`.
+- The footer is `aria-hidden`: it never changes, and hearing "2026 default" sixteen times helps nobody.
+- Music is **off until asked**, behind a Music button: autoplay with sound is blocked anyway and a page that
+  starts singing at someone is bad manners. Same `canPlayType` check as the picker; loops; stops on leave.
+- `prefers-reduced-motion` removes the fade.
+- The stage is a `div`, not a `<button>`: a button would swallow the frame's text as its own label.
+
+**Verified in the real CP with the Playwright MCP**, by script rather than by its snapshot tool: Home/End/
+PageDown ignored; ArrowRight, Space, Enter, click each move exactly one frame; ArrowLeft one back; focus on
+the stage after each change; Previous disabled on the first frame; region and progressbar labelled.
+The tooling's screenshot times out on the fixed full-screen overlay (twice); skipped — the behaviour is
+what was being verified, and it is.
+
+**No JS unit tests still.** Server props are tested (frames, intro/outro, young-site label, people gate,
+404 before a Wrapped exists, the link from the screen).
+
+- Verified: `vendor/bin/pest` 415 passed · `vendor/bin/pint --test` clean · `vendor/bin/phpstan analyse` no errors.

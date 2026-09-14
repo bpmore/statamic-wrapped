@@ -5,11 +5,14 @@ use Bpmore\Wrapped\Export\VideoRenderer;
 use Bpmore\Wrapped\History\Confidence;
 use Bpmore\Wrapped\Snapshots\Period;
 use Bpmore\Wrapped\Snapshots\Snapshot;
+use Bpmore\Wrapped\Stats\CardGate;
 use Bpmore\Wrapped\Tests\Fixtures\FakeImageRenderer;
 use Bpmore\Wrapped\Tests\Fixtures\FakeVideoRenderer;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia;
+use Statamic\Facades\Role;
+use Statamic\Facades\Stache;
 use Statamic\Facades\User;
 
 uses(RefreshDatabase::class);
@@ -287,5 +290,88 @@ describe('the video maker', function () {
 
     it('does not stream a soundtrack it does not have', function () {
         $this->get(cp_route('wrapped.soundtrack', 'nope'))->assertNotFound();
+    });
+});
+
+describe('the story', function () {
+    it('tells the wrapped one frame at a time, with an intro and an outro', function () {
+        storeSnapshot([
+            'entries_published' => ['count' => 42, 'previous' => null],
+            'busiest_time' => ['day' => 2, 'day_count' => 9, 'hour' => 14, 'hour_count' => 7, 'from' => 20],
+        ]);
+
+        $this->get(cp_route('wrapped.story'))
+            ->assertOk()
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->component('wrapped::Story')
+                ->where('label', '2026')
+                ->where('site', 'default')
+                ->where('backUrl', cp_route('wrapped.index'))
+                ->has('frames', 4)
+                ->where('frames.0.kind', 'intro')
+                ->where('frames.0.title', '2026 Wrapped')
+                ->where('frames.0.subtitle', 'default')
+                ->where('frames.1.kind', 'card')
+                ->where('frames.1.heading', 'Entries published')
+                ->where('frames.1.body', 'You published 42 entries.')
+                ->where('frames.3.kind', 'outro')
+                ->where('frames.3.title', 'That was your year.')
+                ->has('tracks', 5)
+                ->where('tracks.0.url', cp_route('wrapped.soundtrack', 'soft-landing'))
+                ->where('defaultTrack', 'soft-landing'));
+    });
+
+    it('frames a young site as "since June"', function () {
+        Snapshot::create([
+            'site' => 'default',
+            'period' => Period::Year,
+            'period_key' => '2026',
+            'history_source' => 'logbook',
+            'confidence' => Confidence::High,
+            'stats' => ['entries_published' => ['count' => 3, 'previous' => null]],
+            'started_at' => CarbonImmutable::parse('2026-06-10'),
+            'generated_at' => CarbonImmutable::parse('2026-12-01 09:00:00'),
+            'generated_by' => null,
+        ]);
+
+        $this->get(cp_route('wrapped.story'))
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->where('label', 'Since June 2026')
+                ->where('frames.0.title', 'Since June 2026 Wrapped'));
+    });
+
+    it('keeps people cards out for a viewer who may not see them', function () {
+        $roles = sys_get_temp_dir().'/wrapped-roles-'.bin2hex(random_bytes(4));
+        mkdir($roles, 0777, true);
+        config(['statamic.users.repositories.file.paths.roles' => $roles.'/roles.yaml']);
+        Stache::clear();
+        Role::make('viewer')->title('Viewer')->permissions(['access cp', CardGate::VIEW])->save();
+        $this->actingAs(User::make()->id('viewer')->email('viewer@example.com')->assignRole('viewer'));
+
+        storeSnapshot([
+            'entries_published' => ['count' => 42, 'previous' => null],
+            'people' => ['people' => 3, 'entries' => 42, 'unattributed' => 0],
+        ]);
+
+        try {
+            $this->get(cp_route('wrapped.story'))
+                ->assertOk()
+                ->assertInertia(fn (AssertableInertia $page) => $page
+                    ->has('frames', 3)
+                    ->where('frames.1.handle', 'entries_published'));
+        } finally {
+            exec('rm -rf '.escapeshellarg($roles));
+        }
+    });
+
+    it('has nothing to tell before a wrapped exists', function () {
+        $this->get(cp_route('wrapped.story'))->assertNotFound();
+    });
+
+    it('is linked from the wrapped screen', function () {
+        storeSnapshot(['entries_published' => ['count' => 42, 'previous' => null]]);
+
+        $this->get(cp_route('wrapped.index'))
+            ->assertInertia(fn (AssertableInertia $page) => $page->where('snapshot.storyUrl', cp_route('wrapped.story')));
     });
 });

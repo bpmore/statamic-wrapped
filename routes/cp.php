@@ -9,6 +9,9 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('can:'.CardGate::VIEW)->group(function () {
     Route::get('wrapped', [WrappedController::class, 'index'])->name('wrapped.index');
 
+    // The Wrapped as a tap-through story: the self-paced, accessible form.
+    Route::get('wrapped/story', [WrappedController::class, 'story'])->name('wrapped.story');
+
     // Downloads, not hosted images. See WrappedController::image().
     Route::get('wrapped/image', [WrappedController::class, 'image'])->name('wrapped.image.summary');
     Route::get('wrapped/image/{card}', [WrappedController::class, 'image'])->name('wrapped.image');

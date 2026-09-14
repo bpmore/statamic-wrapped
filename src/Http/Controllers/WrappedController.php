@@ -54,6 +54,7 @@ class WrappedController extends CpController
                 'canExport' => $images->isAvailable(),
                 'summaryAlt' => $alt->forSummary($snapshot),
                 'video' => $this->videoMaker($video, $soundtracks, $snapshot),
+                'storyUrl' => cp_route('wrapped.story'),
             ],
         ]);
     }
@@ -69,6 +70,44 @@ class WrappedController extends CpController
             fn (array $card) => $card + ['alt' => $alt->forCard($snapshot, $card)],
             $presenter->present($snapshot->stats),
         );
+    }
+
+    /**
+     * The Wrapped as a story: one fact per screen, advanced by the reader.
+     *
+     * This is the accessible form of the video, and arguably the canonical
+     * one. Nothing moves until the reader says so, which is WCAG 2.2.1 and
+     * 2.2.2 satisfied by design rather than by a timing formula; it works from
+     * a keyboard; and every frame is real text a screen reader can read. The
+     * MP4 is the shareable export of this.
+     */
+    public function story(CardPresenter $presenter, Soundtracks $soundtracks): Response
+    {
+        $snapshot = $this->latest();
+
+        if ($snapshot === null) {
+            throw new NotFoundHttpException('There is no Wrapped to tell yet.');
+        }
+
+        $frames = [['kind' => 'intro', 'title' => __('wrapped::messages.story.intro', ['period' => $this->label($snapshot)]), 'subtitle' => $snapshot->site]];
+
+        foreach ($presenter->present($snapshot->stats) as $card) {
+            $frames[] = ['kind' => 'card', 'handle' => $card['handle'], 'heading' => $card['heading'], 'body' => $card['body']];
+        }
+
+        $frames[] = ['kind' => 'outro', 'title' => __('wrapped::messages.video.outro')];
+
+        return Inertia::render('wrapped::Story', [
+            'site' => $snapshot->site,
+            'label' => $this->label($snapshot),
+            'backUrl' => cp_route('wrapped.index'),
+            'frames' => $frames,
+            'tracks' => $soundtracks->all()->values()->map(fn ($track) => $track->toArray() + [
+                'mimeType' => $track->mimeType(),
+                'url' => cp_route('wrapped.soundtrack', $track->handle),
+            ])->all(),
+            'defaultTrack' => $soundtracks->default()?->handle,
+        ]);
     }
 
     /**

@@ -49,11 +49,20 @@ const copyAlt = async (key, text) => {
     <div class="max-w-5xl mx-auto">
         <Head title="Wrapped" />
 
-        <header class="mb-6">
-            <h1 class="text-2xl font-bold">Wrapped</h1>
-            <p v-if="snapshot" class="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                {{ snapshot.label }} &middot; {{ site }}
-            </p>
+        <header class="mb-6 flex items-start justify-between gap-4">
+            <div>
+                <h1 class="text-2xl font-bold">Wrapped</h1>
+                <p v-if="snapshot" class="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                    {{ snapshot.label }} &middot; {{ site }}
+                </p>
+            </div>
+
+            <!-- The tap-through version: same facts, at the reader's pace. -->
+            <a
+                v-if="snapshot && snapshot.cards.length"
+                :href="snapshot.storyUrl"
+                class="shrink-0 px-4 py-2 rounded bg-gray-900 text-white dark:bg-white dark:text-gray-900 text-sm font-medium"
+            >Play it</a>
         </header>
 
         <!--

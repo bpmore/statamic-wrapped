@@ -76,6 +76,13 @@ return [
 
     ],
 
+    'story' => [
+
+        // The first frame of the tap-through story.
+        'intro' => ':period Wrapped',
+
+    ],
+
     'widget' => [
 
         // December, for the year that is ending.
