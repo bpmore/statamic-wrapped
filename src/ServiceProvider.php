@@ -254,6 +254,10 @@ class ServiceProvider extends AddonServiceProvider
     }
 
     /**
+     * Under Tools, with the other reports. A year in review is something you
+     * generate and share, not something you write, and under Content it sat
+     * next to Collections as if it were.
+     *
      * A present, from Statamic's own icon set. The name has to be one the
      * control panel ships: an unknown name is not an error, it is a nav item
      * with a blank where the icon goes, which is what `sparkles` was.
@@ -261,7 +265,7 @@ class ServiceProvider extends AddonServiceProvider
     protected function bootNav(): void
     {
         Nav::extend(function ($nav) {
-            $nav->content('Wrapped')
+            $nav->tools('Wrapped')
                 ->route('wrapped.index')
                 ->icon('gift-present-surprise')
                 ->can(CardGate::VIEW);

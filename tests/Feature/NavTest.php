@@ -36,11 +36,13 @@ function wrappedNavItem(): ?NavItem
     return null;
 }
 
-it('is in the content section of the control panel nav', function () {
+it('is in the tools section of the control panel nav, with the other reports', function () {
+    // A year in review is something you generate and share, not something
+    // you write. Under Content it sat next to Collections as if it were.
     $item = wrappedNavItem();
 
     expect($item)->not->toBeNull()
-        ->and($item->section())->toBe('Content')
+        ->and($item->section())->toBe('Tools')
         ->and($item->url())->toBe(cp_route('wrapped.index'));
 });
 

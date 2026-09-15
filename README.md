@@ -35,7 +35,7 @@ Then build one:
 php please wrapped:generate
 ```
 
-It appears under **Wrapped** in the control panel nav, and a widget shows up on the dashboard once there is something to show.
+It appears under **Tools → Wrapped** in the control panel nav, and a widget shows up on the dashboard once there is something to show.
 
 ## Where the numbers come from
 
