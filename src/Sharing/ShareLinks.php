@@ -31,9 +31,13 @@ class ShareLinks
         protected CardGate $gate,
     ) {}
 
+    /**
+     * The settings screen, or the config file until the screen has been
+     * saved. Read per request, so switching off takes effect at once.
+     */
     public function enabled(): bool
     {
-        return (bool) config('wrapped.share.enabled', false);
+        return ShareSettings::enabled();
     }
 
     /**

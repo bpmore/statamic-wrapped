@@ -1,10 +1,20 @@
 <?php
 
 use Bpmore\Wrapped\Export\Theme;
+use Bpmore\Wrapped\History\Confidence;
+use Bpmore\Wrapped\Sharing\Share;
+use Bpmore\Wrapped\Sharing\ShareLinks;
+use Bpmore\Wrapped\Snapshots\Period;
+use Bpmore\Wrapped\Snapshots\Snapshot;
+use Carbon\CarbonImmutable;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Statamic\Contracts\Addons\SettingsRepository;
 use Statamic\Facades\Addon;
 use Statamic\Facades\AssetContainer;
 use Statamic\Facades\Stache;
+use Statamic\Facades\User;
+
+uses(RefreshDatabase::class);
 
 /**
  * The settings screen, which exists because of who ends up holding a site.
@@ -92,6 +102,62 @@ it('does not let an untouched field on the screen overrule the config file', fun
 
     expect(app(Theme::class)->background)->toBe('#123456')
         ->and(app(Theme::class)->accent)->toBe('#ffffff');
+});
+
+describe('public links, from the screen', function () {
+    it('follows the config file until the screen is saved', function () {
+        config(['wrapped.share.enabled' => false]);
+        expect(app(ShareLinks::class)->enabled())->toBeFalse();
+
+        config(['wrapped.share.enabled' => true]);
+        expect(app(ShareLinks::class)->enabled())->toBeTrue();
+    });
+
+    it('lets the screen switch it on', function () {
+        config(['wrapped.share.enabled' => false]);
+        savedLook(['share_enabled' => true]);
+
+        expect(app(ShareLinks::class)->enabled())->toBeTrue();
+    });
+
+    it('lets the screen switch it off, over a config file that says on', function () {
+        config(['wrapped.share.enabled' => true]);
+        savedLook(['share_enabled' => false]);
+
+        expect(app(ShareLinks::class)->enabled())->toBeFalse();
+    });
+
+    it('stops every public link the moment the screen switches it off', function () {
+        config(['wrapped.share.enabled' => true]);
+        $this->actingAs(User::make()->id('admin')->email('admin@example.com')->makeSuper());
+        Snapshot::create([
+            'site' => 'default',
+            'period' => Period::Year,
+            'period_key' => '2026',
+            'history_source' => 'logbook',
+            'confidence' => Confidence::High,
+            'stats' => ['entries_published' => ['count' => 42, 'previous' => null]],
+            'generated_at' => CarbonImmutable::parse('2026-12-01 09:00:00'),
+            'generated_by' => null,
+        ]);
+        $this->post(cp_route('wrapped.share.store'), ['period' => '2026']);
+        $url = Share::sole()->url();
+
+        $this->get($url)->assertOk();
+
+        savedLook(['share_enabled' => false]);
+
+        $this->get($url)->assertNotFound();
+    });
+
+    it('draws the toggle starting where the config file is, so saving the look does not switch it off', function () {
+        config(['wrapped.share.enabled' => true]);
+
+        $field = wrappedAddon()->settingsBlueprint()->field('share_enabled');
+
+        expect($field->type())->toBe('toggle')
+            ->and($field->get('default'))->toBeTrue();
+    });
 });
 
 describe('the logo, from an asset container', function () {

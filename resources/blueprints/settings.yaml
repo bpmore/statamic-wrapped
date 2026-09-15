@@ -49,3 +49,14 @@ tabs:
               mode: list
               restrict: false
               allow_uploads: true
+      -
+        display: 'Public links'
+        instructions: 'A Wrapped is normally private to the control panel. Switch this on to let people with the "Share publicly" permission make links anyone can open.'
+        fields:
+          -
+            handle: share_enabled
+            field:
+              type: toggle
+              display: 'Allow public links'
+              instructions: 'Off unless you switch it on. Every public link stops working the moment this is switched off, and works again when it is switched back on.'
+              inline_label: 'Anyone with a link can open it'

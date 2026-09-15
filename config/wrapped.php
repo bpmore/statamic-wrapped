@@ -137,6 +137,10 @@ return [
     |
     | Switching this back off stops every existing link at once.
     |
+    | The same switch is on the settings screen in the control panel (Addons,
+    | Wrapped, Settings). Once somebody has saved that screen, it wins over
+    | this file.
+    |
     | `path` is the first segment of the public URL: /wrapped/{token}.
     |
     */

@@ -167,7 +167,18 @@
             align-items: center;
             justify-content: center;
         }
+        .story-button--text { font-size: 14px; }
         .story-button:disabled { opacity: 0.35; cursor: default; }
+        .story-status {
+            position: fixed;
+            left: 0;
+            right: 0;
+            bottom: 76px;
+            text-align: center;
+            font-size: 14px;
+            color: var(--story-muted);
+            pointer-events: none;
+        }
         .story-button:focus-visible { outline: 3px solid var(--story-text); outline-offset: 2px; }
 
         /* A soft change between frames, only where motion is welcome. */
@@ -221,8 +232,15 @@
         {{-- Visible controls too, for anyone who has not guessed the convention. --}}
         <div class="story-controls">
             <button type="button" class="story-button" data-back aria-label="Previous" disabled>‹</button>
+            {{--
+                Share: the phone's own share sheet where there is one, the
+                clipboard otherwise. What it did is said in the button and in
+                the status line, which a screen reader hears.
+            --}}
+            <button type="button" class="story-button story-button--text" data-share hidden>Share</button>
             <button type="button" class="story-button" data-next aria-label="Next">›</button>
         </div>
+        <p class="story-status" data-status role="status" aria-live="polite"></p>
     </div>
 
     <script>
@@ -261,6 +279,54 @@
             stage.addEventListener('click', next);
             nextButton.addEventListener('click', function (e) { e.stopPropagation(); next(); });
             backButton.addEventListener('click', function (e) { e.stopPropagation(); back(); });
+
+            // Share: the phone's own share sheet where there is one, the
+            // clipboard otherwise. The clipboard API needs a secure page, so
+            // there is an old-style copy underneath it for a site still on
+            // plain http; the button only stays hidden if script is off.
+            var shareButton = document.querySelector('[data-share]');
+            var status = document.querySelector('[data-status]');
+            var link = { title: document.title, url: location.href };
+
+            shareButton.hidden = false;
+
+            function say(text) {
+                status.textContent = text;
+                setTimeout(function () { if (status.textContent === text) status.textContent = ''; }, 3000);
+            }
+
+            function copyTheOldWay() {
+                var box = document.createElement('textarea');
+                box.value = link.url;
+                box.setAttribute('readonly', '');
+                box.style.position = 'fixed';
+                box.style.opacity = '0';
+                document.body.appendChild(box);
+                box.select();
+                var done = false;
+                try { done = document.execCommand('copy'); } catch (err) { done = false; }
+                document.body.removeChild(box);
+                return done;
+            }
+
+            shareButton.addEventListener('click', function (e) {
+                e.stopPropagation();
+
+                if (navigator.share) {
+                    navigator.share(link).catch(function () { /* dismissed; nothing to say */ });
+                    return;
+                }
+
+                var fallback = function () {
+                    say(copyTheOldWay() ? 'Link copied' : 'Could not copy. The link is in the address bar.');
+                };
+
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(link.url).then(function () { say('Link copied'); }, fallback);
+                } else {
+                    fallback();
+                }
+            });
 
             window.addEventListener('keydown', function (e) {
                 // Leave the buttons alone: Enter or Space on one is its click.

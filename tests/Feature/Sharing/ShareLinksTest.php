@@ -214,6 +214,9 @@ describe('the public page', function () {
             ->toContain('aria-valuemax="3"')
             ->toContain('aria-label="Previous"')
             ->toContain('aria-label="Next"')
+            // A share button, and a status line a screen reader hears when it copies.
+            ->toContain('data-share')
+            ->toContain('role="status" aria-live="polite"')
             // The footer is decoration for sighted readers; the frames already say it.
             ->toContain('class="story-footer" aria-hidden="true"')
             // A posted link gets a title and a first line.

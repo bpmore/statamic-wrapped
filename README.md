@@ -200,13 +200,14 @@ Some sites want exactly that. A newsroom posting "we published 4,000 stories thi
 WRAPPED_SHARE_ENABLED=true
 ```
 
-then grant the **Share publicly** permission to whoever should make that call. A **Share publicly** panel appears on the Wrapped screen, and each link it makes:
+or switch on **Allow public links** at Addons → Wrapped → Settings, which wins over the file once saved. Then grant the **Share publicly** permission to whoever should make that call. A **Share publicly** panel appears on the Wrapped screen, and each link it makes:
 
 - is a **frozen copy** of that Wrapped at that moment. Regenerating never changes a page somebody has already posted.
 - sits behind a **random, unguessable token** (`/wrapped/0fbc2316…`, 40 hex characters).
 - **leaves the people cards out** unless you tick them for that link. A link can never show more than its maker could see.
 - can be given an **expiry** (a week to a year) and **revoked** at any time. Revoked, expired, or sharing switched back off: the page is a plain 404.
 - is the same **tap-through story** as the control panel, in your theme, with `noindex` and nothing of the control panel around it. Without JavaScript it reads as a plain page.
+- has a **Share** button: the phone's own share sheet where there is one, "Link copied" otherwise.
 
 Switching the setting back off stops every link at once. The first URL segment is `share.path` in the config.
 

@@ -189,6 +189,13 @@ class ServiceProvider extends AddonServiceProvider
                     if (($field['handle'] ?? null) === 'logo') {
                         $field['field'] = $this->logoField($field['field']);
                     }
+
+                    // The toggle starts where the config file is, so saving
+                    // the screen for some other reason does not quietly turn
+                    // sharing off on a site that switched it on in config.
+                    if (($field['handle'] ?? null) === 'share_enabled') {
+                        $field['field']['default'] = (bool) config('wrapped.share.enabled', false);
+                    }
                 }
             }
 

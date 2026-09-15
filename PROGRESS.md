@@ -1227,3 +1227,15 @@ part to design first.
   off is still the default. The spec stays honest about what it originally said.
 - Release: main fast-forwarded to build/phase-1, tag v1.2.0, GitHub release with notes.
 - `.claude/settings.json` (git push allowed) still deliberately uncommitted.
+
+### Post-1.3 — Share button, and the public-links switch on the settings screen (done)
+- Public story page: a Share button between Previous and Next. `navigator.share` where it exists
+  (phones), else the clipboard API, else an old-style `execCommand('copy')` so a site still on plain
+  http gets it too. "Link copied" goes into a `role="status"` line a screen reader hears. The click
+  does not leak to the stage (checked: frame stays put).
+- Settings screen: an "Allow public links" toggle in its own section, read by `ShareSettings::enabled()`
+  ahead of the config file once the screen has been saved, same rule as the look. The toggle is drawn
+  with the config file's value as its default, so saving the screen for the background does not turn
+  sharing off on a site that enabled it in `.env`. Checked in the browser: off → link 404 at once,
+  on → 200.
+- README updated. 559 tests.
