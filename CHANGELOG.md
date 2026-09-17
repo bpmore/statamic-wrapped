@@ -11,6 +11,11 @@ php artisan migrate
 php artisan vendor:publish --tag=wrapped --force
 ```
 
+## 1.4.2 - 2026-09-17
+
+Support is GitHub issues; the notice names the Suno plan the music was made
+on. Nothing else changed. No upgrade steps.
+
 ## 1.4.1 - 2026-09-17
 
 Marketplace readiness. No change to what a Wrapped says or does.
