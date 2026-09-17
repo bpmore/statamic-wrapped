@@ -248,7 +248,7 @@ Link it into a Statamic site with a Composer path repository and it is live with
 
 ## Support
 
-Open an issue at [github.com/bpmore/statamic-wrapped/issues](https://github.com/bpmore/statamic-wrapped/issues), or email brentpassmore@gmail.com. This is a free addon maintained by one person at [Had A Farm](https://hada.farm); expect a reply within a few days, not hours.
+Open an issue at [github.com/bpmore/statamic-wrapped/issues](https://github.com/bpmore/statamic-wrapped/issues). This is a free addon maintained by one person at [Had A Farm](https://hada.farm); expect a reply within a few days, not hours.
 
 ## What is bundled
 

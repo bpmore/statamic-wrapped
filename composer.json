@@ -18,8 +18,7 @@
     "support": {
         "issues": "https://github.com/bpmore/statamic-wrapped/issues",
         "source": "https://github.com/bpmore/statamic-wrapped",
-        "docs": "https://github.com/bpmore/statamic-wrapped#readme",
-        "email": "brentpassmore@gmail.com"
+        "docs": "https://github.com/bpmore/statamic-wrapped#readme"
     },
     "require": {
         "php": "^8.2",

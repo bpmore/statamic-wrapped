@@ -8,9 +8,9 @@ where it came from and what allows it to be here.
 Five instrumental tracks: Soft Landing, Open Road, Ipanema Morning, Kingston
 Slow Sunday and Seoul Rooftop.
 
-- Made with [Suno](https://suno.com) by Had A Farm, LLC on a paid plan whose
-  terms assign ownership of the generated output to the subscriber, including
-  commercial use and distribution.
+- Made with [Suno](https://suno.com) by Had A Farm, LLC on the Pro plan, a
+  paid plan whose terms assign ownership of the generated output to the
+  subscriber, including commercial use and distribution.
 - Owned by Had A Farm, LLC and distributed with this package under the same
   MIT licence as the code.
 - Shipped exactly as Suno delivered them, so Suno's own metadata (the

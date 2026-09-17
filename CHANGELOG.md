@@ -24,7 +24,7 @@ Marketplace readiness. No change to what a Wrapped says or does.
 
 - `LICENSE.md`, `NOTICE.md` (the bundled music, third-party code, and the one
   optional external request) and this changelog.
-- A support address in `composer.json` and the README.
+- A support path (GitHub issues) in `composer.json` and the README.
 - Development files are left out of the Composer download.
 
 ### Changed

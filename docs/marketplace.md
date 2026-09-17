@@ -67,7 +67,7 @@ Statamic 6 · PHP 8.2+ · Chrome or Chromium for images and FFmpeg for video (bo
 
 ## Support line
 
-GitHub issues, or email. Free addon, one maintainer; a reply within a few days.
+GitHub issues. Free addon, one maintainer; a reply within a few days.
 
 ## Licence line
 
