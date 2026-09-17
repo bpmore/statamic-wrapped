@@ -1,0 +1,15 @@
+# What a customer receives through Composer: the addon, its assets and its
+# documentation. Development files stay in the repository and out of the
+# download.
+/.claude          export-ignore
+/.github          export-ignore
+/.gitattributes   export-ignore
+/.gitignore       export-ignore
+/tests            export-ignore
+/CLAUDE.md        export-ignore
+/PROGRESS.md      export-ignore
+/SPEC.md          export-ignore
+/run-build.sh     export-ignore
+/phpstan.neon     export-ignore
+/phpunit.xml      export-ignore
+/pint.json        export-ignore

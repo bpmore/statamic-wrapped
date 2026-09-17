@@ -35,7 +35,26 @@ Then build one:
 php please wrapped:generate
 ```
 
-It appears under **Tools → Wrapped** in the control panel nav, and a widget shows up on the dashboard once there is something to show.
+It appears under **Tools → Wrapped** in the control panel nav. You can also build one from the screen itself, behind the **Build a Wrapped** permission.
+
+For the dashboard widget, add it to the widgets in `config/statamic/cp.php`:
+
+```php
+'widgets' => [
+    ['type' => 'wrapped', 'width' => 50],
+],
+```
+
+It shows the headline number once there is a Wrapped to show, and nudges in December.
+
+Upgrading, whenever the [changelog](CHANGELOG.md) says so:
+
+```bash
+php artisan migrate
+php artisan vendor:publish --tag=wrapped --force
+```
+
+Upgrades never touch a Wrapped you have already built, and the settings screen keeps what you saved.
 
 ## Where the numbers come from
 
@@ -227,6 +246,14 @@ npm install && npm run build
 
 Link it into a Statamic site with a Composer path repository and it is live without a reinstall step.
 
+## Support
+
+Open an issue at [github.com/bpmore/statamic-wrapped/issues](https://github.com/bpmore/statamic-wrapped/issues), or email brentpassmore@gmail.com. This is a free addon maintained by one person at [Had A Farm](https://hada.farm); expect a reply within a few days, not hours.
+
+## What is bundled
+
+The five music tracks are made with Suno on a plan that assigns ownership of the output, owned by Had A Farm, and distributed under this package's licence. The built control panel assets include canvas-confetti (ISC). Nothing about your site is sent anywhere; the one optional external request (a logo given as a full URL) is described in [NOTICE.md](NOTICE.md).
+
 ## License
 
-MIT.
+MIT. See [LICENSE.md](LICENSE.md) and, for the music and third-party code, [NOTICE.md](NOTICE.md).

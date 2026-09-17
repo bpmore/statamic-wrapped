@@ -48,16 +48,30 @@ Free. Statamic 6, PHP 8.2+.
 
 ## Screenshots, in order
 
-1. `docs/screenshots/cp-screen.png` — the Wrapped screen
-2. `docs/screenshots/card-busiest_time.png` — "You publish most on Tuesday"
-3. `docs/screenshots/card-longest_untouched.png` — "Quietly doing its job"
-4. `docs/screenshots/card-entries_published.png` — with last year alongside
-5. `docs/screenshots/summary.png` — the whole thing as one image
-6. `docs/screenshots/dashboard-widget.png` — the December nudge
+All taken from the shipped release (1.4) on a seeded Statamic 6 site.
+
+1. `docs/screenshots/cp-screen.png` — the Wrapped screen, with the period picker and Play it
+2. `docs/screenshots/story.png` — the tap-through story in the control panel
+3. `docs/screenshots/card-busiest_time.png` — "You publish most on Tuesday"
+4. `docs/screenshots/card-longest_untouched.png` — "Quietly doing its job"
+5. `docs/screenshots/video-maker.png` — choosing cards and music for the video
+6. `docs/screenshots/settings.png` — the settings screen: look, and the public-links switch
+7. `docs/screenshots/share-panel.png` — making and revoking public links
+8. `docs/screenshots/public-story.png` — the public page on a phone, with the Share button
+9. `docs/screenshots/summary.png` — the whole thing as one image
+10. `docs/screenshots/dashboard-widget.png` — the dashboard widget
 
 ## Requirements line
 
-Statamic 6 · PHP 8.2 · Chrome or Chromium for images and FFmpeg for video (both optional)
+Statamic 6 · PHP 8.2+ · Chrome or Chromium for images and FFmpeg for video (both optional) · Statamic Logbook recommended for the full set of cards (optional, free)
+
+## Support line
+
+GitHub issues, or email. Free addon, one maintainer; a reply within a few days.
+
+## Licence line
+
+MIT. Bundled music made with Suno and owned by Had A Farm, LLC; see NOTICE.md.
 
 ## Categories
 

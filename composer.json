@@ -15,6 +15,12 @@
             "email": "brentpassmore@gmail.com"
         }
     ],
+    "support": {
+        "issues": "https://github.com/bpmore/statamic-wrapped/issues",
+        "source": "https://github.com/bpmore/statamic-wrapped",
+        "docs": "https://github.com/bpmore/statamic-wrapped#readme",
+        "email": "brentpassmore@gmail.com"
+    },
     "require": {
         "php": "^8.2",
         "statamic/cms": "^6.0"

@@ -92,6 +92,21 @@ onBeforeUnmount(() => audio.value?.pause());
 
 const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
 
+// --- Room for the control panel's own header ---------------------------------
+
+// The story is pinned to the viewport, but the control panel's header is
+// pinned too and its own stacking context puts it on top: without this the
+// progress bars sat behind it. Measured rather than guessed, in case a site
+// or a Statamic release changes the header's height.
+const headerHeight = ref(0);
+
+onMounted(() => {
+    const header = document.querySelector('header');
+    headerHeight.value = header && getComputedStyle(header).position === 'fixed'
+        ? header.getBoundingClientRect().height
+        : 0;
+});
+
 // --- Look -------------------------------------------------------------------
 
 // The same theme as the images and the video, handed over as CSS variables.
@@ -102,6 +117,7 @@ const themeVars = computed(() => ({
     '--story-text': props.theme.text,
     '--story-muted': props.theme.muted,
     '--story-label': props.theme.accent ?? props.theme.muted,
+    '--story-top': `${headerHeight.value}px`,
     // Controls sit on the background; tint them from the text colour.
     '--story-rgb': props.theme.text === '#f7f7f8' || props.theme.text === '#ffffff' ? '247, 247, 248' : '22, 22, 29',
 }));
@@ -189,7 +205,7 @@ const themeVars = computed(() => ({
    film are recognisably the same thing. Contrast 5.34:1 for the grey, checked. */
 .story {
     position: fixed;
-    inset: 0;
+    inset: var(--story-top, 0) 0 0 0;
     z-index: 50;
     background: var(--story-bg);
     color: var(--story-text);
