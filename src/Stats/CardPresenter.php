@@ -28,10 +28,13 @@ class CardPresenter
      * each caller because the screen, the widget, the image export and the alt
      * text all present cards, and a new caller must not be able to forget it.
      *
+     * The voice is who the sentence is addressed to: the editor in the
+     * control panel, everyone on a public page. See `Voice`.
+     *
      * @param  array<string, array<string, mixed>>  $stats
      * @return list<array{handle: string, heading: string, body: string}>
      */
-    public function present(array $stats): array
+    public function present(array $stats, Voice $voice = Voice::You): array
     {
         $cards = [];
 
@@ -46,8 +49,8 @@ class CardPresenter
 
             $cards[] = [
                 'handle' => $handle,
-                'heading' => __("wrapped::cards.{$handle}.heading"),
-                'body' => __("wrapped::cards.{$key}", $this->replacements($handle, $data)),
+                'heading' => __('wrapped::'.$voice->key("cards.{$handle}.heading")),
+                'body' => __('wrapped::'.$voice->key("cards.{$key}"), $this->replacements($handle, $data)),
             ];
         }
 

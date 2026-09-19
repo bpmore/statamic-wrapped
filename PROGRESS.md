@@ -66,7 +66,7 @@
 
 ## Phase 8 — A voice and a song for the shared story (1.5)
 Both tasks touch the share form. Do the voice first: it is small and has no outside dependency.
-- [ ] Voice: a `voice` choice on the share form, `we` (default for share links) or `you` (the control panel keeps `you`); every card body, the intro and the closing line get a `we` wording in the lang files; the choice is frozen into the share row's card text like everything else, with `voice` stored so the intro and outro render to match; a test walks every `we` string and fails on any "you" or "your" left behind
+- [x] Voice: a `voice` choice on the share form, `we` (default for share links) or `you` (the control panel keeps `you`); every card body, the intro and the closing line get a `we` wording in the lang files; the choice is frozen into the share row's card text like everything else, with `voice` stored so the intro and outro render to match; a test walks every `we` string and fails on any "you" or "your" left behind
 - [ ] YouTube, paste a link: a "Music (YouTube link)" field on the share form; the video ID is parsed server-side from any youtube.com / youtu.be shape and stored on the share row; title and thumbnail fetched with YouTube's keyless oEmbed endpoint and shown for confirmation (a failed lookup is a validation error, not a stored link)
 - [ ] YouTube, the player: on the public story only, a "Play music" button on the intro; tapping it loads the IFrame player from `youtube-nocookie.com` as a pinned tile of at least 200×200 px, looping; the cards resize so nothing ever covers the tile; no autoplay; a "YouTube" line with a link to https://www.youtube.com/t/terms under the tile
 - [ ] Wording and docs: under the field, "Plays on the shared web page only. The downloadable video keeps its own soundtrack."; README notes the site's privacy policy should mention Google once a link is set; CHANGELOG
@@ -1252,3 +1252,11 @@ part to design first.
 - **Web only, never the MP4.** Baking a published song into a video we hand out needs a sync licence a small addon cannot get. The video export keeps the bundled Suno tracks and site-supplied files. The share form says so under the field.
 - **Voice is frozen at share time.** Share rows already store card text, not stats, so the wording is chosen when the link is made and never drifts. `we` is the default for share links because the public reader did not publish those entries; the control panel stays `you`.
 - **Cost to watch.** A 200×200 tile is a real chunk of a phone screen. It only appears after the viewer taps Play, so the story reads clean by default. The last task is to look at it on a phone before release.
+
+### Phase 8, task 1 — Voice (done)
+- `Voice` enum (`you` | `we`) in `src/Stats`. `Voice::key()` maps a translation key to its `_we` twin when one exists, else the plain key, so only lines with a pronoun need a second wording: six card lines, one heading (`When we publish`), three closing lines.
+- `CardPresenter::present($stats, $voice)` and `Period::outro($key, $voice)` take the voice; both default to `you`, so nothing in the control panel changed.
+- `wrapped_shares.voice` column, default `you`, in a new migration (1.2 shipped the table, so no editing in place). Rows from before the column keep saying `you`, proven by a test that inserts a 1.2-shaped row.
+- `ShareLinks::publish()` defaults to `we`; the controller validates `voice` with `Rule::enum`. The share form has a "Written as" radio pair, "we" ticked; each live link says which it was written in.
+- The sweep test (`VoiceTest`) renders every card line and every closing line in `we` and fails on any `you`/`your` left over. Checked that it fails when a `_we` line is removed.
+- Verified on statamic-dev: made a Q3 link with the default, curled the public page, every pronoun line reads we/our and the page has no "you" or "your" anywhere in its text. The 1.2-era link on that site now reads `written as "you"`.

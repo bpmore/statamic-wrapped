@@ -2,6 +2,7 @@
 
 namespace Bpmore\Wrapped\Snapshots;
 
+use Bpmore\Wrapped\Stats\Voice;
 use Carbon\CarbonImmutable;
 use InvalidArgumentException;
 
@@ -102,14 +103,15 @@ enum Period: string
 
     /**
      * The closing line for a Wrapped of this key: "That was your year."
-     * for a year, quarter or month as fits. A key this version cannot read
-     * gets the yearly line, which is the one that always existed.
+     * for a year, quarter or month as fits, or "our year" on a public page.
+     * A key this version cannot read gets the yearly line, which is the one
+     * that always existed.
      */
-    public static function outro(string $key): string
+    public static function outro(string $key, Voice $voice = Voice::You): string
     {
         $period = self::fromKey($key)[0] ?? self::Year;
 
-        return __('wrapped::messages.video.outro.'.$period->value);
+        return __('wrapped::'.$voice->key('messages.video.outro.'.$period->value));
     }
 
     /**

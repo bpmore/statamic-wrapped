@@ -5,6 +5,7 @@ namespace Bpmore\Wrapped\Sharing;
 use Bpmore\Wrapped\Snapshots\Snapshot;
 use Bpmore\Wrapped\Stats\CardGate;
 use Bpmore\Wrapped\Stats\CardPresenter;
+use Bpmore\Wrapped\Stats\Voice;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Gate;
@@ -55,8 +56,11 @@ class ShareLinks
      * The people cards go in only when asked for *and* this user may see
      * them: a link is a way of showing something to everyone, so it can
      * never show more than its maker could.
+     *
+     * The voice defaults to "we": whoever opens a public link did not publish
+     * those entries, so "you published" would be talking to the wrong person.
      */
-    public function publish(Snapshot $snapshot, string $label, bool $people = false, ?int $days = null, ?string $by = null): Share
+    public function publish(Snapshot $snapshot, string $label, bool $people = false, ?int $days = null, ?string $by = null, Voice $voice = Voice::We): Share
     {
         if (! $this->canShare()) {
             throw new RuntimeException('Public sharing is off, or this user may not share.');
@@ -69,7 +73,7 @@ class ShareLinks
         $people = $people && $this->gate->canViewPeople();
 
         $cards = array_values(array_filter(
-            $this->presenter->present($snapshot->stats),
+            $this->presenter->present($snapshot->stats, $voice),
             fn (array $card) => $people || ! $this->gate->isAboutPeople($card['handle']),
         ));
 
@@ -86,6 +90,7 @@ class ShareLinks
                 'body' => $card['body'],
             ], $cards),
             'people' => $people,
+            'voice' => $voice,
             'created_by' => $by,
             'created_at' => $now,
             'expires_at' => $days === null ? null : $now->addDays($days),

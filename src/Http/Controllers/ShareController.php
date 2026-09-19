@@ -5,8 +5,10 @@ namespace Bpmore\Wrapped\Http\Controllers;
 use Bpmore\Wrapped\Sharing\Share;
 use Bpmore\Wrapped\Sharing\ShareLinks;
 use Bpmore\Wrapped\Snapshots\Snapshot;
+use Bpmore\Wrapped\Stats\Voice;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use RuntimeException;
 use Statamic\Facades\Site;
 use Statamic\Facades\User;
@@ -28,6 +30,7 @@ class ShareController extends CpController
         $data = $request->validate([
             'period' => ['required', 'string', 'max:20'],
             'people' => ['sometimes', 'boolean'],
+            'voice' => ['sometimes', Rule::enum(Voice::class)],
             'days' => ['nullable', 'integer', 'min:1', 'max:'.ShareLinks::MAX_DAYS],
         ]);
 
@@ -44,6 +47,7 @@ class ShareController extends CpController
                 people: (bool) ($data['people'] ?? false),
                 days: isset($data['days']) ? (int) $data['days'] : null,
                 by: $this->actor(),
+                voice: isset($data['voice']) ? Voice::from($data['voice']) : Voice::We,
             );
         } catch (RuntimeException $e) {
             abort(Response::HTTP_FORBIDDEN, $e->getMessage());

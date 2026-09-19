@@ -82,11 +82,15 @@ return [
     'video' => [
 
         // The last frame. Quiet credit, not a call to action. One per kind
-        // of period, because "your year" on a monthly Wrapped is wrong.
+        // of period, because "your year" on a monthly Wrapped is wrong. The
+        // `_we` lines are for a public page, where the site speaks for itself.
         'outro' => [
             'year' => 'That was your year.',
             'quarter' => 'That was your quarter.',
             'month' => 'That was your month.',
+            'year_we' => 'That was our year.',
+            'quarter_we' => 'That was our quarter.',
+            'month_we' => 'That was our month.',
         ],
 
     ],

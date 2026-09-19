@@ -13,6 +13,10 @@
 | Cards that can be phrased two ways (with or without a previous period to
 | compare against) have a second key. `CardPresenter` picks between them.
 |
+| A key ending `_we` is the same line for a public page, where the site speaks
+| for itself: "we published", "our busiest month". Only the lines that say
+| "you" or "your" need one; `Voice` falls back to the plain key otherwise.
+|
 */
 
 return [
@@ -21,6 +25,8 @@ return [
         'heading' => 'Entries published',
         'body' => 'You published :count entries.',
         'compared' => 'You published :count entries, against :previous the period before.',
+        'body_we' => 'We published :count entries.',
+        'compared_we' => 'We published :count entries, against :previous the period before.',
     ],
 
     'total_words' => [
@@ -36,6 +42,7 @@ return [
     'busiest_month' => [
         'heading' => 'Busiest month',
         'body' => ':month was your busiest month, with :count entries.',
+        'body_we' => ':month was our busiest month, with :count entries.',
     ],
 
     'busiest_week' => [
@@ -46,6 +53,8 @@ return [
     'busiest_time' => [
         'heading' => 'When you publish',
         'body' => 'You publish most on :day, and most often around :hour.',
+        'heading_we' => 'When we publish',
+        'body_we' => 'We publish most on :day, and most often around :hour.',
     ],
 
     'longest_streak' => [
@@ -56,6 +65,7 @@ return [
     'longest_entry' => [
         'heading' => 'Longest entry',
         'body' => '":title" was your longest, at :words words.',
+        'body_we' => '":title" was our longest, at :words words.',
     ],
 
     'most_revised' => [
@@ -71,6 +81,7 @@ return [
     'top_taxonomy_term' => [
         'heading' => 'Most used term',
         'body' => 'You wrote about :term most, :count times.',
+        'body_we' => 'We wrote about :term most, :count times.',
     ],
 
     'longest_untouched' => [

@@ -11,6 +11,18 @@ php artisan migrate
 php artisan vendor:publish --tag=wrapped --force
 ```
 
+## Unreleased
+
+### Added
+
+- A voice for public links. A share link can be written as "we" (the site
+  speaking for itself: "we published 42 entries", "that was our year") or as
+  "you" (as the control panel reads). "We" is the default for new links; the
+  control panel itself still says "you". Chosen on the share form, frozen
+  into the link like everything else. Links made before this keep saying
+  "you". Needs `php artisan migrate` and a republish of the control panel
+  assets.
+
 ## 1.4.2 - 2026-09-17
 
 Support is GitHub issues; the notice names the Suno plan the music was made

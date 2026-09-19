@@ -7,8 +7,10 @@ use Bpmore\Wrapped\Sharing\ShareLinks;
 use Bpmore\Wrapped\Snapshots\Period;
 use Bpmore\Wrapped\Snapshots\Snapshot;
 use Bpmore\Wrapped\Stats\CardGate;
+use Bpmore\Wrapped\Stats\Voice;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Testing\TestResponse;
 use Inertia\Testing\AssertableInertia;
 use Statamic\Facades\Role;
@@ -87,7 +89,57 @@ describe('making a link', function () {
         makeLink();
 
         expect(array_column(Share::sole()->cards, 'handle'))->toBe(['entries_published'])
+            ->and(Share::sole()->cards[0]['body'])->toBe('We published 42 entries.');
+    });
+
+    it('speaks as the site by default: we, not you', function () {
+        sharer();
+        aWrapped();
+
+        makeLink();
+
+        expect(Share::sole()->voice)->toBe(Voice::We)
+            ->and(Share::sole()->cards[0]['body'])->toBe('We published 42 entries.');
+    });
+
+    it('can be written as you, when asked', function () {
+        sharer();
+        aWrapped();
+
+        makeLink(['voice' => 'you']);
+
+        expect(Share::sole()->voice)->toBe(Voice::You)
             ->and(Share::sole()->cards[0]['body'])->toBe('You published 42 entries.');
+    });
+
+    it('refuses a voice it does not have', function () {
+        sharer();
+        aWrapped();
+
+        makeLink(['voice' => 'they'])->assertSessionHasErrors('voice');
+
+        expect(Share::count())->toBe(0);
+    });
+
+    it('keeps saying you on a link made before there was a choice', function () {
+        // A 1.2 row: written before the column existed, so no voice on it.
+        DB::table('wrapped_shares')->insert([
+            'token' => str_repeat('b', 40),
+            'site' => 'default',
+            'period_key' => '2026',
+            'label' => '2026',
+            'cards' => json_encode([['handle' => 'entries_published', 'heading' => 'Entries published', 'body' => 'You published 42 entries.']]),
+            'people' => false,
+            'created_at' => CarbonImmutable::now(),
+        ]);
+
+        $share = Share::sole();
+
+        expect($share->voice)->toBe(Voice::You);
+
+        $this->get($share->url())
+            ->assertSee('You published 42 entries.')
+            ->assertSee('That was your year.');
     });
 
     it('includes the people cards when asked, by someone who may see them', function () {
@@ -120,7 +172,7 @@ describe('making a link', function () {
 
         $this->get(Share::sole()->url())
             ->assertOk()
-            ->assertSee('You published 42 entries.')
+            ->assertSee('We published 42 entries.')
             ->assertDontSee('99');
     });
 
@@ -181,7 +233,7 @@ describe('the public page', function () {
             ->assertOk()
             ->assertSee('2026 Wrapped')
             ->assertSee('Entries published')
-            ->assertSee('You published 42 entries.')
+            ->assertSee('We published 42 entries.')
             ->assertSee('noindex', false);
     });
 
@@ -194,7 +246,19 @@ describe('the public page', function () {
 
         $this->get(Share::sole()->url())
             ->assertSee('August 2026 Wrapped')
-            ->assertSee('That was your month.');
+            ->assertSee('That was our month.');
+    });
+
+    it('closes in the voice it was written in', function () {
+        sharer();
+        aWrapped(key: '2026-08');
+        Snapshot::where('period_key', '2026-08')->update(['period' => Period::Month]);
+
+        makeLink(['period' => '2026-08', 'voice' => 'you']);
+
+        $this->get(Share::sole()->url())
+            ->assertSee('That was your month.')
+            ->assertDontSee('That was our month.');
     });
 
     it('is the story: one frame per card, tap-through, with nothing of the control panel', function () {
@@ -208,8 +272,8 @@ describe('the public page', function () {
         expect($html)
             // Every frame is in the HTML, so it reads as a plain page without script.
             ->toContain('2026 Wrapped')
-            ->toContain('You published 42 entries.')
-            ->toContain('That was your year.')
+            ->toContain('We published 42 entries.')
+            ->toContain('That was our year.')
             ->toContain('role="progressbar"')
             ->toContain('aria-valuemax="3"')
             ->toContain('aria-label="Previous"')
@@ -221,7 +285,7 @@ describe('the public page', function () {
             ->toContain('class="story-footer" aria-hidden="true"')
             // A posted link gets a title and a first line.
             ->toContain('<meta property="og:title" content="2026 Wrapped · Laravel">')
-            ->toContain('<meta property="og:description" content="You published 42 entries.">')
+            ->toContain('<meta property="og:description" content="We published 42 entries.">')
             // Nothing of the control panel: no links into it, no assets from it.
             ->not->toContain('/cp/')
             ->not->toContain('<script src')
@@ -347,6 +411,7 @@ describe('on the wrapped screen', function () {
                 ->where('snapshot.share.links.0.url', Share::where('period_key', '2026')->sole()->url())
                 ->where('snapshot.share.links.0.expiresAt', '2027-01-04T09:00:00+00:00')
                 ->where('snapshot.share.links.0.people', false)
+                ->where('snapshot.share.links.0.voice', 'we')
                 ->where('snapshot.share.links.0.revokeUrl', cp_route('wrapped.share.destroy', Share::where('period_key', '2026')->sole())));
 
         $this->get(cp_route('wrapped.index', ['period' => '2025']))

@@ -18,7 +18,7 @@
     $frames = [
         ['kind' => 'intro', 'title' => __('wrapped::messages.story.intro', ['period' => $share->label]), 'subtitle' => $share->siteName()],
         ...array_map(fn ($card) => ['kind' => 'card'] + $card, $share->cards),
-        ['kind' => 'outro', 'title' => \Bpmore\Wrapped\Snapshots\Period::outro($share->period_key)],
+        ['kind' => 'outro', 'title' => \Bpmore\Wrapped\Snapshots\Period::outro($share->period_key, $share->voice)],
     ];
     $count = count($frames);
     $lead = $share->cards[0]['body'] ?? '';

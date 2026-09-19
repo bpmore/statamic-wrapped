@@ -2,6 +2,7 @@
 
 namespace Bpmore\Wrapped\Sharing;
 
+use Bpmore\Wrapped\Stats\Voice;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -21,6 +22,7 @@ use Statamic\Facades\Site;
  * @property string $label
  * @property list<array{handle: string, heading: string, body: string}> $cards
  * @property bool $people
+ * @property Voice $voice
  * @property string|null $created_by
  * @property CarbonImmutable $created_at
  * @property CarbonImmutable|null $expires_at
@@ -41,6 +43,7 @@ class Share extends Model
         'label',
         'cards',
         'people',
+        'voice',
         'created_by',
         'created_at',
         'expires_at',
@@ -55,6 +58,7 @@ class Share extends Model
         return [
             'cards' => 'array',
             'people' => 'boolean',
+            'voice' => Voice::class,
             'created_at' => 'immutable_datetime',
             'expires_at' => 'immutable_datetime',
             'revoked_at' => 'immutable_datetime',

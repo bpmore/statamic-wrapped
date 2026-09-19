@@ -14,7 +14,9 @@ const props = defineProps({
 
 // The form for a new link. People cards are off until ticked, every time:
 // a public page naming who did what is a decision per link, not a habit.
+// The voice is "we" unless changed: a public reader did not publish anything.
 const people = ref(false);
+const voice = ref('we');
 const days = ref('');
 const busy = ref(false);
 
@@ -22,7 +24,7 @@ const create = () => {
     busy.value = true;
     router.post(
         props.share.createUrl,
-        { period: props.periodKey, people: people.value, days: days.value === '' ? null : Number(days.value) },
+        { period: props.periodKey, people: people.value, voice: voice.value, days: days.value === '' ? null : Number(days.value) },
         { preserveScroll: true, onFinish: () => { busy.value = false; people.value = false; } },
     );
 };
@@ -64,7 +66,7 @@ const dateOf = (iso) => new Date(iso).toLocaleDateString(undefined, { day: 'nume
             <li v-for="link in share.links" :key="link.id" class="wrapped-share__link">
                 <a :href="link.url" class="wrapped-share__url" target="_blank" rel="noopener">{{ link.url }}</a>
                 <span class="wrapped-muted wrapped-share__meta">
-                    Made {{ dateOf(link.createdAt) }}<template v-if="link.expiresAt">, stops {{ dateOf(link.expiresAt) }}</template><template v-else>, does not expire</template><template v-if="link.people">, names people</template>.
+                    Made {{ dateOf(link.createdAt) }}<template v-if="link.expiresAt">, stops {{ dateOf(link.expiresAt) }}</template><template v-else>, does not expire</template><template v-if="link.people">, names people</template>, written as "{{ link.voice }}".
                 </span>
                 <span class="wrapped-share__actions">
                     <button type="button" class="wrapped-link" @click="copy(link)">{{ copied === link.id ? 'Copied' : 'Copy link' }}</button>
@@ -83,6 +85,24 @@ const dateOf = (iso) => new Date(iso).toLocaleDateString(undefined, { day: 'nume
                     <span class="wrapped-muted">Who did what, on a public page. Off unless you tick it, for each link.</span>
                 </span>
             </label>
+
+            <fieldset class="wrapped-share__voice">
+                <legend>Written as</legend>
+                <label class="wrapped-share__option">
+                    <input type="radio" v-model="voice" value="we">
+                    <span>
+                        We
+                        <span class="wrapped-muted">"We published 42 entries." The site speaking for itself, to whoever opens the link.</span>
+                    </span>
+                </label>
+                <label class="wrapped-share__option">
+                    <input type="radio" v-model="voice" value="you">
+                    <span>
+                        You
+                        <span class="wrapped-muted">"You published 42 entries." As it reads here, in the control panel.</span>
+                    </span>
+                </label>
+            </fieldset>
 
             <label class="wrapped-share__option wrapped-share__expiry">
                 <span>Stops working after</span>
@@ -171,6 +191,20 @@ const dateOf = (iso) => new Date(iso).toLocaleDateString(undefined, { day: 'nume
 
 .wrapped-share__option .wrapped-muted {
     display: block;
+}
+
+.wrapped-share__voice {
+    border: 0;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.wrapped-share__voice > legend {
+    padding: 0;
+    margin-bottom: 0.5rem;
 }
 
 .wrapped-share__expiry {
