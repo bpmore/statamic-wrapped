@@ -69,7 +69,7 @@ Both tasks touch the share form. Do the voice first: it is small and has no outs
 - [x] Voice: a `voice` choice on the share form, `we` (default for share links) or `you` (the control panel keeps `you`); every card body, the intro and the closing line get a `we` wording in the lang files; the choice is frozen into the share row's card text like everything else, with `voice` stored so the intro and outro render to match; a test walks every `we` string and fails on any "you" or "your" left behind
 - [x] YouTube, paste a link: a "Music (YouTube link)" field on the share form; the video ID is parsed server-side from any youtube.com / youtu.be shape and stored on the share row; title and thumbnail fetched with YouTube's keyless oEmbed endpoint and shown for confirmation (a failed lookup is a validation error, not a stored link)
 - [x] YouTube, the player: on the public story only, a "Play music" button on the intro; tapping it loads the IFrame player from `youtube-nocookie.com` as a pinned tile of at least 200×200 px, looping; the cards resize so nothing ever covers the tile; no autoplay; a "YouTube" line with a link to https://www.youtube.com/t/terms under the tile
-- [ ] Wording and docs: under the field, "Plays on the shared web page only. The downloadable video keeps its own soundtrack."; README notes the site's privacy policy should mention Google once a link is set; CHANGELOG
+- [x] Wording and docs: under the field, "Plays on the shared web page only. The downloadable video keeps its own soundtrack."; README notes the site's privacy policy should mention Google once a link is set; CHANGELOG
 - [ ] Look at it on a phone: screenshot the public story at 390×844 with the tile open and confirm the cards still read and nothing overlaps; then release 1.5
 
 ## Notes
@@ -1277,3 +1277,8 @@ part to design first.
 - "Stop music" removes the iframe rather than pausing it, so nothing keeps loading from YouTube after the reader says stop.
 - Enter/Space on the intro button no longer also advances the frame; the key handler now leaves `.story-intro-music` and `.story-music` alone as it does the controls.
 - Looked at on statamic-dev with a real video at 1280×800 and 390×844, playing: screenshots in `~/Downloads/wrapped-music-desktop.png` and `wrapped-music-phone.png`. Stop cleared the tile and the caption. Task 5 is the formal phone sign-off.
+
+### Phase 8, task 4 — Wording and docs (done)
+- Under the field: "Optional. Plays on the shared web page only, in a small YouTube player. The downloadable video keeps its own soundtrack."
+- README: two new bullets under Public links (voice, song) and a new subsection "A song on a public link" covering the paste box, the lookup, the player and its tile, YouTube's rules in one sentence, why the video can never carry it (sync licence), and the privacy-policy note: YouTube's API policies ask that a page with their player links a privacy policy that mentions Google, so a site should check its own before making a link with a song. The video's "Music" section points across. "What it will not do" says no published music in the video.
+- CHANGELOG: the Unreleased entry opens with the upgrade steps once (one migration, republish assets) instead of repeating them per bullet, and the player bullet points at the README for the privacy line.

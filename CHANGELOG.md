@@ -13,6 +13,11 @@ php artisan vendor:publish --tag=wrapped --force
 
 ## Unreleased
 
+Public links get a voice and a song. Needs `php artisan migrate` (one new
+migration: `voice` and the `youtube_*` columns on `wrapped_shares`) and a
+republish of the control panel assets. Nothing changes for a site that
+does not use public links.
+
 ### Added
 
 - A voice for public links. A share link can be written as "we" (the site
@@ -20,8 +25,7 @@ php artisan vendor:publish --tag=wrapped --force
   "you" (as the control panel reads). "We" is the default for new links; the
   control panel itself still says "you". Chosen on the share form, frozen
   into the link like everything else. Links made before this keep saying
-  "you". Needs `php artisan migrate` and a republish of the control panel
-  assets.
+  "you".
 - A song for a public link: paste a YouTube link on the share form. The
   video is looked up once (YouTube's keyless oEmbed; no API key, no quota)
   and kept by id with its title and thumbnail, which the control panel shows
@@ -33,7 +37,9 @@ php artisan vendor:publish --tag=wrapped --force
   a phone and bottom-right on a wider screen; the cards make room for it
   rather than sit under it. Nothing loads from YouTube until it is pressed,
   and a page whose link has no song says nothing about YouTube at all.
-  Under the tile: the song's title and a link to YouTube's terms.
+  Under the tile: the song's title and a link to YouTube's terms. If your
+  privacy policy does not already mention embedded YouTube players, the
+  README says what to add and why.
 
 ## 1.4.2 - 2026-09-17
 

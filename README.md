@@ -151,6 +151,8 @@ The addon ships with a small set of instrumental tracks, made with [Suno](https:
 
 Your tracks are listed first.
 
+These are the video's soundtrack, and the control panel story's. A public link can play a published song instead, through YouTube's own player; that is a different thing with different rules, and lives under [Public links](#a-song-on-a-public-link).
+
 ## Look
 
 The images, the video and the story share one look: a background you choose, text the addon chooses.
@@ -227,12 +229,25 @@ or switch on **Allow public links** at Addons → Wrapped → Settings, which wi
 - can be given an **expiry** (a week to a year) and **revoked** at any time. Revoked, expired, or sharing switched back off: the page is a plain 404.
 - is the same **tap-through story** as the control panel, in your theme, with `noindex` and nothing of the control panel around it. Without JavaScript it reads as a plain page.
 - has a **Share** button: the phone's own share sheet where there is one, "Link copied" otherwise.
+- is **written as "we"** unless you choose "you" on the form. The control panel says "you published 42 entries" to the editor; a public reader did not publish anything, so the page says "we published", "our busiest month", "that was our year".
+- can have a **song**: see below.
 
 Switching the setting back off stops every link at once. The first URL segment is `share.path` in the config.
 
+### A song on a public link
+
+Paste a YouTube link into **Music (YouTube link)** when making a public link. Any shape works: `youtube.com/watch?v=…`, `youtu.be/…`, shorts, embed. YouTube is asked about it once, with no API key and no quota, and the title and thumbnail it gives are kept with the link and shown under it in the control panel, so a wrong paste is visible and can be revoked. A link YouTube does not recognise (private, removed, not embeddable) is refused.
+
+On the public page the song is a small YouTube player in its own tile, opened by a **Play music** button on the first frame or **Music** in the controls, looping until **Stop music**. Nothing loads from YouTube until a reader presses one of them. The tile sits at the top on a phone and bottom-right on a wider screen, and the cards make room for it: YouTube's rules for an embedded player ask that it be at least 200×200, on screen, and never covered, hidden or reduced to audio, and the page keeps to them. Under the tile: the song's title and a link to YouTube's terms.
+
+Two things to know:
+
+- **The song plays on the shared web page only.** It is never in the downloadable video, and cannot be: putting a published recording into a file you hand out needs a synchronisation licence that neither this addon nor most sites have. The video keeps the soundtrack chosen for it, bundled or your own. The form says so under the field.
+- **Your privacy policy.** Once a reader presses Play, their browser talks to YouTube (the privacy-enhanced `youtube-nocookie.com` domain, but still Google). YouTube's API policies ask that a page with their player links a privacy policy that mentions Google, and depending on where your readers are, so may the law. If your site's privacy policy does not already cover embedded YouTube players, add a line before you make a link with a song.
+
 ## What it will not do
 
-No analytics. No emailing. No AI summaries. No historical backfill beyond what your history source honestly supports. The video and the images are downloads; nothing is hosted unless you switch public links on, and then only what you chose to publish.
+No analytics. No emailing. No AI summaries. No historical backfill beyond what your history source honestly supports. No published music in the video: only on a public page, played by YouTube's own player. The video and the images are downloads; nothing is hosted unless you switch public links on, and then only what you chose to publish.
 
 ## Development
 

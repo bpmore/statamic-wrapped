@@ -130,8 +130,7 @@ const dateOf = (iso) => new Date(iso).toLocaleDateString(undefined, { day: 'nume
                 <Input v-model="music" type="url" inputmode="url" placeholder="https://www.youtube.com/watch?v=…" :disabled="busy" />
                 <span v-if="errors.music" class="wrapped-share__error" role="status">{{ errors.music }}</span>
                 <span v-else class="wrapped-muted">
-                    Optional. A published song, played in a small YouTube player on the shared web page only.
-                    The downloadable video keeps its own soundtrack.
+                    Optional. Plays on the shared web page only, in a small YouTube player. The downloadable video keeps its own soundtrack.
                 </span>
             </label>
 
