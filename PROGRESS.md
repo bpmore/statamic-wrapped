@@ -1,5 +1,3 @@
-ALL TASKS COMPLETE
-
 # PROGRESS — Wrapped
 
 **Spec:** `wrapped-build-spec.md` · **Package:** `bpmore/statamic-wrapped` · **Free**
@@ -73,6 +71,14 @@ Both tasks touch the share form. Do the voice first: it is small and has no outs
 - [x] YouTube, the player: on the public story only, a "Play music" button on the intro; tapping it loads the IFrame player from `youtube-nocookie.com` as a pinned tile of at least 200×200 px, looping; the cards resize so nothing ever covers the tile; no autoplay; a "YouTube" line with a link to https://www.youtube.com/t/terms under the tile
 - [x] Wording and docs: under the field, "Plays on the shared web page only. The downloadable video keeps its own soundtrack."; README notes the site's privacy policy should mention Google once a link is set; CHANGELOG
 - [x] Look at it on a phone: screenshot the public story at 390×844 with the tile open and confirm the cards still read and nothing overlaps; then release 1.5
+
+## Phase 9 — Your own music (1.6)
+A site can already add tracks by editing `config/wrapped.php`. This is the same thing for the person who cannot: upload in the control panel, and hear it on the public page.
+- [ ] Upload: a "Your soundtracks" assets field on the settings screen (same container as the logo, filled in at boot, `allow_uploads`, several files). Only files with an audio extension (mp3, m4a, wav, ogg, flac, aac) become tracks; anything else is ignored, and the instructions say MP3 is the safe choice. An uploaded track joins `Soundtracks` between the site's config tracks and the bundled ones, handle `upload-{asset id}`, name from the asset's title or filename, so it appears in the video maker and the control panel story with a preview like the others
+- [ ] Disk: `Soundtrack::path` must be a local file for FFmpeg. For an asset on a local container that is its real path; for any other driver the render copies it to a temp file first and removes it after. A test with a fake non-local disk
+- [ ] Music on the public page is a choice: the share form's Music becomes None / a track from the list (bundled or uploaded, with preview) / a YouTube link. A track is stored on the share by handle (`soundtrack` column) and streamed from a new public route `wrapped/{token}/music` that serves the file only while the link is live, so nothing is hosted for a revoked link. On the page it is a looping `<audio>` behind the same Music button; no tile, since the visible-player rule is YouTube's. A missing file (track deleted since) plays nothing and hides the button
+- [ ] Wording and docs: README "Music" section covers uploading and the rights a site needs (a purchased song is licensed for neither the video nor a public page; own recordings and library music with a licence are fine; the bundled Suno tracks may be used on a public page); CHANGELOG; NOTICE's external-requests section unchanged (nothing leaves the server for this)
+- [ ] Look at it on statamic-dev: upload an MP3, render a video with it, make a public link with it, play it logged out on a phone; then release 1.6
 
 ## Notes
 <!-- Record surprises, decisions and blockers here. If a task is wrong or blocked, write why and stop. -->
@@ -1296,3 +1302,9 @@ part to design first.
 - Fresh-site install, as a customer gets it: `composer create-project statamic/statamic` (v6.33.0) at `~/Herd/wrapped-fresh`, then `composer require bpmore/statamic-wrapped:^1.5.1 --prefer-dist` from the GitHub VCS repo, so the dist zip (honouring `.gitattributes`) is what was installed. `tests/`, `PROGRESS.md` and the other dev files were absent from `vendor/bpmore/statamic-wrapped`. Statamic published the `wrapped` assets itself during install; `php artisan migrate` ran the three addon migrations; the screen rendered with styling (empty state first, then five cards after seeding a dated blog collection); the share panel showed the 1.5.1 labels; a real YouTube link made a public link; the public page, logged out, played it.
 - Keyboard through the open player: Play music (Enter) opened the tile without advancing the frame; Tab then went player → "YouTube terms" → Share → Stop music → Next. The frame did not move while tabbing.
 - The fresh site is left in place at `~/Herd/wrapped-fresh` (login `fresh@example.test`) for further checks; delete the directory when done with it.
+
+### Phase 9 — Decisions (planned 19 September 2026)
+- **Statamic's assets field, not an upload endpoint.** The settings screen already has an assets field for the logo with its container filled in at boot; the soundtracks field is the same thing with more files. No custom upload code, no new permission: whoever may edit settings may add music (Marketplace Rule 02).
+- **The assets fieldtype cannot restrict by type.** Checked `Statamic\Fieldtypes\Assets\Assets` config options (container, folder, restrict, allow_uploads, mode, max/min files, query scopes): no MIME or extension filter. So the addon filters by extension when it reads the field, and the instructions steer to MP3.
+- **Streamed through a route, not the asset URL.** An asset in a public container has a public URL regardless, but streaming through `wrapped/{token}/music` means a revoked link stops the music too, and a private container works. Same 404 rules as the page.
+- **Rights are the site's.** As with config tracks today, but an upload button makes the question ordinary, so the README answers it plainly: own recordings and licensed library music yes, a bought song no. Suno Pro output may be used publicly.
