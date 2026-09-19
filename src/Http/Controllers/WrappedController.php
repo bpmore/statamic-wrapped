@@ -23,7 +23,7 @@ use Inertia\Response;
 use RuntimeException;
 use Statamic\Facades\Site;
 use Statamic\Http\Controllers\CP\CpController;
-use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
@@ -276,7 +276,7 @@ class WrappedController extends CpController
      * lives — the addon's own directory, or the site's — never copied into
      * public/. Sits behind the same permission as the screen.
      */
-    public function soundtrack(Soundtracks $soundtracks, string $handle): BinaryFileResponse
+    public function soundtrack(Soundtracks $soundtracks, string $handle): SymfonyResponse
     {
         $track = $soundtracks->find($handle);
 
@@ -284,10 +284,22 @@ class WrappedController extends CpController
             throw new NotFoundHttpException("There is no soundtrack called [{$handle}].");
         }
 
-        return response()->file($track->path, [
+        $headers = [
             'Content-Type' => $track->mimeType(),
             'Cache-Control' => 'private, max-age=3600',
-        ]);
+        ];
+
+        // A file on this server goes out as one, with range requests and
+        // all; a track in a container elsewhere is streamed through.
+        if ($track->path !== null) {
+            return response()->file($track->path, $headers);
+        }
+
+        return response()->stream(function () use ($track) {
+            $stream = $track->stream();
+            fpassthru($stream);
+            fclose($stream);
+        }, 200, $headers);
     }
 
     /**

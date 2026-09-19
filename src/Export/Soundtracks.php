@@ -4,6 +4,7 @@ namespace Bpmore\Wrapped\Export;
 
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
+use League\Flysystem\Local\LocalFilesystemAdapter;
 use Statamic\Assets\Asset;
 
 /**
@@ -82,8 +83,9 @@ class Soundtracks
      * The files uploaded to the "Your soundtracks" field on the settings
      * screen. The field cannot refuse a non-audio file, so anything that is
      * not one is passed over here without a word: the instructions on the
-     * field already say so. A file on a disk this server cannot read directly
-     * is left out for now; see PROGRESS.md, Phase 9.
+     * field already say so. A file in a local container is used where it is;
+     * one in any other kind of container (S3, say) is carried as its asset
+     * and copied to a temp file only when FFmpeg needs it.
      *
      * The handle is a short hash of the asset id rather than the id itself,
      * because the id has slashes and a `::` in it and the handle goes in a
@@ -107,10 +109,11 @@ class Soundtracks
                 continue;
             }
 
-            $path = $asset->resolvedPath();
+            $local = $asset->disk()->filesystem()->getAdapter() instanceof LocalFilesystemAdapter;
+            $path = $local ? $asset->resolvedPath() : null;
 
-            if (! is_file($path)) {
-                Log::warning('[wrapped] Uploaded soundtrack is not on this server\'s disk and was left out.', ['asset' => $asset->id()]);
+            if ($local && ! is_file((string) $path)) {
+                Log::warning('[wrapped] Uploaded soundtrack is missing from its container and was left out.', ['asset' => $asset->id()]);
 
                 continue;
             }
@@ -123,6 +126,7 @@ class Soundtracks
                 description: 'Uploaded to this site.',
                 path: $path,
                 bundled: false,
+                asset: $local ? null : $asset,
             ));
         }
 

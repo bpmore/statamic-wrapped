@@ -20,6 +20,9 @@ class FakeVideoRenderer implements VideoRenderer
 
     public ?VideoSpec $spec = null;
 
+    /** Whether the audio file was actually there when render ran. */
+    public ?bool $audioExisted = null;
+
     public function __construct(
         protected bool $available = true,
         protected ?string $fails = null,
@@ -44,6 +47,7 @@ class FakeVideoRenderer implements VideoRenderer
         $this->frames = $frames;
         $this->overlay = $overlay;
         $this->audio = $audio;
+        $this->audioExisted = $audio === null ? null : is_file($audio);
         $this->spec = $spec;
 
         return 'MP4:'.count($frames).'frames'.($audio === null ? ':silent' : ':'.basename($audio));

@@ -124,7 +124,13 @@ class WrappedVideo
         // Intro, cards, outro and the pinned footer, from one browser launch.
         ['frames' => $frames, 'footer' => $footer] = $this->frames->sheet($snapshot, $cards);
 
-        return $this->renderer->render($frames, $footer, $soundtrack?->path, $spec ?? new VideoSpec);
+        // A track in a container elsewhere becomes a file for exactly as long
+        // as FFmpeg needs one.
+        try {
+            return $this->renderer->render($frames, $footer, $soundtrack?->localPath(), $spec ?? new VideoSpec);
+        } finally {
+            $soundtrack?->release();
+        }
     }
 
     public function filename(Snapshot $snapshot): string
