@@ -1,5 +1,3 @@
-ALL TASKS COMPLETE
-
 # PROGRESS — Wrapped
 
 **Spec:** `wrapped-build-spec.md` · **Package:** `bpmore/statamic-wrapped` · **Free**
@@ -65,6 +63,14 @@ ALL TASKS COMPLETE
 - [x] Share links: off by default; publish one snapshot as a frozen copy behind an unguessable, revocable token; people cards opt-in per link
 - [x] The public story page: no CP chrome, noindex, the site's theme, same tap-through behaviour
 - [x] README + release 1.2
+
+## Phase 8 — A voice and a song for the shared story (1.5)
+Both tasks touch the share form. Do the voice first: it is small and has no outside dependency.
+- [ ] Voice: a `voice` choice on the share form, `we` (default for share links) or `you` (the control panel keeps `you`); every card body, the intro and the closing line get a `we` wording in the lang files; the choice is frozen into the share row's card text like everything else, with `voice` stored so the intro and outro render to match; a test walks every `we` string and fails on any "you" or "your" left behind
+- [ ] YouTube, paste a link: a "Music (YouTube link)" field on the share form; the video ID is parsed server-side from any youtube.com / youtu.be shape and stored on the share row; title and thumbnail fetched with YouTube's keyless oEmbed endpoint and shown for confirmation (a failed lookup is a validation error, not a stored link)
+- [ ] YouTube, the player: on the public story only, a "Play music" button on the intro; tapping it loads the IFrame player from `youtube-nocookie.com` as a pinned tile of at least 200×200 px, looping; the cards resize so nothing ever covers the tile; no autoplay; a "YouTube" line with a link to https://www.youtube.com/t/terms under the tile
+- [ ] Wording and docs: under the field, "Plays on the shared web page only. The downloadable video keeps its own soundtrack."; README notes the site's privacy policy should mention Google once a link is set; CHANGELOG
+- [ ] Look at it on a phone: screenshot the public story at 390×844 with the tile open and confirm the cards still read and nothing overlaps; then release 1.5
 
 ## Notes
 <!-- Record surprises, decisions and blockers here. If a task is wrong or blocked, write why and stop. -->
@@ -1239,3 +1245,10 @@ part to design first.
   sharing off on a site that enabled it in `.env`. Checked in the browser: off → link 404 at once,
   on → 200.
 - README updated. 559 tests.
+
+### Phase 8 — Decisions (planned 19 September 2026)
+- **Why YouTube, not Spotify or Apple.** Checked against YouTube's Developer Policies and Embedded Player Requirements, both "Last updated 2026-09-14". Allowed, with conditions: the player must be visible and at least 200×200 px (Player Requirements, Minimum Size); nothing may overlay it; no background or hidden player, no audio-only, no separating audio from video (Developer Policies III.I.6 to III.I.9); no autoplay until more than half the player is on screen; one autoplaying player per page. Spotify tightened new-app API access in 2025 and Apple needs a paid developer account. Not legal advice; a plain reading of the current pages.
+- **Paste a link, not search.** `search.list` on the Data API is capped at 100 calls a day per key, and using it brings the Data API terms with it. oEmbed (`https://www.youtube.com/oembed?url=…&format=json`) is keyless and gives title and thumbnail. So: no API key, no quota, no per-site setup.
+- **Web only, never the MP4.** Baking a published song into a video we hand out needs a sync licence a small addon cannot get. The video export keeps the bundled Suno tracks and site-supplied files. The share form says so under the field.
+- **Voice is frozen at share time.** Share rows already store card text, not stats, so the wording is chosen when the link is made and never drifts. `we` is the default for share links because the public reader did not publish those entries; the control panel stays `you`.
+- **Cost to watch.** A 200×200 tile is a real chunk of a phone screen. It only appears after the viewer taps Play, so the story reads clean by default. The last task is to look at it on a phone before release.
