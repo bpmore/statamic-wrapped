@@ -11,6 +11,17 @@ php artisan migrate
 php artisan vendor:publish --tag=wrapped --force
 ```
 
+## 1.5.1 - 2026-09-19
+
+### Fixed
+
+- `NOTICE.md` now lists the two requests 1.5 added: the server's one call to
+  YouTube's oEmbed endpoint when a song is pasted, and the reader's own
+  browser loading YouTube's player when they press Play. Documentation only.
+- The share form's field labels ("Written as", "Music", "Stops working
+  after") take the same small label style as the Build form. Needs a
+  republish of the control panel assets.
+
 ## 1.5.0 - 2026-09-19
 
 Public links get a voice and a song. Needs `php artisan migrate` (one new

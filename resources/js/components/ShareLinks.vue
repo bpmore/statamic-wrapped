@@ -108,7 +108,7 @@ const dateOf = (iso) => new Date(iso).toLocaleDateString(undefined, { day: 'nume
             </label>
 
             <fieldset class="wrapped-share__voice">
-                <legend>Written as</legend>
+                <legend class="wrapped-share__label">Written as</legend>
                 <label class="wrapped-share__option">
                     <input type="radio" v-model="voice" value="we">
                     <span>
@@ -126,7 +126,7 @@ const dateOf = (iso) => new Date(iso).toLocaleDateString(undefined, { day: 'nume
             </fieldset>
 
             <label class="wrapped-share__field">
-                <span>Music (YouTube link)</span>
+                <span class="wrapped-share__label">Music (YouTube link)</span>
                 <Input v-model="music" type="url" inputmode="url" placeholder="https://www.youtube.com/watch?v=…" :disabled="busy" />
                 <span v-if="errors.music" class="wrapped-share__error" role="status">{{ errors.music }}</span>
                 <span v-else class="wrapped-muted">
@@ -135,7 +135,7 @@ const dateOf = (iso) => new Date(iso).toLocaleDateString(undefined, { day: 'nume
             </label>
 
             <label class="wrapped-share__option wrapped-share__expiry">
-                <span>Stops working after</span>
+                <span class="wrapped-share__label">Stops working after</span>
                 <select v-model="days" class="wrapped-share__select">
                     <option value="">Never, until revoked</option>
                     <option value="7">7 days</option>
@@ -234,7 +234,18 @@ const dateOf = (iso) => new Date(iso).toLocaleDateString(undefined, { day: 'nume
 
 .wrapped-share__voice > legend {
     padding: 0;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.25rem;
+}
+
+/* Field labels, as the Build form has them, so the two forms read alike. */
+.wrapped-share__label {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--color-gray-600);
+}
+
+.dark .wrapped-share__label {
+    color: var(--color-gray-400);
 }
 
 .wrapped-share__field {

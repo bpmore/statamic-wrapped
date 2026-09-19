@@ -34,13 +34,26 @@ loaded from it at runtime.
 
 ## External requests this package can make
 
-None on its own. Two settings can cause one:
+None on its own. Four things an editor or a reader does can cause one:
 
 - A logo given as a full `http(s)://` URL (config `theme.logo`, or the Logo
   field on the settings screen) is fetched once when the look is built, with a
   three-second timeout, and embedded in the images and video. Give a path on
   the site instead and nothing leaves the server.
+- Pasting a YouTube link into the **Music** field when making a public link
+  (1.5+) makes one request from the server to
+  `https://www.youtube.com/oembed`, with a five-second timeout, carrying the
+  video id and nothing else. It brings back the title and thumbnail URL, which
+  are stored on the link. No API key is used and nothing about the site is sent.
+- On a public page whose link has a song, a reader pressing **Play music** has
+  their own browser load YouTube's player from `www.youtube-nocookie.com`
+  (YouTube's privacy-enhanced domain, still operated by Google). That is a
+  request from the reader to Google, on the same terms as any embedded YouTube
+  video, and it does not happen until the button is pressed. A public page
+  whose link has no song loads nothing from YouTube. The README says what
+  this means for a site's privacy policy.
 - The Chrome and FFmpeg binaries are run locally; they receive only the
   package's own HTML and files.
 
-Nothing about a site or its content is sent anywhere.
+Beyond a video id and a logo URL you chose, nothing about a site or its
+content is sent anywhere.
