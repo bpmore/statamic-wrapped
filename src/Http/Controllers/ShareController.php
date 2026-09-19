@@ -4,6 +4,7 @@ namespace Bpmore\Wrapped\Http\Controllers;
 
 use Bpmore\Wrapped\Sharing\Share;
 use Bpmore\Wrapped\Sharing\ShareLinks;
+use Bpmore\Wrapped\Sharing\YouTube;
 use Bpmore\Wrapped\Snapshots\Snapshot;
 use Bpmore\Wrapped\Stats\Voice;
 use Illuminate\Http\RedirectResponse;
@@ -25,14 +26,21 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
  */
 class ShareController extends CpController
 {
-    public function store(Request $request, ShareLinks $links): RedirectResponse
+    public function store(Request $request, ShareLinks $links, YouTube $youtube): RedirectResponse
     {
         $data = $request->validate([
             'period' => ['required', 'string', 'max:20'],
             'people' => ['sometimes', 'boolean'],
             'voice' => ['sometimes', Rule::enum(Voice::class)],
             'days' => ['nullable', 'integer', 'min:1', 'max:'.ShareLinks::MAX_DAYS],
+            'music' => ['nullable', 'string', 'max:500'],
         ]);
+
+        // Asked of YouTube before the snapshot is looked up, so a bad link is
+        // a validation error on the form and never a half-made share.
+        $music = isset($data['music']) && trim($data['music']) !== ''
+            ? $youtube->resolve($data['music'])
+            : null;
 
         $snapshot = Snapshot::query()
             ->where('site', Site::selected()->handle())
@@ -48,6 +56,7 @@ class ShareController extends CpController
                 days: isset($data['days']) ? (int) $data['days'] : null,
                 by: $this->actor(),
                 voice: isset($data['voice']) ? Voice::from($data['voice']) : Voice::We,
+                music: $music,
             );
         } catch (RuntimeException $e) {
             abort(Response::HTTP_FORBIDDEN, $e->getMessage());

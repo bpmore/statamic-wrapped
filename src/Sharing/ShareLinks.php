@@ -59,8 +59,11 @@ class ShareLinks
      *
      * The voice defaults to "we": whoever opens a public link did not publish
      * those entries, so "you published" would be talking to the wrong person.
+     *
+     * The music, if any, is a YouTube video already looked up and found; it
+     * plays on the public page and nowhere else.
      */
-    public function publish(Snapshot $snapshot, string $label, bool $people = false, ?int $days = null, ?string $by = null, Voice $voice = Voice::We): Share
+    public function publish(Snapshot $snapshot, string $label, bool $people = false, ?int $days = null, ?string $by = null, Voice $voice = Voice::We, ?YouTubeVideo $music = null): Share
     {
         if (! $this->canShare()) {
             throw new RuntimeException('Public sharing is off, or this user may not share.');
@@ -91,6 +94,9 @@ class ShareLinks
             ], $cards),
             'people' => $people,
             'voice' => $voice,
+            'youtube_id' => $music?->id,
+            'youtube_title' => $music?->title,
+            'youtube_thumbnail' => $music?->thumbnail,
             'created_by' => $by,
             'created_at' => $now,
             'expires_at' => $days === null ? null : $now->addDays($days),

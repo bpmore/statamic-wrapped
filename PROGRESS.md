@@ -67,7 +67,7 @@
 ## Phase 8 — A voice and a song for the shared story (1.5)
 Both tasks touch the share form. Do the voice first: it is small and has no outside dependency.
 - [x] Voice: a `voice` choice on the share form, `we` (default for share links) or `you` (the control panel keeps `you`); every card body, the intro and the closing line get a `we` wording in the lang files; the choice is frozen into the share row's card text like everything else, with `voice` stored so the intro and outro render to match; a test walks every `we` string and fails on any "you" or "your" left behind
-- [ ] YouTube, paste a link: a "Music (YouTube link)" field on the share form; the video ID is parsed server-side from any youtube.com / youtu.be shape and stored on the share row; title and thumbnail fetched with YouTube's keyless oEmbed endpoint and shown for confirmation (a failed lookup is a validation error, not a stored link)
+- [x] YouTube, paste a link: a "Music (YouTube link)" field on the share form; the video ID is parsed server-side from any youtube.com / youtu.be shape and stored on the share row; title and thumbnail fetched with YouTube's keyless oEmbed endpoint and shown for confirmation (a failed lookup is a validation error, not a stored link)
 - [ ] YouTube, the player: on the public story only, a "Play music" button on the intro; tapping it loads the IFrame player from `youtube-nocookie.com` as a pinned tile of at least 200×200 px, looping; the cards resize so nothing ever covers the tile; no autoplay; a "YouTube" line with a link to https://www.youtube.com/t/terms under the tile
 - [ ] Wording and docs: under the field, "Plays on the shared web page only. The downloadable video keeps its own soundtrack."; README notes the site's privacy policy should mention Google once a link is set; CHANGELOG
 - [ ] Look at it on a phone: screenshot the public story at 390×844 with the tile open and confirm the cards still read and nothing overlaps; then release 1.5
@@ -1260,3 +1260,11 @@ part to design first.
 - `ShareLinks::publish()` defaults to `we`; the controller validates `voice` with `Rule::enum`. The share form has a "Written as" radio pair, "we" ticked; each live link says which it was written in.
 - The sweep test (`VoiceTest`) renders every card line and every closing line in `we` and fails on any `you`/`your` left over. Checked that it fails when a `_we` line is removed.
 - Verified on statamic-dev: made a Q3 link with the default, curled the public page, every pronoun line reads we/our and the page has no "you" or "your" anywhere in its text. The 1.2-era link on that site now reads `written as "you"`.
+
+### Phase 8, task 2 — YouTube, paste a link (done)
+- `YouTubeVideo::idFrom()` reads the 11-character id out of watch, youtu.be, shorts, embed, live and bare-id shapes, with or without scheme, www/m/music, and ignores the rest of the query string. A lookalike host (`youtube.com.evil.example`) is not YouTube. Fifteen shapes and eight non-links in the tests.
+- `YouTube::resolve()` asks oEmbed once (5 s timeout, no key) and throws a `ValidationException` on `music` with one of two messages: not a YouTube link, or YouTube did not recognise it (401/403/404/5xx, unreachable, or an answer with no title). Either way no share is made.
+- Three nullable columns on `wrapped_shares`: `youtube_id`, `youtube_title`, `youtube_thumbnail`. Added to the 1.5 migration alongside `voice` (it had not shipped; rolled back and re-run on statamic-dev). `Share::music()` gives them back as a `YouTubeVideo` or null.
+- Share form: a "Music (YouTube link)" `Input`, hint under it saying web page only, the validation message in its place. Each live link shows the song's thumbnail and YouTube's own title, linked, so a wrong paste is visible and can be revoked.
+- Verified on statamic-dev against real YouTube: a Vimeo URL showed the message and made no link; `https://youtu.be/dQw4w9WgXcQ?si=test` made a link listed as "Music: Rick Astley - Never Gonna Give You Up (Official Video) (4K Remaster)" with its thumbnail.
+- The public page does not play anything yet; that is task 3.

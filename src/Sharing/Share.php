@@ -23,6 +23,9 @@ use Statamic\Facades\Site;
  * @property list<array{handle: string, heading: string, body: string}> $cards
  * @property bool $people
  * @property Voice $voice
+ * @property string|null $youtube_id
+ * @property string|null $youtube_title
+ * @property string|null $youtube_thumbnail
  * @property string|null $created_by
  * @property CarbonImmutable $created_at
  * @property CarbonImmutable|null $expires_at
@@ -44,6 +47,9 @@ class Share extends Model
         'cards',
         'people',
         'voice',
+        'youtube_id',
+        'youtube_title',
+        'youtube_thumbnail',
         'created_by',
         'created_at',
         'expires_at',
@@ -66,8 +72,15 @@ class Share extends Model
     }
 
     /**
-     * Still serving: not revoked, and not past its expiry.
+     * The song chosen for the public page, or null for a page without one.
      */
+    public function music(): ?YouTubeVideo
+    {
+        return $this->youtube_id === null || $this->youtube_title === null
+            ? null
+            : new YouTubeVideo($this->youtube_id, $this->youtube_title, $this->youtube_thumbnail);
+    }
+
     /**
      * The site as a person knows it, for the page's title and its intro. The
      * handle stands in for a site that no longer exists.

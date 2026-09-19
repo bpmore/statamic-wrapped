@@ -22,6 +22,12 @@ php artisan vendor:publish --tag=wrapped --force
   into the link like everything else. Links made before this keep saying
   "you". Needs `php artisan migrate` and a republish of the control panel
   assets.
+- A song for a public link: paste a YouTube link on the share form. The
+  video is looked up once (YouTube's keyless oEmbed; no API key, no quota)
+  and kept by id with its title and thumbnail, which the control panel shows
+  under the link. A link YouTube does not recognise is refused. The song
+  plays on the shared web page only, never in the downloadable video; the
+  player itself lands in the next entry.
 
 ## 1.4.2 - 2026-09-17
 

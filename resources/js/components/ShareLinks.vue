@@ -1,7 +1,7 @@
 <script setup>
-import { ref } from 'vue';
-import { router } from '@statamic/cms/inertia';
-import { Button } from '@statamic/cms/ui';
+import { computed, ref } from 'vue';
+import { router, usePage } from '@statamic/cms/inertia';
+import { Button, Input } from '@statamic/cms/ui';
 
 /*
  * Public links for one Wrapped. Only mounted when sharing is switched on and
@@ -15,17 +15,33 @@ const props = defineProps({
 // The form for a new link. People cards are off until ticked, every time:
 // a public page naming who did what is a decision per link, not a habit.
 // The voice is "we" unless changed: a public reader did not publish anything.
+// A song is a pasted YouTube link. It plays on the public page only; the
+// server looks it up and refuses a link YouTube does not know.
 const people = ref(false);
 const voice = ref('we');
+const music = ref('');
 const days = ref('');
 const busy = ref(false);
+
+// Validation messages come back on the page's errors, keyed by field.
+const errors = computed(() => usePage().props.errors ?? {});
 
 const create = () => {
     busy.value = true;
     router.post(
         props.share.createUrl,
-        { period: props.periodKey, people: people.value, voice: voice.value, days: days.value === '' ? null : Number(days.value) },
-        { preserveScroll: true, onFinish: () => { busy.value = false; people.value = false; } },
+        {
+            period: props.periodKey,
+            people: people.value,
+            voice: voice.value,
+            music: music.value.trim() === '' ? null : music.value.trim(),
+            days: days.value === '' ? null : Number(days.value),
+        },
+        {
+            preserveScroll: true,
+            onSuccess: () => { people.value = false; music.value = ''; },
+            onFinish: () => { busy.value = false; },
+        },
     );
 };
 
@@ -68,6 +84,11 @@ const dateOf = (iso) => new Date(iso).toLocaleDateString(undefined, { day: 'nume
                 <span class="wrapped-muted wrapped-share__meta">
                     Made {{ dateOf(link.createdAt) }}<template v-if="link.expiresAt">, stops {{ dateOf(link.expiresAt) }}</template><template v-else>, does not expire</template><template v-if="link.people">, names people</template>, written as "{{ link.voice }}".
                 </span>
+                <!-- The song, as YouTube named it, so a wrong paste shows up here and can be revoked. -->
+                <a v-if="link.music" :href="link.music.url" class="wrapped-share__music" target="_blank" rel="noopener">
+                    <img v-if="link.music.thumbnail" :src="link.music.thumbnail" alt="" class="wrapped-share__thumb" width="64" height="36" loading="lazy">
+                    <span>Music: {{ link.music.title }}</span>
+                </a>
                 <span class="wrapped-share__actions">
                     <button type="button" class="wrapped-link" @click="copy(link)">{{ copied === link.id ? 'Copied' : 'Copy link' }}</button>
                     <button type="button" class="wrapped-link" @click="revoke(link)">Revoke</button>
@@ -103,6 +124,16 @@ const dateOf = (iso) => new Date(iso).toLocaleDateString(undefined, { day: 'nume
                     </span>
                 </label>
             </fieldset>
+
+            <label class="wrapped-share__field">
+                <span>Music (YouTube link)</span>
+                <Input v-model="music" type="url" inputmode="url" placeholder="https://www.youtube.com/watch?v=…" :disabled="busy" />
+                <span v-if="errors.music" class="wrapped-share__error" role="status">{{ errors.music }}</span>
+                <span v-else class="wrapped-muted">
+                    Optional. A published song, played in a small YouTube player on the shared web page only.
+                    The downloadable video keeps its own soundtrack.
+                </span>
+            </label>
 
             <label class="wrapped-share__option wrapped-share__expiry">
                 <span>Stops working after</span>
@@ -205,6 +236,42 @@ const dateOf = (iso) => new Date(iso).toLocaleDateString(undefined, { day: 'nume
 .wrapped-share__voice > legend {
     padding: 0;
     margin-bottom: 0.5rem;
+}
+
+.wrapped-share__field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    width: 100%;
+    max-width: 36rem;
+}
+
+.wrapped-share__field .wrapped-muted {
+    display: block;
+}
+
+.wrapped-share__error {
+    font-size: 0.875rem;
+    color: #b91c1c;
+}
+
+.dark .wrapped-share__error {
+    color: #fca5a5;
+}
+
+.wrapped-share__music {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    text-decoration: underline;
+}
+
+.wrapped-share__thumb {
+    width: 4rem;
+    height: 2.25rem;
+    object-fit: cover;
+    border-radius: 0.25rem;
 }
 
 .wrapped-share__expiry {

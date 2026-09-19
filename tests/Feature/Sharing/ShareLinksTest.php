@@ -4,6 +4,7 @@ use Bpmore\Wrapped\Export\Theme;
 use Bpmore\Wrapped\History\Confidence;
 use Bpmore\Wrapped\Sharing\Share;
 use Bpmore\Wrapped\Sharing\ShareLinks;
+use Bpmore\Wrapped\Sharing\YouTube;
 use Bpmore\Wrapped\Snapshots\Period;
 use Bpmore\Wrapped\Snapshots\Snapshot;
 use Bpmore\Wrapped\Stats\CardGate;
@@ -11,6 +12,7 @@ use Bpmore\Wrapped\Stats\Voice;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Testing\TestResponse;
 use Inertia\Testing\AssertableInertia;
 use Statamic\Facades\Role;
@@ -110,6 +112,58 @@ describe('making a link', function () {
 
         expect(Share::sole()->voice)->toBe(Voice::You)
             ->and(Share::sole()->cards[0]['body'])->toBe('You published 42 entries.');
+    });
+
+    it('has no music unless a song was pasted', function () {
+        sharer();
+        aWrapped();
+        Http::fake();
+
+        makeLink(['music' => '']);
+
+        expect(Share::sole()->youtube_id)->toBeNull()
+            ->and(Share::sole()->music())->toBeNull();
+
+        Http::assertNothingSent();
+    });
+
+    it('keeps a pasted song by id, with the title and thumbnail YouTube gave', function () {
+        sharer();
+        aWrapped();
+        Http::fake([YouTube::OEMBED.'*' => Http::response([
+            'title' => 'Never Gonna Give You Up',
+            'thumbnail_url' => 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
+        ])]);
+
+        makeLink(['music' => 'https://youtu.be/dQw4w9WgXcQ?si=abc'])->assertSessionHasNoErrors();
+
+        $share = Share::sole();
+
+        expect($share->youtube_id)->toBe('dQw4w9WgXcQ')
+            ->and($share->youtube_title)->toBe('Never Gonna Give You Up')
+            ->and($share->youtube_thumbnail)->toBe('https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg')
+            ->and($share->music()?->url())->toBe('https://www.youtube.com/watch?v=dQw4w9WgXcQ');
+    });
+
+    it('refuses a song link that is not YouTube, and makes no share', function () {
+        sharer();
+        aWrapped();
+        Http::fake();
+
+        makeLink(['music' => 'https://vimeo.com/123456'])->assertSessionHasErrors('music');
+
+        expect(Share::count())->toBe(0);
+        Http::assertNothingSent();
+    });
+
+    it('refuses a song YouTube does not know, and makes no share', function () {
+        sharer();
+        aWrapped();
+        Http::fake([YouTube::OEMBED.'*' => Http::response('Not Found', 404)]);
+
+        makeLink(['music' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ'])->assertSessionHasErrors('music');
+
+        expect(Share::count())->toBe(0);
     });
 
     it('refuses a voice it does not have', function () {
@@ -412,10 +466,27 @@ describe('on the wrapped screen', function () {
                 ->where('snapshot.share.links.0.expiresAt', '2027-01-04T09:00:00+00:00')
                 ->where('snapshot.share.links.0.people', false)
                 ->where('snapshot.share.links.0.voice', 'we')
+                ->where('snapshot.share.links.0.music', null)
                 ->where('snapshot.share.links.0.revokeUrl', cp_route('wrapped.share.destroy', Share::where('period_key', '2026')->sole())));
 
         $this->get(cp_route('wrapped.index', ['period' => '2025']))
             ->assertInertia(fn (AssertableInertia $page) => $page->has('snapshot.share.links', 1));
+    });
+
+    it('tells the screen which song a link plays', function () {
+        sharer();
+        aWrapped();
+        Http::fake([YouTube::OEMBED.'*' => Http::response(['title' => 'Never Gonna Give You Up', 'thumbnail_url' => 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg'])]);
+        makeLink(['music' => 'https://youtu.be/dQw4w9WgXcQ']);
+
+        $this->get(cp_route('wrapped.index', ['period' => '2026']))
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->where('snapshot.share.links.0.music', [
+                    'id' => 'dQw4w9WgXcQ',
+                    'title' => 'Never Gonna Give You Up',
+                    'thumbnail' => 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
+                    'url' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+                ]));
     });
 
     it('does not offer sharing to someone without the permission', function () {

@@ -113,6 +113,7 @@ class WrappedController extends CpController
                 'expiresAt' => $share->expires_at?->toIso8601String(),
                 'people' => $share->people,
                 'voice' => $share->voice->value,
+                'music' => $share->music()?->toArray(),
                 'revokeUrl' => cp_route('wrapped.share.destroy', $share),
             ])->values()->all(),
         ];
