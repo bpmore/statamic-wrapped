@@ -1290,3 +1290,9 @@ part to design first.
 - Worst case, 360×640: tile shrinks to 328×200 (still over YouTube's 200 minimum), smallest gap above a card 53 px, below 37 px, on the four-line "Took the period off" card. Screenshots in `~/Downloads/wrapped-1.5-phone-intro.png`, `-phone-playing.png`, `-small-phone-card.png`.
 - CHANGELOG's Unreleased entry became 1.5.0; marketplace feature list mentions the voice and the song in the public-links line.
 - Release: tag v1.5.0 on main, `build/phase-1` fast-forwarded to it, GitHub release with the changelog entry.
+
+### After 1.5.0 — marketplace review, 1.5.1, fresh-site install (done)
+- `/marketplace-review` against v1.5.0 found one thing: `NOTICE.md`'s external-requests section did not list the two YouTube requests 1.5 added. Fixed, with the share form's field labels restyled to match the Build form, as 1.5.1 (tag `v1.5.1`, GitHub release).
+- Fresh-site install, as a customer gets it: `composer create-project statamic/statamic` (v6.33.0) at `~/Herd/wrapped-fresh`, then `composer require bpmore/statamic-wrapped:^1.5.1 --prefer-dist` from the GitHub VCS repo, so the dist zip (honouring `.gitattributes`) is what was installed. `tests/`, `PROGRESS.md` and the other dev files were absent from `vendor/bpmore/statamic-wrapped`. Statamic published the `wrapped` assets itself during install; `php artisan migrate` ran the three addon migrations; the screen rendered with styling (empty state first, then five cards after seeding a dated blog collection); the share panel showed the 1.5.1 labels; a real YouTube link made a public link; the public page, logged out, played it.
+- Keyboard through the open player: Play music (Enter) opened the tile without advancing the frame; Tab then went player → "YouTube terms" → Share → Stop music → Next. The frame did not move while tabbing.
+- The fresh site is left in place at `~/Herd/wrapped-fresh` (login `fresh@example.test`) for further checks; delete the directory when done with it.
