@@ -497,3 +497,64 @@ describe('on the wrapped screen', function () {
             ->assertInertia(fn (AssertableInertia $page) => $page->where('snapshot.share', null));
     });
 });
+
+describe('music on the public page', function () {
+    function withASong(): void
+    {
+        sharer();
+        aWrapped();
+        Http::fake([YouTube::OEMBED.'*' => Http::response(['title' => 'Never Gonna Give You Up', 'thumbnail_url' => 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg'])]);
+        makeLink(['music' => 'https://youtu.be/dQw4w9WgXcQ']);
+        auth()->logout();
+    }
+
+    it('offers the song, named as YouTube named it, and plays nothing until asked', function () {
+        withASong();
+
+        $html = $this->get(Share::sole()->url())->assertOk()->getContent();
+
+        expect($html)
+            // The tile, empty, with what the script needs to fill it.
+            ->toContain('data-music-id="dQw4w9WgXcQ"')
+            ->toContain('<div data-music-player></div>')
+            ->toContain('<span class="story-music__title">Never Gonna Give You Up</span>')
+            // YouTube's terms, linked, as their policies ask of a page with their player.
+            ->toContain('href="https://www.youtube.com/t/terms"')
+            // Two ways in: on the intro, and in the controls.
+            ->toContain('data-label="Play music"')
+            ->toContain('data-label="Music"')
+            // Privacy-enhanced domain, looping, and only ever built by the reader's press.
+            ->toContain('https://www.youtube-nocookie.com/embed/')
+            ->toContain('loop=1&playlist=')
+            // No player in the HTML itself: nothing loads from YouTube until asked.
+            ->not->toContain('<iframe')
+            ->not->toContain('<script src');
+    });
+
+    it('has no tile, no buttons and no mention of YouTube when the link has no song', function () {
+        sharer();
+        aWrapped();
+        makeLink();
+        auth()->logout();
+
+        $html = $this->get(Share::sole()->url())->assertOk()->getContent();
+
+        expect($html)
+            ->not->toContain('data-music')
+            ->not->toContain('youtube')
+            ->not->toContain('YouTube');
+    });
+
+    it('escapes a song title that tries to be markup', function () {
+        sharer();
+        aWrapped();
+        Http::fake([YouTube::OEMBED.'*' => Http::response(['title' => '<script>alert(1)</script> & co'])]);
+        makeLink(['music' => 'https://youtu.be/dQw4w9WgXcQ']);
+
+        $html = $this->get(Share::sole()->url())->assertOk()->getContent();
+
+        expect($html)
+            ->not->toContain('<script>alert(1)</script>')
+            ->toContain('&lt;script&gt;alert(1)&lt;/script&gt; &amp; co');
+    });
+});

@@ -68,7 +68,7 @@
 Both tasks touch the share form. Do the voice first: it is small and has no outside dependency.
 - [x] Voice: a `voice` choice on the share form, `we` (default for share links) or `you` (the control panel keeps `you`); every card body, the intro and the closing line get a `we` wording in the lang files; the choice is frozen into the share row's card text like everything else, with `voice` stored so the intro and outro render to match; a test walks every `we` string and fails on any "you" or "your" left behind
 - [x] YouTube, paste a link: a "Music (YouTube link)" field on the share form; the video ID is parsed server-side from any youtube.com / youtu.be shape and stored on the share row; title and thumbnail fetched with YouTube's keyless oEmbed endpoint and shown for confirmation (a failed lookup is a validation error, not a stored link)
-- [ ] YouTube, the player: on the public story only, a "Play music" button on the intro; tapping it loads the IFrame player from `youtube-nocookie.com` as a pinned tile of at least 200×200 px, looping; the cards resize so nothing ever covers the tile; no autoplay; a "YouTube" line with a link to https://www.youtube.com/t/terms under the tile
+- [x] YouTube, the player: on the public story only, a "Play music" button on the intro; tapping it loads the IFrame player from `youtube-nocookie.com` as a pinned tile of at least 200×200 px, looping; the cards resize so nothing ever covers the tile; no autoplay; a "YouTube" line with a link to https://www.youtube.com/t/terms under the tile
 - [ ] Wording and docs: under the field, "Plays on the shared web page only. The downloadable video keeps its own soundtrack."; README notes the site's privacy policy should mention Google once a link is set; CHANGELOG
 - [ ] Look at it on a phone: screenshot the public story at 390×844 with the tile open and confirm the cards still read and nothing overlaps; then release 1.5
 
@@ -1268,3 +1268,12 @@ part to design first.
 - Share form: a "Music (YouTube link)" `Input`, hint under it saying web page only, the validation message in its place. Each live link shows the song's thumbnail and YouTube's own title, linked, so a wrong paste is visible and can be revoked.
 - Verified on statamic-dev against real YouTube: a Vimeo URL showed the message and made no link; `https://youtu.be/dQw4w9WgXcQ?si=test` made a link listed as "Music: Rick Astley - Never Gonna Give You Up (Official Video) (4K Remaster)" with its thumbnail.
 - The public page does not play anything yet; that is task 3.
+
+### Phase 8, task 3 — YouTube, the player (done)
+- Public page only. A link with a song gets a "Play music" button on the intro and a "Music" button in the controls; either builds the player. Nothing from YouTube is in the HTML, the styles or the script until the reader presses one: a page with no song has no mention of YouTube anywhere (tested).
+- The player is an `<iframe>` from `youtube-nocookie.com/embed/{id}?autoplay=1&loop=1&playlist={id}&rel=0&playsinline=1`, built on the press. `autoplay=1` is fine under YouTube's rule because the press is the reader's own act and the tile is fully on screen when it is made. No IFrame API script, so the page still loads no `<script src>`.
+- The tile is 356×200 (16:9 at the 200 px minimum), or `100vw - 32px` wide on a very narrow screen, never under 200. Phone: fixed at the top, the stage gets `padding-top: 276px`. From 900 px wide: fixed bottom-right above the footer, the stage gets `padding-right: 420px`. Nothing is ever drawn over it; the cards give up the space instead.
+- Caption under the tile: the title as YouTube gave it (one line, ellipsis) and a link to https://www.youtube.com/t/terms.
+- "Stop music" removes the iframe rather than pausing it, so nothing keeps loading from YouTube after the reader says stop.
+- Enter/Space on the intro button no longer also advances the frame; the key handler now leaves `.story-intro-music` and `.story-music` alone as it does the controls.
+- Looked at on statamic-dev with a real video at 1280×800 and 390×844, playing: screenshots in `~/Downloads/wrapped-music-desktop.png` and `wrapped-music-phone.png`. Stop cleared the tile and the caption. Task 5 is the formal phone sign-off.

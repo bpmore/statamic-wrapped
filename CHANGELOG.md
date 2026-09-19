@@ -26,8 +26,14 @@ php artisan vendor:publish --tag=wrapped --force
   video is looked up once (YouTube's keyless oEmbed; no API key, no quota)
   and kept by id with its title and thumbnail, which the control panel shows
   under the link. A link YouTube does not recognise is refused. The song
-  plays on the shared web page only, never in the downloadable video; the
-  player itself lands in the next entry.
+  plays on the shared web page only, never in the downloadable video.
+- The player on the public page: a "Play music" button on the first frame
+  and a "Music" button in the controls. Pressing one opens a small YouTube
+  player (privacy-enhanced domain, looping) in its own tile, at the top on
+  a phone and bottom-right on a wider screen; the cards make room for it
+  rather than sit under it. Nothing loads from YouTube until it is pressed,
+  and a page whose link has no song says nothing about YouTube at all.
+  Under the tile: the song's title and a link to YouTube's terms.
 
 ## 1.4.2 - 2026-09-17
 

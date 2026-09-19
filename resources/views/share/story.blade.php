@@ -22,6 +22,7 @@
     ];
     $count = count($frames);
     $lead = $share->cards[0]['body'] ?? '';
+    $music = $share->music();
     $rgb = in_array($theme->text, ['#f7f7f8', '#ffffff'], true) ? '247, 247, 248' : '22, 22, 29';
 @endphp
 <!DOCTYPE html>
@@ -181,6 +182,62 @@
         }
         .story-button:focus-visible { outline: 3px solid var(--story-text); outline-offset: 2px; }
 
+        @if ($music)
+        /*
+            The song, when the link has one and the reader has asked for it: a
+            YouTube player in a tile of its own. YouTube's rules for an embedded
+            player (developers.google.com/youtube/terms, checked 19 Sept 2026):
+            at least 200×200, on screen, nothing over it, never hidden or
+            audio-only, no autoplay before the reader acts. So the tile is a
+            fixed 356×200 (200×200 on a very narrow screen), the stage gives
+            up that space rather than sharing it, and nothing plays until the
+            button is pressed.
+        */
+        .story-music { display: none; }
+        .js .has-music .story-music {
+            display: block;
+            position: fixed;
+            z-index: 1;
+            top: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: min(356px, calc(100vw - 32px));
+        }
+        .story-music__player {
+            display: block;
+            width: 100%;
+            height: 200px;
+            border: 0;
+            border-radius: 8px;
+            background: #000;
+        }
+        .story-music__caption {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            margin-top: 6px;
+            font-size: 13px;
+            line-height: 1.4;
+            color: var(--story-muted);
+        }
+        .story-music__title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .story-music__caption a { color: inherit; white-space: nowrap; }
+        .js .has-music .story-stage { padding-top: 276px; }
+        .story-intro-music { margin-top: 32px; }
+
+        @media (min-width: 900px) {
+            .js .has-music .story-music {
+                top: auto;
+                bottom: 124px;
+                left: auto;
+                right: 32px;
+                transform: none;
+                width: 356px;
+            }
+            .js .has-music .story-stage { padding-top: 48px; padding-right: 420px; }
+        }
+        @endif
+
         /* A soft change between frames, only where motion is welcome. */
         @media (prefers-reduced-motion: no-preference) {
             .js .story-frame.is-current { animation: story-fade 0.35s ease; }
@@ -219,6 +276,9 @@
                         @if (! empty($frame['subtitle']))
                             <p class="story-subtitle">{{ $frame['subtitle'] }}</p>
                         @endif
+                        @if ($music && $frame['kind'] === 'intro')
+                            <button type="button" class="story-button story-button--text story-intro-music" data-music-toggle data-label="Play music" aria-pressed="false" hidden>Play music</button>
+                        @endif
                     @endif
                 </div>
             @endforeach
@@ -229,6 +289,22 @@
             <span>{{ $share->siteName() }}</span>
         </div>
 
+        @if ($music)
+            {{--
+                The player goes in here by script when asked for, from
+                youtube-nocookie.com, and comes out again on "Stop music".
+                The caption names the song as YouTube did and links YouTube's
+                terms, which their policies ask of any page with their player.
+            --}}
+            <div class="story-music" data-music data-music-id="{{ $music->id }}" data-music-title="{{ $music->title }}">
+                <div data-music-player></div>
+                <p class="story-music__caption">
+                    <span class="story-music__title">{{ $music->title }}</span>
+                    <a href="https://www.youtube.com/t/terms" target="_blank" rel="noopener">YouTube terms</a>
+                </p>
+            </div>
+        @endif
+
         {{-- Visible controls too, for anyone who has not guessed the convention. --}}
         <div class="story-controls">
             <button type="button" class="story-button" data-back aria-label="Previous" disabled>‹</button>
@@ -238,6 +314,9 @@
                 the status line, which a screen reader hears.
             --}}
             <button type="button" class="story-button story-button--text" data-share hidden>Share</button>
+            @if ($music)
+                <button type="button" class="story-button story-button--text" data-music-toggle data-label="Music" aria-pressed="false" hidden>Music</button>
+            @endif
             <button type="button" class="story-button" data-next aria-label="Next">›</button>
         </div>
         <p class="story-status" data-status role="status" aria-live="polite"></p>
@@ -328,9 +407,52 @@
                 }
             });
 
+            @if ($music)
+            // Music: nothing until asked. The first press builds the player,
+            // with autoplay because the press is the reader's own; "Stop"
+            // takes it out again rather than leaving a paused player around.
+            // Only on a page with a song: a page without one says nothing
+            // about YouTube at all.
+            var story = document.querySelector('.story');
+            var musicBox = document.querySelector('[data-music]');
+            var musicToggles = Array.prototype.slice.call(document.querySelectorAll('[data-music-toggle]'));
+            var musicOn = false;
+
+            function setMusic(on) {
+                musicOn = on;
+                story.classList.toggle('has-music', on);
+
+                var slot = musicBox.querySelector('[data-music-player]');
+                slot.innerHTML = '';
+
+                if (on) {
+                    var id = encodeURIComponent(musicBox.getAttribute('data-music-id'));
+                    var player = document.createElement('iframe');
+                    player.className = 'story-music__player';
+                    player.src = 'https://www.youtube-nocookie.com/embed/' + id
+                        + '?autoplay=1&loop=1&playlist=' + id + '&rel=0&playsinline=1';
+                    player.title = 'Music: ' + musicBox.getAttribute('data-music-title');
+                    player.allow = 'autoplay; encrypted-media; picture-in-picture';
+                    player.setAttribute('allowfullscreen', '');
+                    player.setAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
+                    slot.appendChild(player);
+                }
+
+                musicToggles.forEach(function (b) {
+                    b.textContent = on ? 'Stop music' : b.getAttribute('data-label');
+                    b.setAttribute('aria-pressed', on ? 'true' : 'false');
+                });
+            }
+
+            musicToggles.forEach(function (b) {
+                b.hidden = false;
+                b.addEventListener('click', function (e) { e.stopPropagation(); setMusic(!musicOn); });
+            });
+            @endif
+
             window.addEventListener('keydown', function (e) {
                 // Leave the buttons alone: Enter or Space on one is its click.
-                if (e.target && e.target.closest && e.target.closest('.story-controls')) return;
+                if (e.target && e.target.closest && e.target.closest('.story-controls, .story-intro-music, .story-music')) return;
 
                 if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Enter') { e.preventDefault(); next(); }
                 else if (e.key === 'ArrowLeft') { e.preventDefault(); back(); }
