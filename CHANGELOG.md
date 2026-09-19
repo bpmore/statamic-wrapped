@@ -11,6 +11,16 @@ php artisan migrate
 php artisan vendor:publish --tag=wrapped --force
 ```
 
+## Unreleased
+
+### Added
+
+- Your own music, uploaded. A "Your soundtracks" field on the settings screen
+  (Addons → Wrapped → Settings) takes MP3 and other audio files; anything
+  uploaded there appears at the top of the track list for the video and the
+  control panel story, named from its title or filename. A file that is not
+  audio is ignored. The config-file route still works and lists first.
+
 ## 1.5.1 - 2026-09-19
 
 ### Fixed

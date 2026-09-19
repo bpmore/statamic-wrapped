@@ -2,10 +2,6 @@
 
 namespace Bpmore\Wrapped\Export;
 
-use Statamic\Assets\Asset;
-use Statamic\Contracts\Addons\SettingsRepository;
-use Statamic\Facades\AssetContainer;
-
 /**
  * The look, as the config file and the settings screen together decide it.
  *
@@ -27,7 +23,7 @@ class ThemeSettings
      * The addon's slug, which is what the settings file is named after and
      * what the repository looks a record up by — not the package name.
      */
-    public const ADDON = 'wrapped';
+    public const ADDON = SavedSettings::ADDON;
 
     /**
      * @return array{background: mixed, accent: mixed, logo: mixed}
@@ -36,7 +32,7 @@ class ThemeSettings
     {
         $config = (array) config('wrapped.theme', []);
 
-        $saved = app(SettingsRepository::class)->find(self::ADDON)?->raw();
+        $saved = SavedSettings::raw();
 
         if ($saved === null) {
             return $config + ['background' => null, 'accent' => null, 'logo' => null];
@@ -50,38 +46,9 @@ class ThemeSettings
         );
 
         if (isset($saved['logo'])) {
-            $saved['logo'] = static::asset($saved['logo']) ?? $saved['logo'];
+            $saved['logo'] = SavedSettings::asset($saved['logo']) ?? $saved['logo'];
         }
 
         return array_merge(['background' => null, 'accent' => null, 'logo' => null], $config, $saved);
-    }
-
-    /**
-     * The asset the logo field points at, or null for a value that is not one.
-     *
-     * The field stores a path inside its container and not the container
-     * itself, and the container the form offered was whichever the site had
-     * when the form was drawn; so the path is looked for in every container,
-     * first match wins. A `container::path` reference is read as such.
-     */
-    protected static function asset(mixed $value): ?Asset
-    {
-        if (! is_string($value) || $value === '') {
-            return null;
-        }
-
-        if (str_contains($value, '::')) {
-            [$handle, $path] = explode('::', $value, 2);
-
-            return AssetContainer::find($handle)?->asset($path);
-        }
-
-        foreach (AssetContainer::all() as $container) {
-            if ($asset = $container->asset($value)) {
-                return $asset;
-            }
-        }
-
-        return null;
     }
 }

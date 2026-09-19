@@ -36,6 +36,7 @@ use Bpmore\Wrapped\Stats\StatCard;
 use Bpmore\Wrapped\Stats\StatCardRegistry;
 use Bpmore\Wrapped\Widgets\WrappedWidget;
 use Illuminate\Console\Command;
+use Statamic\Contracts\Assets\AssetContainer as AssetContainerContract;
 use Statamic\Facades\AssetContainer;
 use Statamic\Facades\CP\Nav;
 use Statamic\Facades\Permission;
@@ -170,7 +171,8 @@ class ServiceProvider extends AddonServiceProvider
 
     /**
      * The settings form, from resources/blueprints/settings.yaml with one
-     * thing filled in: which asset container the logo field offers.
+     * thing filled in: which asset container the logo and soundtrack fields
+     * offer.
      *
      * Statamic registers that file on its own, but an assets field with no
      * container works only on a site with exactly one and throws on any
@@ -184,10 +186,23 @@ class ServiceProvider extends AddonServiceProvider
         $this->registerSettingsBlueprint(function () {
             $blueprint = YAML::file(__DIR__.'/../resources/blueprints/settings.yaml')->parse();
 
-            foreach ($blueprint['tabs']['main']['sections'] as &$section) {
-                foreach ($section['fields'] as &$field) {
+            $container = AssetContainer::all()->sortBy(fn ($container) => $container->handle())->first();
+
+            foreach ($blueprint['tabs']['main']['sections'] as $i => &$section) {
+                foreach ($section['fields'] as $j => &$field) {
                     if (($field['handle'] ?? null) === 'logo') {
-                        $field['field'] = $this->logoField($field['field']);
+                        $field['field'] = $this->logoField($field['field'], $container);
+                    }
+
+                    // Uploads need somewhere to go. A site with no container
+                    // keeps the config file for its music, so the field, and
+                    // the section that only holds it, are left out.
+                    if (($field['handle'] ?? null) === 'soundtracks') {
+                        if ($container === null) {
+                            unset($section['fields'][$j]);
+                        } else {
+                            $field['field'] += ['container' => $container->handle()];
+                        }
                     }
 
                     // The toggle starts where the config file is, so saving
@@ -199,6 +214,13 @@ class ServiceProvider extends AddonServiceProvider
                 }
             }
 
+            unset($section, $field);
+
+            $blueprint['tabs']['main']['sections'] = array_values(array_filter(
+                $blueprint['tabs']['main']['sections'],
+                fn (array $section) => $section['fields'] !== [],
+            ));
+
             return $blueprint;
         });
     }
@@ -207,10 +229,8 @@ class ServiceProvider extends AddonServiceProvider
      * @param  array<string, mixed>  $field
      * @return array<string, mixed>
      */
-    protected function logoField(array $field): array
+    protected function logoField(array $field, ?AssetContainerContract $container): array
     {
-        $container = AssetContainer::all()->sortBy(fn ($container) => $container->handle())->first();
-
         if ($container === null) {
             return [
                 'type' => 'text',

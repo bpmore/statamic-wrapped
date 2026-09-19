@@ -50,6 +50,20 @@ tabs:
               restrict: false
               allow_uploads: true
       -
+        display: 'Music'
+        instructions: 'Wrapped comes with a few instrumental tracks for the video and the story. Add your own here and they appear in the same list, first.'
+        fields:
+          -
+            handle: soundtracks
+            field:
+              type: assets
+              display: 'Your soundtracks'
+              instructions: 'MP3 is the safe choice; M4A, WAV, OGG, FLAC and AAC also work. A file that is not audio is ignored. Only add music you have the rights to use in a video you will share.'
+              mode: list
+              restrict: false
+              allow_uploads: true
+              show_filename: true
+      -
         display: 'Public links'
         instructions: 'A Wrapped is normally private to the control panel. Switch this on to let people with the "Share publicly" permission make links anyone can open.'
         fields:
