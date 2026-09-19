@@ -1,3 +1,5 @@
+ALL TASKS COMPLETE
+
 # PROGRESS — Wrapped
 
 **Spec:** `wrapped-build-spec.md` · **Package:** `bpmore/statamic-wrapped` · **Free**
@@ -70,7 +72,7 @@ Both tasks touch the share form. Do the voice first: it is small and has no outs
 - [x] YouTube, paste a link: a "Music (YouTube link)" field on the share form; the video ID is parsed server-side from any youtube.com / youtu.be shape and stored on the share row; title and thumbnail fetched with YouTube's keyless oEmbed endpoint and shown for confirmation (a failed lookup is a validation error, not a stored link)
 - [x] YouTube, the player: on the public story only, a "Play music" button on the intro; tapping it loads the IFrame player from `youtube-nocookie.com` as a pinned tile of at least 200×200 px, looping; the cards resize so nothing ever covers the tile; no autoplay; a "YouTube" line with a link to https://www.youtube.com/t/terms under the tile
 - [x] Wording and docs: under the field, "Plays on the shared web page only. The downloadable video keeps its own soundtrack."; README notes the site's privacy policy should mention Google once a link is set; CHANGELOG
-- [ ] Look at it on a phone: screenshot the public story at 390×844 with the tile open and confirm the cards still read and nothing overlaps; then release 1.5
+- [x] Look at it on a phone: screenshot the public story at 390×844 with the tile open and confirm the cards still read and nothing overlaps; then release 1.5
 
 ## Notes
 <!-- Record surprises, decisions and blockers here. If a task is wrong or blocked, write why and stop. -->
@@ -1282,3 +1284,9 @@ part to design first.
 - Under the field: "Optional. Plays on the shared web page only, in a small YouTube player. The downloadable video keeps its own soundtrack."
 - README: two new bullets under Public links (voice, song) and a new subsection "A song on a public link" covering the paste box, the lookup, the player and its tile, YouTube's rules in one sentence, why the video can never carry it (sync licence), and the privacy-policy note: YouTube's API policies ask that a page with their player links a privacy policy that mentions Google, so a site should check its own before making a link with a song. The video's "Music" section points across. "What it will not do" says no published music in the video.
 - CHANGELOG: the Unreleased entry opens with the upgrade steps once (one migration, republish assets) instead of repeating them per bullet, and the player bullet points at the README for the privacy line.
+
+### Phase 8, task 5 — Look at it on a phone, release 1.5 (done)
+- Measured, not eyeballed: at 390×844 with the player open, stepped through all 15 frames by script and recorded the tile's bottom edge (264 px) against each card's top. Smallest gap 155 px; every card ended by 601 px, above the footer. Player 356×200.
+- Worst case, 360×640: tile shrinks to 328×200 (still over YouTube's 200 minimum), smallest gap above a card 53 px, below 37 px, on the four-line "Took the period off" card. Screenshots in `~/Downloads/wrapped-1.5-phone-intro.png`, `-phone-playing.png`, `-small-phone-card.png`.
+- CHANGELOG's Unreleased entry became 1.5.0; marketplace feature list mentions the voice and the song in the public-links line.
+- Release: tag v1.5.0 on main, `build/phase-1` fast-forwarded to it, GitHub release with the changelog entry.

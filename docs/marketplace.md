@@ -42,7 +42,7 @@ Free. Statamic 6, PHP 8.2+.
 - Your own background colour and logo, with text contrast worked out for you
 - Dashboard widget with a December nudge
 - Yearly, quarterly and monthly, with a picker to move between them
-- Public links, off by default: a frozen, revocable, noindex copy of the story behind a random token
+- Public links, off by default: a frozen, revocable, noindex copy of the story behind a random token, written as "we" for its readers, with an optional song by YouTube link that plays on the page in YouTube's own player
 - Multisite: one Wrapped per site
 - Three permissions: view Wrapped, view people stats, share publicly
 

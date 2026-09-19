@@ -11,7 +11,7 @@ php artisan migrate
 php artisan vendor:publish --tag=wrapped --force
 ```
 
-## Unreleased
+## 1.5.0 - 2026-09-19
 
 Public links get a voice and a song. Needs `php artisan migrate` (one new
 migration: `voice` and the `youtube_*` columns on `wrapped_shares`) and a
