@@ -85,7 +85,7 @@ it('refuses a card this wrapped does not have', function () {
         ->toThrow(RuntimeException::class, 'no [nonsense] card');
 });
 
-it('refuses to summarise a wrapped with nothing on it', function () {
+it('refuses to summarize a wrapped with nothing on it', function () {
     expect(fn () => imagesWith(new FakeImageRenderer)->summary(exportable([])))
         ->toThrow(RuntimeException::class, 'nothing on it');
 });

@@ -12,7 +12,7 @@ Slow Sunday and Seoul Rooftop.
   paid plan whose terms assign ownership of the generated output to the
   subscriber, including commercial use and distribution.
 - Owned by Had A Farm, LLC and distributed with this package under the same
-  MIT licence as the code.
+  MIT license as the code.
 - Shipped exactly as Suno delivered them, so Suno's own metadata (the
   "made with suno" tag) stays in each file. The test suite checks it is still
   there. Please leave it in place if you redistribute them.
@@ -22,7 +22,7 @@ The prompts they were written from are in `docs/suno-brief.md`.
 
 ## Third-party code in the built control panel assets (`public/build`)
 
-- **canvas-confetti** by Kiril Vatev, ISC licence. Copyright (c) 2020, Kiril
+- **canvas-confetti** by Kiril Vatev, ISC license. Copyright (c) 2020, Kiril
   Vatev. Permission to use, copy, modify, and/or distribute this software for
   any purpose with or without fee is hereby granted, provided that the above
   copyright notice and this permission notice appear in all copies.

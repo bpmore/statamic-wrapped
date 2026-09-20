@@ -159,7 +159,7 @@ describe('with real ffmpeg', function () {
             escapeshellarg(config('wrapped.video.ffmpeg') ?: '/opt/homebrew/bin/ffmpeg'), escapeshellarg($tone)));
 
         if (! is_file($tone)) {
-            test()->markTestSkipped('Could not synthesise a test tone.');
+            test()->markTestSkipped('Could not synthesize a test tone.');
         }
 
         try {

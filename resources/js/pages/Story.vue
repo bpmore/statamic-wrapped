@@ -202,7 +202,7 @@ const themeVars = computed(() => ({
 
 <style scoped>
 /* The same palette and proportions as the video frames, so the story and the
-   film are recognisably the same thing. Contrast 5.34:1 for the grey, checked. */
+   film are recognizably the same thing. Contrast 5.34:1 for the gray, checked. */
 .story {
     position: fixed;
     inset: var(--story-top, 0) 0 0 0;

@@ -58,7 +58,7 @@ class GenerateWrapped extends Command
         foreach ($sites as $site) {
             $result = $builder->build($period, $year, $part, $site, force: (bool) $this->option('force'), by: $this->actor());
 
-            $this->components->twoColumnDetail($site, $this->summarise($result));
+            $this->components->twoColumnDetail($site, $this->summarize($result));
         }
 
         return self::SUCCESS;
@@ -78,16 +78,16 @@ class GenerateWrapped extends Command
         return $id === null ? null : (string) $id;
     }
 
-    protected function summarise(BuildResult $result): string
+    protected function summarize(BuildResult $result): string
     {
         if ($result->skipped || $result->stats === null) {
             return '<fg=yellow>already built, --force to rebuild</>';
         }
 
-        return $this->summariseStats($result->stats);
+        return $this->summarizeStats($result->stats);
     }
 
-    protected function summariseStats(StatsResult $result): string
+    protected function summarizeStats(StatsResult $result): string
     {
         $parts = [sprintf('%d cards', count($result->stats))];
 

@@ -46,11 +46,11 @@ it('keeps the muted label color readable too', function (string $background) {
         ->and($theme->muted)->not->toBe($theme->text);
 })->with(['#16161d', '#ffffff', '#1e3a5f', '#fef3c7']);
 
-it('measures the shipped grey at what was checked by hand', function () {
+it('measures the shipped gray at what was checked by hand', function () {
     expect(round(Theme::contrast('#8b8b96', '#16161d'), 2))->toBe(5.34);
 });
 
-it('accepts short hex and normalises it', function () {
+it('accepts short hex and normalizes it', function () {
     expect(themed(['background' => '#FFF'])->background)->toBe('#ffffff')
         ->and(themed(['background' => ' #1e3a5f '])->background)->toBe('#1e3a5f');
 });

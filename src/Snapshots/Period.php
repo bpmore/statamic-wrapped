@@ -116,7 +116,7 @@ enum Period: string
 
     /**
      * A stored key back into its parts, or null for a key this version does
-     * not recognise. The inverse of `key()`.
+     * not recognize. The inverse of `key()`.
      *
      * @return array{0: self, 1: int, 2: int|null}|null
      */

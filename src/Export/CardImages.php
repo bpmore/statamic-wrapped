@@ -11,7 +11,7 @@ use RuntimeException;
  * A Wrapped, as pictures.
  *
  * Where the marketing value lives (SPEC.md §5) — and a convenience, never the
- * artefact. Images are invisible to screen readers, so the control panel screen
+ * artifact. Images are invisible to screen readers, so the control panel screen
  * stays the canonical version and this only makes it shareable. An
  * accessibility-minded addon shipping image-only output is the screenshot
  * nobody wants.

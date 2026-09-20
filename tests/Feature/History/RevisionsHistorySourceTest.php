@@ -149,7 +149,7 @@ it('skips a revision file it cannot read', function () {
     expect((new RevisionsHistorySource)->events(...wholeYear(2026)))->toBeEmpty();
 });
 
-it('skips an action it does not recognise', function () {
+it('skips an action it does not recognize', function () {
     writeRevision('entry-1', at('2026-03-04 09:00:00'), ['action' => 'something-new']);
 
     expect((new RevisionsHistorySource)->events(...wholeYear(2026)))->toBeEmpty();

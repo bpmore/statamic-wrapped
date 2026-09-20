@@ -69,7 +69,7 @@ Statamic 6 · PHP 8.2+ · Chrome or Chromium for images and FFmpeg for video (bo
 
 GitHub issues. Free addon, one maintainer; a reply within a few days.
 
-## Licence line
+## License line
 
 MIT. Bundled music made with Suno and owned by Had A Farm, LLC; see NOTICE.md.
 

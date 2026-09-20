@@ -38,7 +38,7 @@ Twelve tracks. For each one, give me exactly this:
 ## Rules for the set as a whole
 
 - **From all over the world, and respectful about it.** Statamic runs on every continent. I want the set to sound like it knows that: West Africa, Brazil, Japan, South Asia, the Middle East, the Caribbean, Scandinavia, Ireland, the Andes, Korea, the Balkans, the Mediterranean, and so on. Pick twelve regions that give real variety.
-- **No caricature.** Each track should sound like something a musician from that place would actually make today, not a tourist postcard. Modern production is fine and often better: a contemporary producer working in a tradition, not a museum recording. If a tradition would be trivialised by a 45-second instrumental with beats under it, choose a different one.
+- **No caricature.** Each track should sound like something a musician from that place would actually make today, not a tourist postcard. Modern production is fine and often better: a contemporary producer working in a tradition, not a museum recording. If a tradition would be trivialized by a 45-second instrumental with beats under it, choose a different one.
 - **Avoid anything sacred, ceremonial, or national.** No hymns, no anthems, no music tied to religious ritual or state occasions. This plays under "you uploaded 12 files."
 - **Spread the moods.** Across the twelve I want roughly: four gentle and reflective, four bright and upbeat, four somewhere in between. Nobody's Wrapped should have to be a party if their year was calm.
 - **Include two or three that are not tied to a place** (a lo-fi beat, a soft piano and strings piece, a light electronic groove). Some people just want neutral.

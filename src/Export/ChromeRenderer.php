@@ -44,7 +44,7 @@ class ChromeRenderer implements ImageRenderer
 
     /**
      * Each document goes in an <iframe srcdoc> cell so it keeps its own styles
-     * and cannot bleed into its neighbours. The sheet is captured at 1x: a
+     * and cannot bleed into its neighbors. The sheet is captured at 1x: a
      * video frame is output size already, and doubling ten of them would push
      * the capture past what Chrome will screenshot in one go.
      */

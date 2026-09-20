@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Log;
 
 function soundtracks(): Soundtracks
 {
-    // Fresh each time: the registry memoises, and tests change config.
+    // Fresh each time: the registry memoizes, and tests change config.
     return new Soundtracks;
 }
 
@@ -62,7 +62,7 @@ describe('the bundled tracks', function () {
         }
     });
 
-    it('lists every audio file in the directory in the manifest, so none ships unlabelled', function () {
+    it('lists every audio file in the directory in the manifest, so none ships unlabeled', function () {
         $manifest = require Soundtracks::MANIFEST;
         $files = collect(glob(Soundtracks::BUNDLED_DIRECTORY.'/*.{m4a,mp3,ogg,opus,wav,flac,aac}', GLOB_BRACE) ?: [])
             ->map(fn (string $path) => pathinfo($path, PATHINFO_FILENAME))
@@ -159,7 +159,7 @@ it('finds nothing for a handle it does not have', function () {
     expect(soundtracks()->find('nope'))->toBeNull();
 });
 
-it('serialises for the picker without the file path', function () {
+it('serializes for the picker without the file path', function () {
     $array = soundtracks()->find('open-road')?->toArray();
 
     expect($array)->toHaveKeys(['handle', 'name', 'description', 'bundled'])

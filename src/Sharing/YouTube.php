@@ -40,7 +40,7 @@ class YouTube
 
         if ($video === null) {
             throw ValidationException::withMessages([
-                'music' => 'YouTube did not recognise that video. It may be private, removed, or not allowed to be embedded.',
+                'music' => 'YouTube did not recognize that video. It may be private, removed, or not allowed to be embedded.',
             ]);
         }
 

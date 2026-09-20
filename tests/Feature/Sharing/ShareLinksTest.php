@@ -26,7 +26,7 @@ use Statamic\Facades\User;
 uses(RefreshDatabase::class);
 
 /*
- * Sharing is switched ON for every test here. The off-by-default behaviour,
+ * Sharing is switched ON for every test here. The off-by-default behavior,
  * which is what a real install starts with, is proven in
  * ../Http/SharingOffTest.php.
  */

@@ -165,7 +165,7 @@ The addon ships with a small set of instrumental tracks, made with [Suno](https:
 
 Your tracks are listed first: config, then uploads, then the bundled ones.
 
-**The rights your own music needs.** A track you add goes into the downloadable video and, if you choose it for a public link, is streamed to everyone who opens the page. That is fine for music you made, music made for you, and library music whose licence covers video and web use. It is not fine for a song you bought or stream: a purchase is a licence to listen, not to put the recording under a video or on a page. The bundled tracks are covered for both. If in doubt, the question to ask a library is "does this licence cover synchronisation and public performance online?"
+**The rights your own music needs.** A track you add goes into the downloadable video and, if you choose it for a public link, is streamed to everyone who opens the page. That is fine for music you made, music made for you, and library music whose license covers video and web use. It is not fine for a song you bought or stream: a purchase is a license to listen, not to put the recording under a video or on a page. The bundled tracks are covered for both. If in doubt, the question to ask a library is "does this license cover synchronization and public performance online?"
 
 These are the video's soundtrack and the control panel story's, and any of them can be the music on a public link too. A public link can instead play a published song through YouTube's own player; that is a different thing with different rules, and lives under [Public links](#music-on-a-public-link).
 
@@ -258,7 +258,7 @@ Switching the setting back off stops every link at once. The first URL segment i
 
 **A track** is any the video can have: the bundled ones, your config tracks, your uploads. Pick one from the list (there is a Preview button), and on the public page it plays as a quiet loop behind the story, opened by a **Play music** button on the first frame or **Music** in the controls, until **Stop music**. Nothing is fetched until a reader presses one of them. The track streams from your site under the link's own token, so it stops when the link is revoked or expires, and works from a private asset container. If you later delete the track, the page simply has no music.
 
-**A YouTube video** is for a published song. Paste its link into **YouTube link** when making the public link. Any shape works: `youtube.com/watch?v=…`, `youtu.be/…`, shorts, embed. YouTube is asked about it once, with no API key and no quota, and the title and thumbnail it gives are kept with the link and shown under it in the control panel, so a wrong paste is visible and can be revoked. A link YouTube does not recognise (private, removed, not embeddable) is refused.
+**A YouTube video** is for a published song. Paste its link into **YouTube link** when making the public link. Any shape works: `youtube.com/watch?v=…`, `youtu.be/…`, shorts, embed. YouTube is asked about it once, with no API key and no quota, and the title and thumbnail it gives are kept with the link and shown under it in the control panel, so a wrong paste is visible and can be revoked. A link YouTube does not recognize (private, removed, not embeddable) is refused.
 
 On the public page the song is a small YouTube player in its own tile, opened by a **Play music** button on the first frame or **Music** in the controls, looping until **Stop music**. Nothing loads from YouTube until a reader presses one of them. The tile sits at the top on a phone and bottom-right on a wider screen, and the cards make room for it: YouTube's rules for an embedded player ask that it be at least 200×200, on screen, and never covered, hidden or reduced to audio, and the page keeps to them. Under the tile: the song's title and a link to YouTube's terms.
 
@@ -266,7 +266,7 @@ On the public page the song is a small YouTube player in its own tile, opened by
 
 Two things to know:
 
-- **Either kind plays on the shared web page only.** A YouTube song is never in the downloadable video, and cannot be: putting a published recording into a file you hand out needs a synchronisation licence that neither this addon nor most sites have. The video keeps the soundtrack chosen for it, bundled or your own. The form says so under the choice.
+- **Either kind plays on the shared web page only.** A YouTube song is never in the downloadable video, and cannot be: putting a published recording into a file you hand out needs a synchronization license that neither this addon nor most sites have. The video keeps the soundtrack chosen for it, bundled or your own. The form says so under the choice.
 - **Your privacy policy.** Once a reader presses Play, their browser talks to YouTube (the privacy-enhanced `youtube-nocookie.com` domain, but still Google). YouTube's API policies ask that a page with their player links a privacy policy that mentions Google, and depending on where your readers are, so may the law. If your site's privacy policy does not already cover embedded YouTube players, add a line before you make a link with a song.
 
 ## What it will not do
@@ -291,7 +291,7 @@ Open an issue at [github.com/bpmore/statamic-wrapped/issues](https://github.com/
 
 ## What is bundled
 
-The five music tracks are made with Suno on a plan that assigns ownership of the output, owned by Had A Farm, and distributed under this package's licence. The built control panel assets include canvas-confetti (ISC). Nothing about your site is sent anywhere; the one optional external request (a logo given as a full URL) is described in [NOTICE.md](NOTICE.md).
+The five music tracks are made with Suno on a plan that assigns ownership of the output, owned by Had A Farm, and distributed under this package's license. The built control panel assets include canvas-confetti (ISC). Nothing about your site is sent anywhere; the one optional external request (a logo given as a full URL) is described in [NOTICE.md](NOTICE.md).
 
 ## License
 

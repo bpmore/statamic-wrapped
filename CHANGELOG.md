@@ -71,7 +71,7 @@ does not use public links.
 - A song for a public link: paste a YouTube link on the share form. The
   video is looked up once (YouTube's keyless oEmbed; no API key, no quota)
   and kept by id with its title and thumbnail, which the control panel shows
-  under the link. A link YouTube does not recognise is refused. The song
+  under the link. A link YouTube does not recognize is refused. The song
   plays on the shared web page only, never in the downloadable video.
 - The player on the public page: a "Play music" button on the first frame
   and a "Music" button in the controls. Pressing one opens a small YouTube

@@ -22,7 +22,7 @@ uses(RefreshDatabase::class);
  * The settings screen, which exists because of who ends up holding a site.
  *
  * A developer installs this and hands over. The person left with it opens
- * the control panel, wants the cards in the organisation's color, and
+ * the control panel, wants the cards in the organization's color, and
  * cannot edit config/wrapped.php. Everything here is about that working.
  */
 const PNG = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';

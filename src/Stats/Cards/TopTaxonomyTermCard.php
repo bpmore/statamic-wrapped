@@ -22,7 +22,7 @@ use Throwable;
  * several, so both shapes are handled.
  *
  * The taxonomy handle and the term slug are stored, never the term's title.
- * Titles are localised and can be edited; the CP screen resolves them at
+ * Titles are localized and can be edited; the CP screen resolves them at
  * display time.
  *
  * A term used once is not what a period was "mostly about", so the card needs

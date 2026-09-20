@@ -12,7 +12,7 @@ use Throwable;
  * A site chooses a background and, optionally, an accent and a logo. It does
  * not choose the text color, and that is the point: text is worked out from
  * the background so it always clears WCAG AA's 4.5:1, whatever a site picks.
- * The muted grey used for labels is derived the same way. A site cannot
+ * The muted gray used for labels is derived the same way. A site cannot
  * accidentally ship an unreadable Wrapped.
  *
  * There is no "site color" to read in Statamic — no standard place a brand
@@ -245,7 +245,7 @@ class Theme
     }
 
     /**
-     * A #rgb or #rrggbb color, normalised to #rrggbb, or null for anything
+     * A #rgb or #rrggbb color, normalized to #rrggbb, or null for anything
      * else. Nothing that is not a color gets anywhere near a stylesheet.
      */
     protected static function color(mixed $value): ?string

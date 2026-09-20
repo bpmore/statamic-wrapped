@@ -92,7 +92,7 @@ it('is a validation error on music when YouTube does not know the video', functi
         app(YouTube::class)->resolve('https://youtu.be/dQw4w9WgXcQ');
         $this->fail('Expected a validation error.');
     } catch (ValidationException $e) {
-        expect($e->errors()['music'][0])->toContain('did not recognise that video');
+        expect($e->errors()['music'][0])->toContain('did not recognize that video');
     }
 })->with([401, 403, 404, 500]);
 

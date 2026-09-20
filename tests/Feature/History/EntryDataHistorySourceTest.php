@@ -11,7 +11,7 @@ use Statamic\Facades\Stache;
 
 /**
  * Real entries in a real (temporary) content directory, so these tests exercise
- * Statamic's own date, status and localisation behaviour rather than a stand-in.
+ * Statamic's own date, status and localization behavior rather than a stand-in.
  */
 function useSites(): void
 {
