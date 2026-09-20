@@ -222,7 +222,7 @@ const copyAlt = async (key, text) => {
  * Not scoped, and not Tailwind utilities: the control panel ships only the
  * utility classes its own screens happen to use (p-4 and p-6 exist, p-5 does
  * not), so anything layout-critical is written out here. Unscoped so the
- * VideoMaker child can share the same vocabulary. Colours come from the
+ * VideoMaker child can share the same vocabulary. Colors come from the
  * control panel's own tokens, so dark mode follows the site's setting.
  */
 .wrapped {

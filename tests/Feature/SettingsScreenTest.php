@@ -22,7 +22,7 @@ uses(RefreshDatabase::class);
  * The settings screen, which exists because of who ends up holding a site.
  *
  * A developer installs this and hands over. The person left with it opens
- * the control panel, wants the cards in the organisation's colour, and
+ * the control panel, wants the cards in the organisation's color, and
  * cannot edit config/wrapped.php. Everything here is about that working.
  */
 const PNG = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
@@ -88,7 +88,7 @@ it('lets the screen win once it has been saved', function () {
         ->and(app(Theme::class)->isDark())->toBeFalse();
 });
 
-it('goes back to the config file for a colour that was emptied on the screen', function () {
+it('goes back to the config file for a color that was emptied on the screen', function () {
     // Clearing the field means "not this", and the only "not this" is what
     // the file says. An unsaved field on a saved form is the same case.
     savedLook(['background' => null, 'accent' => '#ffffff']);
@@ -99,7 +99,7 @@ it('goes back to the config file for a colour that was emptied on the screen', f
 it('does not let an untouched field on the screen overrule the config file', function () {
     // Somebody opens the screen, picks an accent, saves. The background on
     // that form still holds the form's own default; reading blended values
-    // would quietly repaint a site whose developer chose a colour on purpose.
+    // would quietly repaint a site whose developer chose a color on purpose.
     savedLook(['accent' => '#ffffff']);
 
     expect(app(Theme::class)->background)->toBe('#123456')

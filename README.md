@@ -178,17 +178,17 @@ Set it on the settings screen, under **Addons → Wrapped** in the control panel
 ```php
 // config/wrapped.php
 'theme' => [
-    'background' => '#16161d',   // any colour
+    'background' => '#16161d',   // any color
     'accent' => null,            // optional, used sparingly
     'logo' => null,              // falls back to the control panel logo
 ],
 ```
 
-Pick any background. The text colour is worked out from it so it always clears WCAG AA's 4.5:1 contrast, and the muted label colour is derived the same way. An accent that cannot be read against the background is dropped, with a note in the log, rather than used. A site cannot accidentally ship an unreadable Wrapped.
+Pick any background. The text color is worked out from it so it always clears WCAG AA's 4.5:1 contrast, and the muted label color is derived the same way. An accent that cannot be read against the background is dropped, with a note in the log, rather than used. A site cannot accidentally ship an unreadable Wrapped.
 
 The logo appears on the opening and closing frames and takes a path on disk, a URL under the site, or a full URL. If you have set `custom_logo_url` in `config/statamic/cp.php`, that is used unless you say otherwise.
 
-There is no attempt to read a "site colour" from your starter kit: Statamic has no standard place for one, and guessing would work on one kit and silently do nothing on the next.
+There is no attempt to read a "site color" from your starter kit: Statamic has no standard place for one, and guessing would work on one kit and silently do nothing on the next.
 
 ## People stats
 

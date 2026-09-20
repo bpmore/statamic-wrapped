@@ -122,7 +122,7 @@ Republish the control panel assets. No migration.
 - **Allow public links** on the settings screen (Addons → Wrapped → Settings).
   Once saved it wins over `config/wrapped.php`; off stops every link at once.
   The toggle starts where the config file is, so saving the screen to change a
-  colour does not switch sharing off on a site that enabled it in `.env`.
+  color does not switch sharing off on a site that enabled it in `.env`.
 
 Republish the control panel assets. No migration.
 
@@ -187,7 +187,7 @@ Run the migration (new table `wrapped_shares`) and republish the assets.
   (WCAG 2.1 AA pacing); the period and site are pinned over every frame.
 - **Music**: five bundled instrumental tracks, made with Suno and shipped
   exactly as downloaded, or your own through config. See NOTICE.md.
-- **Your look**: a background colour with the text colour worked out to clear
+- **Your look**: a background color with the text color worked out to clear
   4.5:1 contrast; your logo on the opening and closing frames.
 
 ### Changed

@@ -3,7 +3,7 @@
 # The look of the images, the video and the story was a PHP file and three
 # environment variables until somebody pointed out who ends up holding a site:
 # a developer installs the addon and hands over, and the person left with it
-# cannot edit config/wrapped.php. A background colour is exactly the kind of
+# cannot edit config/wrapped.php. A background color is exactly the kind of
 # thing that person wants to change.
 #
 # Statamic gives this screen for free: this file is the form, and it appears
@@ -20,14 +20,14 @@ tabs:
     sections:
       -
         display: 'Look'
-        instructions: 'The card images, the video and the story share one look. Pick a background; the text colour is worked out from it so it can always be read.'
+        instructions: 'The card images, the video and the story share one look. Pick a background; the text color is worked out from it so it can always be read.'
         fields:
           -
             handle: background
             field:
               type: color
               display: 'Background'
-              instructions: 'Any colour. Light or dark text is chosen for you, whichever reads better on it.'
+              instructions: 'Any color. Light or dark text is chosen for you, whichever reads better on it.'
               allow_any: true
               default: '#16161d'
               width: 50

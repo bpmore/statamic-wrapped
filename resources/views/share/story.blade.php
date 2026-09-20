@@ -6,7 +6,7 @@
     because Inertia pages live inside the control panel and this is the one
     page that must not. Every frame is in the HTML; the script shows one at a
     time. Without script it reads top to bottom as a plain page in the same
-    colours, so the text is there either way.
+    colors, so the text is there either way.
 
     The reader sets the pace: nothing advances on a timer (WCAG 2.2.1, 2.2.2).
     Keys are the slideshow convention and nothing more. Home, End, Page Up and

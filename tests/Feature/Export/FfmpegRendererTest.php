@@ -187,7 +187,7 @@ describe('slicing a sheet', function () {
     it('cuts a grid back into its cells, in reading order, alpha kept', function () {
         $renderer = withRealFfmpeg();
 
-        // A 2x2 sheet of 4x4 cells, each a different solid colour, drawn by ffmpeg itself.
+        // A 2x2 sheet of 4x4 cells, each a different solid color, drawn by ffmpeg itself.
         $sheet = sys_get_temp_dir().'/wrapped-sheet-'.bin2hex(random_bytes(4)).'.png';
         exec(sprintf(
             '%s -hide_banner -loglevel error -y -f lavfi -i "color=red:s=4x4" -f lavfi -i "color=green:s=4x4" -f lavfi -i "color=blue:s=4x4" -f lavfi -i "color=black@0.0:s=4x4,format=rgba" -filter_complex "[0][1]hstack[t];[2][3]hstack[b];[t][b]vstack,format=rgba" -frames:v 1 %s',
@@ -212,7 +212,7 @@ describe('slicing a sheet', function () {
         }
 
         // The fourth cell was transparent black; a PNG with an alpha channel
-        // says so in its IHDR colour type (6 = RGBA).
+        // says so in its IHDR color type (6 = RGBA).
         expect(ord($cells[3][25]))->toBe(6);
     });
 

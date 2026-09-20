@@ -95,7 +95,7 @@ return [
     |--------------------------------------------------------------------------
     |
     | The background of the card images, the video and the story. Pick any
-    | colour; the text colour is worked out from it so it always clears WCAG
+    | color; the text color is worked out from it so it always clears WCAG
     | AA's 4.5:1 contrast, whatever you choose.
     |
     | `accent` is optional and used sparingly (the small labels). It is dropped

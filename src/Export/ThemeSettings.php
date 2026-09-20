@@ -13,7 +13,7 @@ namespace Bpmore\Wrapped\Export;
  * **Whether it has been saved is the question, not whether it has values.**
  * An unsaved settings record is not empty: it comes back carrying the
  * form's own defaults, so reading the values alone would let a field default
- * quietly beat a colour a developer wrote in the config file on purpose.
+ * quietly beat a color a developer wrote in the config file on purpose.
  * `raw()` rather than `all()` for the same reason: `all()` blends the
  * defaults over what was saved.
  */
@@ -38,7 +38,7 @@ class ThemeSettings
             return $config + ['background' => null, 'accent' => null, 'logo' => null];
         }
 
-        // Nulls only. An emptied colour is null and means "back to the config
+        // Nulls only. An emptied color is null and means "back to the config
         // file"; there is no false or [] here that could be a real answer.
         $saved = array_filter(
             ['background' => $saved['background'] ?? null, 'accent' => $saved['accent'] ?? null, 'logo' => $saved['logo'] ?? null],

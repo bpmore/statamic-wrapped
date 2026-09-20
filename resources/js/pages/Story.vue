@@ -110,7 +110,7 @@ onMounted(() => {
 // --- Look -------------------------------------------------------------------
 
 // The same theme as the images and the video, handed over as CSS variables.
-// Text and muted colours were chosen server-side for contrast; the accent is
+// Text and muted colors were chosen server-side for contrast; the accent is
 // only present if it could be read.
 const themeVars = computed(() => ({
     '--story-bg': props.theme.background,
@@ -118,7 +118,7 @@ const themeVars = computed(() => ({
     '--story-muted': props.theme.muted,
     '--story-label': props.theme.accent ?? props.theme.muted,
     '--story-top': `${headerHeight.value}px`,
-    // Controls sit on the background; tint them from the text colour.
+    // Controls sit on the background; tint them from the text color.
     '--story-rgb': props.theme.text === '#f7f7f8' || props.theme.text === '#ffffff' ? '247, 247, 248' : '22, 22, 29',
 }));
 </script>

@@ -10,13 +10,13 @@ use Throwable;
  * The look of everything exported: card images, video frames, the story.
  *
  * A site chooses a background and, optionally, an accent and a logo. It does
- * not choose the text colour, and that is the point: text is worked out from
+ * not choose the text color, and that is the point: text is worked out from
  * the background so it always clears WCAG AA's 4.5:1, whatever a site picks.
  * The muted grey used for labels is derived the same way. A site cannot
  * accidentally ship an unreadable Wrapped.
  *
- * There is no "site colour" to read in Statamic — no standard place a brand
- * colour lives — so this is config, not guesswork. The logo does have a
+ * There is no "site color" to read in Statamic — no standard place a brand
+ * color lives — so this is config, not guesswork. The logo does have a
  * standard home, `statamic.cp.custom_logo_url`, and is picked up from there
  * unless the site says otherwise.
  */
@@ -63,14 +63,14 @@ class Theme
      */
     public static function fromValues(array $values): self
     {
-        $background = static::colour($values['background'] ?? null) ?? self::DEFAULT_BACKGROUND;
+        $background = static::color($values['background'] ?? null) ?? self::DEFAULT_BACKGROUND;
         $text = static::textFor($background);
 
         return new self(
             background: $background,
             text: $text,
             muted: static::mutedFor($background, $text),
-            accent: static::accentFor(static::colour($values['accent'] ?? null), $background),
+            accent: static::accentFor(static::color($values['accent'] ?? null), $background),
             logo: static::logoFrom($values['logo'] ?? config('statamic.cp.custom_logo_url')),
         );
     }
@@ -119,7 +119,7 @@ class Theme
     }
 
     /**
-     * A quieter version of the text colour for labels: the text blended toward
+     * A quieter version of the text color for labels: the text blended toward
      * the background, but only as far as AA allows. Starts at a 45% blend and
      * backs off toward the text until 4.5:1 holds.
      */
@@ -245,10 +245,10 @@ class Theme
     }
 
     /**
-     * A #rgb or #rrggbb colour, normalised to #rrggbb, or null for anything
-     * else. Nothing that is not a colour gets anywhere near a stylesheet.
+     * A #rgb or #rrggbb color, normalised to #rrggbb, or null for anything
+     * else. Nothing that is not a color gets anywhere near a stylesheet.
      */
-    protected static function colour(mixed $value): ?string
+    protected static function color(mixed $value): ?string
     {
         if (! is_string($value)) {
             return null;
