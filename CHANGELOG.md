@@ -11,6 +11,16 @@ php artisan migrate
 php artisan vendor:publish --tag=wrapped --force
 ```
 
+## 1.6.1 - 2026-09-20
+
+### Fixed
+
+- A logo or soundtrack chosen on the settings screen is now read back from
+  the container the form offered, before any other. On a site with two or
+  more asset containers holding the same relative path, the other file could
+  have been picked up. One ordering is now shared by the form and the
+  read-back. No upgrade steps.
+
 ## 1.6.0 - 2026-09-20
 
 Your own music: uploaded on the settings screen, in the video, and on a

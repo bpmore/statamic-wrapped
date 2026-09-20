@@ -300,6 +300,36 @@ describe('your soundtracks, from the settings screen', function () {
         expect($first)->toBe($again)->toMatch('/^upload-[a-f0-9]{12}$/');
     });
 
+    it('reads a saved path from the container the form offered, even when another container has the same path', function () {
+        // A second container whose handle sorts BEFORE the form's would win a
+        // naive "first container with this path" search; a second one that
+        // sorts AFTER must not either. So: one of each, both with the path.
+        mkdir($this->root.'/aaa/music', 0777, true);
+        mkdir($this->root.'/zzz/music', 0777, true);
+        config(['filesystems.disks.test_aaa' => ['driver' => 'local', 'root' => $this->root.'/aaa']]);
+        config(['filesystems.disks.test_zzz' => ['driver' => 'local', 'root' => $this->root.'/zzz']]);
+        AssetContainer::make('aaa')->disk('test_aaa')->save();
+        AssetContainer::make('zzz')->disk('test_zzz')->save();
+        file_put_contents($this->root.'/aaa/music/jingle.m4a', 'the wrong file, in aaa');
+        file_put_contents($this->root.'/zzz/music/jingle.m4a', 'the wrong file, in zzz');
+        Stache::clear();
+
+        // The form offers the first container by handle, which is now "aaa";
+        // a value saved through it belongs to "aaa".
+        expect(wrappedAddon()->settingsBlueprint()->field('soundtracks')->get('container'))->toBe('aaa');
+        savedLook(['soundtracks' => ['music/jingle.m4a']]);
+
+        $track = (new Soundtracks)->all()->first();
+
+        expect($track->name)->toBe('Jingle')
+            ->and(file_get_contents($track->localPath()))->toBe('the wrong file, in aaa');
+
+        // And a value that names its container is taken at its word.
+        savedLook(['soundtracks' => ['zzz::music/jingle.m4a']]);
+
+        expect(file_get_contents((new Soundtracks)->all()->first()->localPath()))->toBe('the wrong file, in zzz');
+    });
+
     it('is streamed to the preview button like any other track', function () {
         savedLook(['soundtracks' => ['music/jingle.m4a']]);
         $handle = (new Soundtracks)->all()->keys()->first();

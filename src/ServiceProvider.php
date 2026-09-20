@@ -6,6 +6,7 @@ use Bpmore\Wrapped\Console\Commands\GenerateWrapped;
 use Bpmore\Wrapped\Export\ChromeRenderer;
 use Bpmore\Wrapped\Export\FfmpegRenderer;
 use Bpmore\Wrapped\Export\ImageRenderer;
+use Bpmore\Wrapped\Export\SavedSettings;
 use Bpmore\Wrapped\Export\Soundtracks;
 use Bpmore\Wrapped\Export\Theme;
 use Bpmore\Wrapped\Export\VideoRenderer;
@@ -36,8 +37,7 @@ use Bpmore\Wrapped\Stats\StatCard;
 use Bpmore\Wrapped\Stats\StatCardRegistry;
 use Bpmore\Wrapped\Widgets\WrappedWidget;
 use Illuminate\Console\Command;
-use Statamic\Contracts\Assets\AssetContainer as AssetContainerContract;
-use Statamic\Facades\AssetContainer;
+use Statamic\Assets\AssetContainer;
 use Statamic\Facades\CP\Nav;
 use Statamic\Facades\Permission;
 use Statamic\Facades\YAML;
@@ -186,7 +186,8 @@ class ServiceProvider extends AddonServiceProvider
         $this->registerSettingsBlueprint(function () {
             $blueprint = YAML::file(__DIR__.'/../resources/blueprints/settings.yaml')->parse();
 
-            $container = AssetContainer::all()->sortBy(fn ($container) => $container->handle())->first();
+            // The same container SavedSettings reads a saved value back from.
+            $container = SavedSettings::formContainer();
 
             foreach ($blueprint['tabs']['main']['sections'] as $i => &$section) {
                 foreach ($section['fields'] as $j => &$field) {
@@ -229,7 +230,7 @@ class ServiceProvider extends AddonServiceProvider
      * @param  array<string, mixed>  $field
      * @return array<string, mixed>
      */
-    protected function logoField(array $field, ?AssetContainerContract $container): array
+    protected function logoField(array $field, ?AssetContainer $container): array
     {
         if ($container === null) {
             return [

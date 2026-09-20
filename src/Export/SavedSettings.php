@@ -2,7 +2,9 @@
 
 namespace Bpmore\Wrapped\Export;
 
+use Illuminate\Support\Collection;
 use Statamic\Assets\Asset;
+use Statamic\Assets\AssetContainer as Container;
 use Statamic\Contracts\Addons\SettingsRepository;
 use Statamic\Facades\AssetContainer;
 
@@ -39,9 +41,11 @@ class SavedSettings
      * is not one.
      *
      * The field stores a path inside its container and not the container
-     * itself, and the container the form offered was whichever the site had
-     * when the form was drawn; so the path is looked for in every container,
-     * first match wins. A `container::path` reference is read as such.
+     * itself. The form always offers the same container (`formContainer()`),
+     * so that one is asked first and is the answer on every ordinary site.
+     * The others are tried after it, in handle order, for a value saved when
+     * the site's containers were different. A `container::path` reference is
+     * read as such.
      */
     public static function asset(mixed $value): ?Asset
     {
@@ -55,12 +59,37 @@ class SavedSettings
             return AssetContainer::find($handle)?->asset($path);
         }
 
-        foreach (AssetContainer::all() as $container) {
+        foreach (static::containers() as $container) {
             if ($asset = $container->asset($value)) {
                 return $asset;
             }
         }
 
         return null;
+    }
+
+    /**
+     * The container the settings form's assets fields offer: the site's
+     * first, by handle, so it is the same one every time the form is drawn.
+     * Null on a site with no containers at all.
+     *
+     * Typed as the class rather than the contract: the contract's docblock
+     * says `asset()` always returns an asset, the class's (truthfully) says
+     * it may return null, and callers rely on the null.
+     */
+    public static function formContainer(): ?Container
+    {
+        return static::containers()->first();
+    }
+
+    /**
+     * Every container, the form's first. One ordering, used both when the
+     * form is drawn and when a saved value is read back, so the two agree.
+     *
+     * @return Collection<int, Container>
+     */
+    protected static function containers(): Collection
+    {
+        return AssetContainer::all()->sortBy(fn (Container $container) => $container->handle())->values();
     }
 }
