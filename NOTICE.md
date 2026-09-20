@@ -34,14 +34,15 @@ loaded from it at runtime.
 
 ## External requests this package can make
 
-None on its own. Four things an editor or a reader does can cause one:
+None on its own. Four things an editor or a reader does can cause one, and
+one that looks as if it might does not:
 
 - A logo given as a full `http(s)://` URL (config `theme.logo`, or the Logo
   field on the settings screen) is fetched once when the look is built, with a
   three-second timeout, and embedded in the images and video. Give a path on
   the site instead and nothing leaves the server.
-- Pasting a YouTube link into the **Music** field when making a public link
-  (1.5+) makes one request from the server to
+- Choosing **A YouTube video** under Music when making a public link and
+  pasting its address (1.5+) makes one request from the server to
   `https://www.youtube.com/oembed`, with a five-second timeout, carrying the
   video id and nothing else. It brings back the title and thumbnail URL, which
   are stored on the link. No API key is used and nothing about the site is sent.
@@ -52,6 +53,9 @@ None on its own. Four things an editor or a reader does can cause one:
   video, and it does not happen until the button is pressed. A public page
   whose link has no song loads nothing from YouTube. The README says what
   this means for a site's privacy policy.
+- A track chosen as the music on a public link (1.6+), bundled or your own,
+  is streamed by your own site to the reader. Nothing leaves the server for
+  it, and no one else is asked.
 - The Chrome and FFmpeg binaries are run locally; they receive only the
   package's own HTML and files.
 

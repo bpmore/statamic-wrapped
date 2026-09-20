@@ -38,11 +38,11 @@ Free. Statamic 6, PHP 8.2+.
 - Cards left out rather than guessed when history is thin
 - Shareable PNG per card and for the whole thing, with suggested alt text
 - A tap-through story: one fact per screen, at the reader's pace, keyboard and screen-reader friendly
-- A short vertical video for Reels, Stories and TikTok, with bundled instrumental music or your own
+- A short vertical video for Reels, Stories and TikTok, with bundled instrumental music or your own, uploaded on the settings screen
 - Your own background colour and logo, with text contrast worked out for you
 - Dashboard widget with a December nudge
 - Yearly, quarterly and monthly, with a picker to move between them
-- Public links, off by default: a frozen, revocable, noindex copy of the story behind a random token, written as "we" for its readers, with an optional song by YouTube link that plays on the page in YouTube's own player
+- Public links, off by default: a frozen, revocable, noindex copy of the story behind a random token, written as "we" for its readers, with optional music: one of the tracks (bundled or yours) as a quiet loop, or a published song by YouTube link in YouTube's own player
 - Multisite: one Wrapped per site
 - Three permissions: view Wrapped, view people stats, share publicly
 

@@ -133,7 +133,11 @@ Without it the video maker does not appear. The story and the images work regard
 
 ### Music
 
-The addon ships with a small set of instrumental tracks, made with [Suno](https://suno.com) on a plan that assigns ownership of the output, and shipped exactly as downloaded so Suno's own metadata stays in the files. Add your own, or offer only your own:
+The addon ships with a small set of instrumental tracks, made with [Suno](https://suno.com) on a plan that assigns ownership of the output, and shipped exactly as downloaded so Suno's own metadata stays in the files.
+
+**Add your own from the control panel.** Addons → Wrapped → Settings has a **Your soundtracks** field: drop in an MP3 (M4A, WAV, OGG, FLAC and AAC work too) and save. It appears at the top of the track list, named from its filename or the title you give the file. A file that is not audio is ignored. An asset container on S3 or another remote disk is fine; the file is copied to the server for the length of a video render and removed after.
+
+**Or in config**, if you would rather keep music with the code, or offer only your own:
 
 ```php
 // config/wrapped.php
@@ -149,9 +153,11 @@ The addon ships with a small set of instrumental tracks, made with [Suno](https:
 ],
 ```
 
-Your tracks are listed first.
+Your tracks are listed first: config, then uploads, then the bundled ones.
 
-These are the video's soundtrack, and the control panel story's. A public link can play a published song instead, through YouTube's own player; that is a different thing with different rules, and lives under [Public links](#a-song-on-a-public-link).
+**The rights your own music needs.** A track you add goes into the downloadable video and, if you choose it for a public link, is streamed to everyone who opens the page. That is fine for music you made, music made for you, and library music whose licence covers video and web use. It is not fine for a song you bought or stream: a purchase is a licence to listen, not to put the recording under a video or on a page. The bundled tracks are covered for both. If in doubt, the question to ask a library is "does this licence cover synchronisation and public performance online?"
+
+These are the video's soundtrack and the control panel story's, and any of them can be the music on a public link too. A public link can instead play a published song through YouTube's own player; that is a different thing with different rules, and lives under [Public links](#music-on-a-public-link).
 
 ## Look
 
@@ -234,20 +240,24 @@ or switch on **Allow public links** at Addons → Wrapped → Settings, which wi
 
 Switching the setting back off stops every link at once. The first URL segment is `share.path` in the config.
 
-### A song on a public link
+### Music on a public link
 
-Paste a YouTube link into **Music (YouTube link)** when making a public link. Any shape works: `youtube.com/watch?v=…`, `youtu.be/…`, shorts, embed. YouTube is asked about it once, with no API key and no quota, and the title and thumbnail it gives are kept with the link and shown under it in the control panel, so a wrong paste is visible and can be revoked. A link YouTube does not recognise (private, removed, not embeddable) is refused.
+**Music** on the share form is a choice: none, a track, or a YouTube video.
+
+**A track** is any the video can have: the bundled ones, your config tracks, your uploads. Pick one from the list (there is a Preview button), and on the public page it plays as a quiet loop behind the story, opened by a **Play music** button on the first frame or **Music** in the controls, until **Stop music**. Nothing is fetched until a reader presses one of them. The track streams from your site under the link's own token, so it stops when the link is revoked or expires, and works from a private asset container. If you later delete the track, the page simply has no music.
+
+**A YouTube video** is for a published song. Paste its link into **YouTube link** when making the public link. Any shape works: `youtube.com/watch?v=…`, `youtu.be/…`, shorts, embed. YouTube is asked about it once, with no API key and no quota, and the title and thumbnail it gives are kept with the link and shown under it in the control panel, so a wrong paste is visible and can be revoked. A link YouTube does not recognise (private, removed, not embeddable) is refused.
 
 On the public page the song is a small YouTube player in its own tile, opened by a **Play music** button on the first frame or **Music** in the controls, looping until **Stop music**. Nothing loads from YouTube until a reader presses one of them. The tile sits at the top on a phone and bottom-right on a wider screen, and the cards make room for it: YouTube's rules for an embedded player ask that it be at least 200×200, on screen, and never covered, hidden or reduced to audio, and the page keeps to them. Under the tile: the song's title and a link to YouTube's terms.
 
 Two things to know:
 
-- **The song plays on the shared web page only.** It is never in the downloadable video, and cannot be: putting a published recording into a file you hand out needs a synchronisation licence that neither this addon nor most sites have. The video keeps the soundtrack chosen for it, bundled or your own. The form says so under the field.
+- **Either kind plays on the shared web page only.** A YouTube song is never in the downloadable video, and cannot be: putting a published recording into a file you hand out needs a synchronisation licence that neither this addon nor most sites have. The video keeps the soundtrack chosen for it, bundled or your own. The form says so under the choice.
 - **Your privacy policy.** Once a reader presses Play, their browser talks to YouTube (the privacy-enhanced `youtube-nocookie.com` domain, but still Google). YouTube's API policies ask that a page with their player links a privacy policy that mentions Google, and depending on where your readers are, so may the law. If your site's privacy policy does not already cover embedded YouTube players, add a line before you make a link with a song.
 
 ## What it will not do
 
-No analytics. No emailing. No AI summaries. No historical backfill beyond what your history source honestly supports. No published music in the video: only on a public page, played by YouTube's own player. The video and the images are downloads; nothing is hosted unless you switch public links on, and then only what you chose to publish.
+No analytics. No emailing. No AI summaries. No historical backfill beyond what your history source honestly supports. No published music in the video: only on a public page, played by YouTube's own player. No hosting of anyone else's recordings: a track on a public page is one you chose, streamed by your own site. The video and the images are downloads; nothing is hosted unless you switch public links on, and then only what you chose to publish.
 
 ## Development
 
