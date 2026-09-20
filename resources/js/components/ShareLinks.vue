@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref } from 'vue';
+import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import { router, usePage } from '@statamic/cms/inertia';
 import { Button, Input } from '@statamic/cms/ui';
 
@@ -15,13 +15,34 @@ const props = defineProps({
 // The form for a new link. People cards are off until ticked, every time:
 // a public page naming who did what is a decision per link, not a habit.
 // The voice is "we" unless changed: a public reader did not publish anything.
-// A song is a pasted YouTube link. It plays on the public page only; the
-// server looks it up and refuses a link YouTube does not know.
+// Music is one of three: none, a track from the list (bundled or uploaded),
+// or a pasted YouTube link. Either kind plays on the public page only; the
+// server looks a YouTube link up and refuses one it does not know.
 const people = ref(false);
 const voice = ref('we');
+const musicKind = ref('none');
+const soundtrack = ref(props.share.tracks[0]?.handle ?? '');
 const music = ref('');
 const days = ref('');
 const busy = ref(false);
+
+// Hearing a track before choosing it, the same way the video maker does.
+const previewAudio = ref(null);
+const previewing = ref(false);
+
+const preview = () => {
+    const t = props.share.tracks.find((x) => x.handle === soundtrack.value);
+    if (!t) return;
+    if (!previewAudio.value) previewAudio.value = new Audio();
+    if (previewing.value) { previewAudio.value.pause(); previewing.value = false; return; }
+    previewAudio.value.src = t.previewUrl;
+    previewAudio.value.currentTime = 0;
+    previewAudio.value.play().then(() => { previewing.value = true; }).catch(() => { previewing.value = false; });
+    previewAudio.value.onended = () => { previewing.value = false; };
+};
+
+watch([soundtrack, musicKind], () => { previewAudio.value?.pause(); previewing.value = false; });
+onBeforeUnmount(() => previewAudio.value?.pause());
 
 // Validation messages come back on the page's errors, keyed by field.
 const errors = computed(() => usePage().props.errors ?? {});
@@ -34,7 +55,8 @@ const create = () => {
             period: props.periodKey,
             people: people.value,
             voice: voice.value,
-            music: music.value.trim() === '' ? null : music.value.trim(),
+            soundtrack: musicKind.value === 'track' && soundtrack.value !== '' ? soundtrack.value : null,
+            music: musicKind.value === 'youtube' && music.value.trim() !== '' ? music.value.trim() : null,
             days: days.value === '' ? null : Number(days.value),
         },
         {
@@ -89,6 +111,7 @@ const dateOf = (iso) => new Date(iso).toLocaleDateString(undefined, { day: 'nume
                     <img v-if="link.music.thumbnail" :src="link.music.thumbnail" alt="" class="wrapped-share__thumb" width="64" height="36" loading="lazy">
                     <span>Music: {{ link.music.title }}</span>
                 </a>
+                <span v-else-if="link.soundtrack" class="wrapped-share__music">Music: {{ link.soundtrack.name }}</span>
                 <span class="wrapped-share__actions">
                     <button type="button" class="wrapped-link" @click="copy(link)">{{ copied === link.id ? 'Copied' : 'Copy link' }}</button>
                     <button type="button" class="wrapped-link" @click="revoke(link)">Revoke</button>
@@ -125,14 +148,40 @@ const dateOf = (iso) => new Date(iso).toLocaleDateString(undefined, { day: 'nume
                 </label>
             </fieldset>
 
-            <label class="wrapped-share__field">
-                <span class="wrapped-share__label">Music (YouTube link)</span>
-                <Input v-model="music" type="url" inputmode="url" placeholder="https://www.youtube.com/watch?v=…" :disabled="busy" />
-                <span v-if="errors.music" class="wrapped-share__error" role="status">{{ errors.music }}</span>
-                <span v-else class="wrapped-muted">
-                    Optional. Plays on the shared web page only, in a small YouTube player. The downloadable video keeps its own soundtrack.
-                </span>
-            </label>
+            <fieldset class="wrapped-share__voice">
+                <legend class="wrapped-share__label">Music</legend>
+                <label class="wrapped-share__option">
+                    <input type="radio" v-model="musicKind" value="none">
+                    <span>None</span>
+                </label>
+                <label v-if="share.tracks.length" class="wrapped-share__option">
+                    <input type="radio" v-model="musicKind" value="track">
+                    <span>
+                        A track
+                        <span class="wrapped-muted">One of the tracks the video can have, playing quietly behind the story.</span>
+                    </span>
+                </label>
+                <div v-if="musicKind === 'track'" class="wrapped-share__track">
+                    <select v-model="soundtrack" class="wrapped-share__select" aria-label="Which track">
+                        <option v-for="t in share.tracks" :key="t.handle" :value="t.handle">{{ t.name }}<template v-if="t.description"> — {{ t.description }}</template></option>
+                    </select>
+                    <button type="button" class="wrapped-link" @click="preview">{{ previewing ? 'Stop' : 'Preview' }}</button>
+                    <span v-if="errors.soundtrack" class="wrapped-share__error" role="status">{{ errors.soundtrack }}</span>
+                </div>
+                <label class="wrapped-share__option">
+                    <input type="radio" v-model="musicKind" value="youtube">
+                    <span>
+                        A YouTube video
+                        <span class="wrapped-muted">A published song, in a small YouTube player on the page.</span>
+                    </span>
+                </label>
+                <label v-if="musicKind === 'youtube'" class="wrapped-share__field">
+                    <span class="wrapped-share__label">YouTube link</span>
+                    <Input v-model="music" type="url" inputmode="url" placeholder="https://www.youtube.com/watch?v=…" :disabled="busy" />
+                    <span v-if="errors.music" class="wrapped-share__error" role="status">{{ errors.music }}</span>
+                </label>
+                <span class="wrapped-muted">Either kind plays on the shared web page only. The downloadable video keeps its own soundtrack.</span>
+            </fieldset>
 
             <label class="wrapped-share__option wrapped-share__expiry">
                 <span class="wrapped-share__label">Stops working after</span>
@@ -282,6 +331,14 @@ const dateOf = (iso) => new Date(iso).toLocaleDateString(undefined, { day: 'nume
     height: 2.25rem;
     object-fit: cover;
     border-radius: 0.25rem;
+}
+
+.wrapped-share__track {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-left: 1.75rem;
+    flex-wrap: wrap;
 }
 
 .wrapped-share__expiry {

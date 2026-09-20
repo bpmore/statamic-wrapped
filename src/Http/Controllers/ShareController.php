@@ -2,6 +2,7 @@
 
 namespace Bpmore\Wrapped\Http\Controllers;
 
+use Bpmore\Wrapped\Export\Soundtracks;
 use Bpmore\Wrapped\Sharing\Share;
 use Bpmore\Wrapped\Sharing\ShareLinks;
 use Bpmore\Wrapped\Sharing\YouTube;
@@ -10,6 +11,7 @@ use Bpmore\Wrapped\Stats\Voice;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use RuntimeException;
 use Statamic\Facades\Site;
 use Statamic\Facades\User;
@@ -26,7 +28,7 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
  */
 class ShareController extends CpController
 {
-    public function store(Request $request, ShareLinks $links, YouTube $youtube): RedirectResponse
+    public function store(Request $request, ShareLinks $links, YouTube $youtube, Soundtracks $soundtracks): RedirectResponse
     {
         $data = $request->validate([
             'period' => ['required', 'string', 'max:20'],
@@ -34,13 +36,19 @@ class ShareController extends CpController
             'voice' => ['sometimes', Rule::enum(Voice::class)],
             'days' => ['nullable', 'integer', 'min:1', 'max:'.ShareLinks::MAX_DAYS],
             'music' => ['nullable', 'string', 'max:500'],
+            'soundtrack' => ['nullable', 'string', 'max:64', Rule::in($soundtracks->all()->keys()->all())],
         ]);
+
+        $soundtrack = isset($data['soundtrack']) && $data['soundtrack'] !== '' ? $data['soundtrack'] : null;
+        $pasted = isset($data['music']) && trim($data['music']) !== '';
+
+        if ($soundtrack !== null && $pasted) {
+            throw ValidationException::withMessages(['music' => 'Choose a track or paste a YouTube link, not both.']);
+        }
 
         // Asked of YouTube before the snapshot is looked up, so a bad link is
         // a validation error on the form and never a half-made share.
-        $music = isset($data['music']) && trim($data['music']) !== ''
-            ? $youtube->resolve($data['music'])
-            : null;
+        $music = $pasted ? $youtube->resolve($data['music']) : null;
 
         $snapshot = Snapshot::query()
             ->where('site', Site::selected()->handle())
@@ -57,6 +65,7 @@ class ShareController extends CpController
                 by: $this->actor(),
                 voice: isset($data['voice']) ? Voice::from($data['voice']) : Voice::We,
                 music: $music,
+                soundtrack: $soundtrack,
             );
         } catch (RuntimeException $e) {
             abort(Response::HTTP_FORBIDDEN, $e->getMessage());

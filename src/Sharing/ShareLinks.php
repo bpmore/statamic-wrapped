@@ -2,6 +2,7 @@
 
 namespace Bpmore\Wrapped\Sharing;
 
+use Bpmore\Wrapped\Export\Soundtracks;
 use Bpmore\Wrapped\Snapshots\Snapshot;
 use Bpmore\Wrapped\Stats\CardGate;
 use Bpmore\Wrapped\Stats\CardPresenter;
@@ -30,6 +31,7 @@ class ShareLinks
     public function __construct(
         protected CardPresenter $presenter,
         protected CardGate $gate,
+        protected Soundtracks $soundtracks,
     ) {}
 
     /**
@@ -60,13 +62,22 @@ class ShareLinks
      * The voice defaults to "we": whoever opens a public link did not publish
      * those entries, so "you published" would be talking to the wrong person.
      *
-     * The music, if any, is a YouTube video already looked up and found; it
-     * plays on the public page and nowhere else.
+     * The music, if any, is one of two things, never both: a YouTube video
+     * already looked up and found, or a soundtrack by handle (bundled, from
+     * config, or uploaded). Either plays on the public page and nowhere else.
      */
-    public function publish(Snapshot $snapshot, string $label, bool $people = false, ?int $days = null, ?string $by = null, Voice $voice = Voice::We, ?YouTubeVideo $music = null): Share
+    public function publish(Snapshot $snapshot, string $label, bool $people = false, ?int $days = null, ?string $by = null, Voice $voice = Voice::We, ?YouTubeVideo $music = null, ?string $soundtrack = null): Share
     {
         if (! $this->canShare()) {
             throw new RuntimeException('Public sharing is off, or this user may not share.');
+        }
+
+        if ($music !== null && $soundtrack !== null) {
+            throw new RuntimeException('A link plays a soundtrack or a YouTube video, not both.');
+        }
+
+        if ($soundtrack !== null && $this->soundtracks->find($soundtrack) === null) {
+            throw new RuntimeException("There is no soundtrack called [{$soundtrack}].");
         }
 
         if ($days !== null && ($days < 1 || $days > self::MAX_DAYS)) {
@@ -97,6 +108,7 @@ class ShareLinks
             'youtube_id' => $music?->id,
             'youtube_title' => $music?->title,
             'youtube_thumbnail' => $music?->thumbnail,
+            'soundtrack' => $soundtrack,
             'created_by' => $by,
             'created_at' => $now,
             'expires_at' => $days === null ? null : $now->addDays($days),

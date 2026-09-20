@@ -1,5 +1,6 @@
 <?php
 
+use Bpmore\Wrapped\Export\Soundtracks;
 use Bpmore\Wrapped\Export\Theme;
 use Bpmore\Wrapped\History\Confidence;
 use Bpmore\Wrapped\Sharing\Share;
@@ -15,7 +16,11 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Testing\TestResponse;
 use Inertia\Testing\AssertableInertia;
+use Statamic\Contracts\Addons\SettingsRepository;
+use Statamic\Facades\Addon;
+use Statamic\Facades\AssetContainer;
 use Statamic\Facades\Role;
+use Statamic\Facades\Stache;
 use Statamic\Facades\User;
 
 uses(RefreshDatabase::class);
@@ -556,5 +561,129 @@ describe('music on the public page', function () {
         expect($html)
             ->not->toContain('<script>alert(1)</script>')
             ->toContain('&lt;script&gt;alert(1)&lt;/script&gt; &amp; co');
+    });
+});
+
+describe('a soundtrack on the public page', function () {
+    function withATrack(string $handle = 'soft-landing'): void
+    {
+        sharer();
+        aWrapped();
+        makeLink(['soundtrack' => $handle])->assertSessionHasNoErrors();
+        auth()->logout();
+    }
+
+    it('keeps the chosen track by handle, and tells the screen its name', function () {
+        withATrack();
+
+        expect(Share::sole()->soundtrack)->toBe('soft-landing')
+            ->and(Share::sole()->youtube_id)->toBeNull();
+
+        sharer();
+        $this->get(cp_route('wrapped.index', ['period' => '2026']))
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->where('snapshot.share.links.0.soundtrack', ['handle' => 'soft-landing', 'name' => 'Soft Landing'])
+                ->where('snapshot.share.links.0.music', null)
+                ->where('snapshot.share.tracks.0.handle', 'soft-landing')
+                ->where('snapshot.share.tracks.0.previewUrl', cp_route('wrapped.soundtrack', ['handle' => 'soft-landing'])));
+    });
+
+    it('refuses a track it does not have', function () {
+        sharer();
+        aWrapped();
+
+        makeLink(['soundtrack' => 'not-a-track'])->assertSessionHasErrors('soundtrack');
+
+        expect(Share::count())->toBe(0);
+    });
+
+    it('refuses a track and a YouTube link together', function () {
+        sharer();
+        aWrapped();
+        Http::fake();
+
+        makeLink(['soundtrack' => 'soft-landing', 'music' => 'https://youtu.be/dQw4w9WgXcQ'])->assertSessionHasErrors('music');
+
+        expect(Share::count())->toBe(0);
+        Http::assertNothingSent();
+    });
+
+    it('gives the page a looping audio behind the same buttons, and no YouTube', function () {
+        withATrack();
+
+        $html = $this->get(Share::sole()->url())->assertOk()->getContent();
+
+        expect($html)
+            ->toContain('data-label="Play music"')
+            ->toContain('data-label="Music"')
+            ->toContain(route('wrapped.share.music', ['token' => Share::sole()->token]))
+            ->toContain('trackAudio.loop = true')
+            ->not->toContain('<audio')
+            ->not->toContain('data-music-id')
+            ->not->toContain('youtube')
+            ->not->toContain('YouTube');
+    });
+
+    it('streams the track under the link\'s token while the link is live, and not after', function () {
+        withATrack();
+        $share = Share::sole();
+
+        $this->get(route('wrapped.share.music', ['token' => $share->token]))
+            ->assertOk()
+            ->assertHeader('Content-Type', 'audio/mp4');
+
+        $share->revoke();
+
+        $this->get(route('wrapped.share.music', ['token' => $share->token]))->assertNotFound();
+    });
+
+    it('is a 404 for a link with no track, and for a token that is not one', function () {
+        sharer();
+        aWrapped();
+        makeLink();
+
+        $this->get(route('wrapped.share.music', ['token' => Share::sole()->token]))->assertNotFound();
+        $this->get('/wrapped/'.str_repeat('c', 40).'/music')->assertNotFound();
+    });
+
+    it('goes quiet, with no buttons, when the track is no longer offered', function () {
+        withATrack();
+        config(['wrapped.video.bundled' => false]);
+        app()->forgetInstance(Soundtracks::class);
+
+        $share = Share::sole();
+
+        $html = $this->get($share->url())->assertOk()->getContent();
+
+        expect($html)->not->toContain('data-music-toggle')
+            ->and($share->fresh()->soundtrack)->toBe('soft-landing');
+
+        $this->get(route('wrapped.share.music', ['token' => $share->token]))->assertNotFound();
+    });
+
+    it('plays an uploaded track too', function () {
+        $root = sys_get_temp_dir().'/wrapped-share-upload-'.bin2hex(random_bytes(6));
+        mkdir($root.'/assets', 0777, true);
+        mkdir($root.'/containers', 0777, true);
+        Stache::store('asset-containers')->directory($root.'/containers');
+        Stache::clear();
+        config(['filesystems.disks.test_assets' => ['driver' => 'local', 'root' => $root.'/assets']]);
+        AssetContainer::make('uploads')->disk('test_assets')->save();
+        file_put_contents($root.'/assets/theme.mp3', 'not really audio');
+
+        $settings = Addon::get('bpmore/statamic-wrapped')->settings();
+        $settings->set('soundtracks', ['theme.mp3']);
+        app(SettingsRepository::class)->save($settings);
+
+        try {
+            $handle = app(Soundtracks::class)->all()->keys()->first(fn ($h) => str_starts_with($h, 'upload-'));
+            withATrack($handle);
+
+            $this->get(route('wrapped.share.music', ['token' => Share::sole()->token]))
+                ->assertOk()
+                ->assertHeader('Content-Type', 'audio/mpeg');
+        } finally {
+            exec('rm -rf '.escapeshellarg($root));
+        }
     });
 });

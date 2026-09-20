@@ -4,6 +4,8 @@ namespace Bpmore\Wrapped\Http\Controllers;
 
 use Bpmore\Wrapped\Export\AltText;
 use Bpmore\Wrapped\Export\CardImages;
+use Bpmore\Wrapped\Export\Soundtrack;
+use Bpmore\Wrapped\Export\SoundtrackResponse;
 use Bpmore\Wrapped\Export\Soundtracks;
 use Bpmore\Wrapped\Export\Theme;
 use Bpmore\Wrapped\Export\VideoSpec;
@@ -71,7 +73,7 @@ class WrappedController extends CpController
                 'storyUrl' => $this->route('wrapped.story', $snapshot),
                 // Null unless sharing is on and this user may do it; the
                 // panel does not appear at all otherwise.
-                'share' => $links->canShare() ? $this->sharing($links, $gate, $snapshot) : null,
+                'share' => $links->canShare() ? $this->sharing($links, $gate, $snapshot, $soundtracks) : null,
             ],
         ]);
     }
@@ -100,12 +102,15 @@ class WrappedController extends CpController
      *
      * @return array<string, mixed>
      */
-    protected function sharing(ShareLinks $links, CardGate $gate, Snapshot $snapshot): array
+    protected function sharing(ShareLinks $links, CardGate $gate, Snapshot $snapshot, Soundtracks $soundtracks): array
     {
         return [
             'createUrl' => cp_route('wrapped.share.store'),
             'canPeople' => $gate->canViewPeople(),
             'maxDays' => ShareLinks::MAX_DAYS,
+            'tracks' => $soundtracks->all()->map(fn (Soundtrack $track) => $track->toArray() + [
+                'previewUrl' => cp_route('wrapped.soundtrack', ['handle' => $track->handle]),
+            ])->values()->all(),
             'links' => $links->liveFor($snapshot)->map(fn (Share $share) => [
                 'id' => $share->id,
                 'url' => $share->url(),
@@ -114,6 +119,7 @@ class WrappedController extends CpController
                 'people' => $share->people,
                 'voice' => $share->voice->value,
                 'music' => $share->music()?->toArray(),
+                'soundtrack' => ($track = $share->soundtrack($soundtracks)) === null ? null : ['handle' => $track->handle, 'name' => $track->name],
                 'revokeUrl' => cp_route('wrapped.share.destroy', $share),
             ])->values()->all(),
         ];
@@ -284,22 +290,7 @@ class WrappedController extends CpController
             throw new NotFoundHttpException("There is no soundtrack called [{$handle}].");
         }
 
-        $headers = [
-            'Content-Type' => $track->mimeType(),
-            'Cache-Control' => 'private, max-age=3600',
-        ];
-
-        // A file on this server goes out as one, with range requests and
-        // all; a track in a container elsewhere is streamed through.
-        if ($track->path !== null) {
-            return response()->file($track->path, $headers);
-        }
-
-        return response()->stream(function () use ($track) {
-            $stream = $track->stream();
-            fpassthru($stream);
-            fclose($stream);
-        }, 200, $headers);
+        return SoundtrackResponse::for($track);
     }
 
     /**

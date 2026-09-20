@@ -22,7 +22,12 @@
     ];
     $count = count($frames);
     $lead = $share->cards[0]['body'] ?? '';
+    // Music, one of two kinds or neither: a YouTube video (a visible player,
+    // by YouTube's rules) or a soundtrack (a plain looping audio element, streamed
+    // from this site under the link's own token). $soundtrack comes from the
+    // controller already resolved, and is null when the track has gone.
     $music = $share->music();
+    $hasMusic = $music !== null || $soundtrack !== null;
     $rgb = in_array($theme->text, ['#f7f7f8', '#ffffff'], true) ? '247, 247, 248' : '22, 22, 29';
 @endphp
 <!DOCTYPE html>
@@ -276,7 +281,7 @@
                         @if (! empty($frame['subtitle']))
                             <p class="story-subtitle">{{ $frame['subtitle'] }}</p>
                         @endif
-                        @if ($music && $frame['kind'] === 'intro')
+                        @if ($hasMusic && $frame['kind'] === 'intro')
                             <button type="button" class="story-button story-button--text story-intro-music" data-music-toggle data-label="Play music" aria-pressed="false" hidden>Play music</button>
                         @endif
                     @endif
@@ -314,7 +319,7 @@
                 the status line, which a screen reader hears.
             --}}
             <button type="button" class="story-button story-button--text" data-share hidden>Share</button>
-            @if ($music)
+            @if ($hasMusic)
                 <button type="button" class="story-button story-button--text" data-music-toggle data-label="Music" aria-pressed="false" hidden>Music</button>
             @endif
             <button type="button" class="story-button" data-next aria-label="Next">›</button>
@@ -407,19 +412,30 @@
                 }
             });
 
-            @if ($music)
-            // Music: nothing until asked. The first press builds the player,
-            // with autoplay because the press is the reader's own; "Stop"
-            // takes it out again rather than leaving a paused player around.
-            // Only on a page with a song: a page without one says nothing
-            // about YouTube at all.
-            var story = document.querySelector('.story');
-            var musicBox = document.querySelector('[data-music]');
+            @if ($hasMusic)
+            // Music: nothing until asked, and nothing at all on a page whose
+            // link has none. Two kinds, one set of buttons; each kind's own
+            // script is only on a page that has it.
             var musicToggles = Array.prototype.slice.call(document.querySelectorAll('[data-music-toggle]'));
             var musicOn = false;
 
-            function setMusic(on) {
+            function showMusic(on) {
                 musicOn = on;
+                musicToggles.forEach(function (b) {
+                    b.textContent = on ? 'Stop music' : b.getAttribute('data-label');
+                    b.setAttribute('aria-pressed', on ? 'true' : 'false');
+                });
+            }
+            @endif
+
+            @if ($music)
+            // A YouTube video: the first press builds the player, with
+            // autoplay because the press is the reader's own; "Stop" takes
+            // it out again rather than leaving a paused player around.
+            var story = document.querySelector('.story');
+            var musicBox = document.querySelector('[data-music]');
+
+            function setMusic(on) {
                 story.classList.toggle('has-music', on);
 
                 var slot = musicBox.querySelector('[data-music-player]');
@@ -438,12 +454,34 @@
                     slot.appendChild(player);
                 }
 
-                musicToggles.forEach(function (b) {
-                    b.textContent = on ? 'Stop music' : b.getAttribute('data-label');
-                    b.setAttribute('aria-pressed', on ? 'true' : 'false');
-                });
+                showMusic(on);
             }
+            @elseif ($soundtrack)
+            // A soundtrack: a looping audio element, made on the first press and
+            // streamed from this site under the link's own token. Nothing is
+            // fetched before that press. If the browser will not play it,
+            // the button goes back to how it was rather than lying.
+            var trackUrl = @json(route('wrapped.share.music', ['token' => $share->token]), JSON_UNESCAPED_SLASHES);
+            var trackAudio = null;
 
+            function setMusic(on) {
+                if (on) {
+                    if (!trackAudio) {
+                        trackAudio = new Audio();
+                        trackAudio.loop = true;
+                        trackAudio.preload = 'none';
+                        trackAudio.src = trackUrl;
+                    }
+                    showMusic(true);
+                    trackAudio.play().catch(function () { showMusic(false); });
+                } else {
+                    if (trackAudio) trackAudio.pause();
+                    showMusic(false);
+                }
+            }
+            @endif
+
+            @if ($hasMusic)
             musicToggles.forEach(function (b) {
                 b.hidden = false;
                 b.addEventListener('click', function (e) { e.stopPropagation(); setMusic(!musicOn); });

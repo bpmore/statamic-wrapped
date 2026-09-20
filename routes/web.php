@@ -13,3 +13,8 @@ $path = trim((string) config('wrapped.share.path', 'wrapped'), '/');
 Route::get($path.'/{token}', [PublicStoryController::class, 'show'])
     ->where('token', '[a-f0-9]{40}')
     ->name('wrapped.share.show');
+
+// The page's soundtrack, under the same token and the same rules.
+Route::get($path.'/{token}/music', [PublicStoryController::class, 'music'])
+    ->where('token', '[a-f0-9]{40}')
+    ->name('wrapped.share.music');

@@ -2,6 +2,8 @@
 
 namespace Bpmore\Wrapped\Sharing;
 
+use Bpmore\Wrapped\Export\Soundtrack;
+use Bpmore\Wrapped\Export\Soundtracks;
 use Bpmore\Wrapped\Stats\Voice;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
@@ -26,6 +28,7 @@ use Statamic\Facades\Site;
  * @property string|null $youtube_id
  * @property string|null $youtube_title
  * @property string|null $youtube_thumbnail
+ * @property string|null $soundtrack
  * @property string|null $created_by
  * @property CarbonImmutable $created_at
  * @property CarbonImmutable|null $expires_at
@@ -50,6 +53,7 @@ class Share extends Model
         'youtube_id',
         'youtube_title',
         'youtube_thumbnail',
+        'soundtrack',
         'created_by',
         'created_at',
         'expires_at',
@@ -72,7 +76,18 @@ class Share extends Model
     }
 
     /**
-     * The song chosen for the public page, or null for a page without one.
+     * The soundtrack chosen for the public page, or null: none was chosen,
+     * or the one that was is no longer offered (a config track removed, an
+     * upload deleted). The page then has no music rather than a broken
+     * button.
+     */
+    public function soundtrack(Soundtracks $soundtracks): ?Soundtrack
+    {
+        return $this->soundtrack === null ? null : $soundtracks->find($this->soundtrack);
+    }
+
+    /**
+     * The YouTube video chosen for the public page, or null for a page without one.
      */
     public function music(): ?YouTubeVideo
     {

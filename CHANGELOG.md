@@ -22,6 +22,12 @@ php artisan vendor:publish --tag=wrapped --force
   audio is ignored. The config-file route still works and lists first. An
   asset container on S3 or another remote disk works too: the file is copied
   to the server for the length of a video render and removed after.
+- Music on a public link is now a choice: none, a track (any the video can
+  have, bundled or your own), or a YouTube video. A track plays as a quiet
+  loop behind the story, streamed from your site under the link's own token,
+  so it stops when the link does. The bundled tracks may be used this way;
+  the README says what rights your own music needs. Needs
+  `php artisan migrate` and a republish of the control panel assets.
 
 ## 1.5.1 - 2026-09-19
 
