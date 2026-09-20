@@ -47,6 +47,8 @@ For the dashboard widget, add it to the widgets in `config/statamic/cp.php`:
 
 It shows the headline number once there is a Wrapped to show, and nudges in December.
 
+![The dashboard widget](docs/screenshots/dashboard-widget.png)
+
 Upgrading, whenever the [changelog](CHANGELOG.md) says so:
 
 ```bash
@@ -121,6 +123,10 @@ Without a browser the download links simply do not appear. The screen is the rea
 
 **Play it** on the Wrapped screen opens the story: the same facts, one per screen, advanced by tap, click or arrow key. Nothing moves until the reader says so, it works from a keyboard, and a screen reader is read each fact as it appears. Music is off until asked. This is the accessible version, and the one the video is made from.
 
+![The story: one fact per screen, in the control panel](docs/screenshots/story.png)
+
+On a public link the same story plays with whatever music the link was given; see [Public links](#music-on-a-public-link).
+
 **Make a video** turns it into a short vertical MP4 for Reels, Stories and TikTok. The editor ticks which cards go in (six by default, people cards never by default), picks a track, and downloads. Each card stays on screen for as long as its words take to read, so the pacing meets WCAG 2.1 AA; a running-time readout shows the length as boxes are ticked, and a typical Wrapped lands under thirty seconds.
 
 Video needs FFmpeg. If it is installed in a usual place it is found automatically; otherwise:
@@ -131,11 +137,15 @@ WRAPPED_FFMPEG_PATH=/usr/bin/ffmpeg
 
 Without it the video maker does not appear. The story and the images work regardless.
 
+![The video maker: tick the cards, pick a track, download](docs/screenshots/video-maker.png)
+
 ### Music
 
 The addon ships with a small set of instrumental tracks, made with [Suno](https://suno.com) on a plan that assigns ownership of the output, and shipped exactly as downloaded so Suno's own metadata stays in the files.
 
 **Add your own from the control panel.** Addons → Wrapped → Settings has a **Your soundtracks** field: drop in an MP3 (M4A, WAV, OGG, FLAC and AAC work too) and save. It appears at the top of the track list, named from its filename or the title you give the file. A file that is not audio is ignored. An asset container on S3 or another remote disk is fine; the file is copied to the server for the length of a video render and removed after.
+
+![The settings screen: look, your soundtracks, and the public-links switch](docs/screenshots/settings.png)
 
 **Or in config**, if you would rather keep music with the code, or offer only your own:
 
@@ -215,7 +225,7 @@ One Wrapped per site. Generate with `--site=` for one, or without it for all.
 
 ## Quarterly and monthly
 
-Add `--quarter=1` through `4` for three months instead of twelve, or `--month=1` through `12` for one, or choose them on the Build form. Same cards, same screen, and the closing line says "your quarter" or "your month" rather than "your year". The dashboard widget nudges only about the year, in December.
+Add `--quarter=1` through `4` for three months instead of twelve, or `--month=1` through `12` for one, or choose them on the Build form. Same cards, same screen, and the closing line says "your quarter" or "your month" rather than "your year" (or "our", on a public link). The dashboard widget nudges only about the year, in December.
 
 ## Public links
 
@@ -236,7 +246,9 @@ or switch on **Allow public links** at Addons → Wrapped → Settings, which wi
 - is the same **tap-through story** as the control panel, in your theme, with `noindex` and nothing of the control panel around it. Without JavaScript it reads as a plain page.
 - has a **Share** button: the phone's own share sheet where there is one, "Link copied" otherwise.
 - is **written as "we"** unless you choose "you" on the form. The control panel says "you published 42 entries" to the editor; a public reader did not publish anything, so the page says "we published", "our busiest month", "that was our year".
-- can have a **song**: see below.
+- can have **music**: see below.
+
+![The Share publicly panel: live links, the voice, the music choice](docs/screenshots/share-panel.png)
 
 Switching the setting back off stops every link at once. The first URL segment is `share.path` in the config.
 
@@ -249,6 +261,8 @@ Switching the setting back off stops every link at once. The first URL segment i
 **A YouTube video** is for a published song. Paste its link into **YouTube link** when making the public link. Any shape works: `youtube.com/watch?v=…`, `youtu.be/…`, shorts, embed. YouTube is asked about it once, with no API key and no quota, and the title and thumbnail it gives are kept with the link and shown under it in the control panel, so a wrong paste is visible and can be revoked. A link YouTube does not recognise (private, removed, not embeddable) is refused.
 
 On the public page the song is a small YouTube player in its own tile, opened by a **Play music** button on the first frame or **Music** in the controls, looping until **Stop music**. Nothing loads from YouTube until a reader presses one of them. The tile sits at the top on a phone and bottom-right on a wider screen, and the cards make room for it: YouTube's rules for an embedded player ask that it be at least 200×200, on screen, and never covered, hidden or reduced to audio, and the page keeps to them. Under the tile: the song's title and a link to YouTube's terms.
+
+![The public page on a phone, written as "we", with a YouTube song playing](docs/screenshots/public-story.png)
 
 Two things to know:
 

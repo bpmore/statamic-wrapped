@@ -48,15 +48,15 @@ Free. Statamic 6, PHP 8.2+.
 
 ## Screenshots, in order
 
-All taken from the shipped release on a seeded Statamic 6 site: 1.4 for most, 1.5 for the two public-links shots (7 and 8).
+All taken from the shipped release on a seeded Statamic 6 site: 1.4 for the cards, the screen, the story, the summary and the widget; 1.5 for the public page (8); 1.6 for the video maker, the settings screen and the share panel (5, 6, 7).
 
 1. `docs/screenshots/cp-screen.png` — the Wrapped screen, with the period picker and Play it
 2. `docs/screenshots/story.png` — the tap-through story in the control panel
 3. `docs/screenshots/card-busiest_time.png` — "You publish most on Tuesday"
 4. `docs/screenshots/card-longest_untouched.png` — "Quietly doing its job"
-5. `docs/screenshots/video-maker.png` — choosing cards and music for the video
-6. `docs/screenshots/settings.png` — the settings screen: look, and the public-links switch
-7. `docs/screenshots/share-panel.png` — making and revoking public links: the voice choice, the music field, a live link with its song
+5. `docs/screenshots/video-maker.png` — choosing cards and music for the video, an upload first in the list
+6. `docs/screenshots/settings.png` — the settings screen: look, your soundtracks, and the public-links switch
+7. `docs/screenshots/share-panel.png` — making and revoking public links: the voice choice, the three-way music choice, live links with a track and a song
 8. `docs/screenshots/public-story.png` — the public page on a phone, written as "we", with the YouTube tile open and the Share button
 9. `docs/screenshots/summary.png` — the whole thing as one image
 10. `docs/screenshots/dashboard-widget.png` — the dashboard widget
