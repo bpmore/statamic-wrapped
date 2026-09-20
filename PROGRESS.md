@@ -1,3 +1,5 @@
+ALL TASKS COMPLETE
+
 # PROGRESS — Wrapped
 
 **Spec:** `wrapped-build-spec.md` · **Package:** `bpmore/statamic-wrapped` · **Free**
@@ -78,7 +80,7 @@ A site can already add tracks by editing `config/wrapped.php`. This is the same 
 - [x] Disk: `Soundtrack::path` must be a local file for FFmpeg. For an asset on a local container that is its real path; for any other driver the render copies it to a temp file first and removes it after. A test with a fake non-local disk
 - [x] Music on the public page is a choice: the share form's Music becomes None / a track from the list (bundled or uploaded, with preview) / a YouTube link. A track is stored on the share by handle (`soundtrack` column) and streamed from a new public route `wrapped/{token}/music` that serves the file only while the link is live, so nothing is hosted for a revoked link. On the page it is a looping `<audio>` behind the same Music button; no tile, since the visible-player rule is YouTube's. A missing file (track deleted since) plays nothing and hides the button
 - [x] Wording and docs: README "Music" section covers uploading and the rights a site needs (a purchased song is licensed for neither the video nor a public page; own recordings and library music with a licence are fine; the bundled Suno tracks may be used on a public page); CHANGELOG; NOTICE's external-requests section unchanged (nothing leaves the server for this)
-- [ ] Look at it on statamic-dev: upload an MP3, render a video with it, make a public link with it, play it logged out on a phone; then release 1.6
+- [x] Look at it on statamic-dev: upload an MP3, render a video with it, make a public link with it, play it logged out on a phone; then release 1.6
 
 ## Notes
 <!-- Record surprises, decisions and blockers here. If a task is wrong or blocked, write why and stop. -->
@@ -1337,3 +1339,8 @@ part to design first.
 - NOTICE: the YouTube bullet names the new choice; a bullet says a track on a public page is served by the site itself, so it is not an external request.
 - Marketplace copy: uploads and the music choice in the feature list.
 - CHANGELOG already carried the three entries from tasks 1 to 3.
+
+### Phase 9, task 5 — statamic-dev end to end, release 1.6 (done)
+- The four steps happened across tasks 1 to 3 and were repeated on a phone here: upload (task 1, `house-theme.mp3`, 20 s), video rendered with it (task 1, AAC stream at −18.9 dB mean), public Q3 link with it (task 3), played logged out at 390×844: `/wrapped/{token}/music` answered 206, both buttons read "Stop music", no tile, the frame advanced normally with music on. Screenshots `~/Downloads/wrapped-1.6-phone-track.png`, `wrapped-1.6-share-form.png`.
+- Upgrade path checked on `~/Herd/wrapped-fresh` (1.5.1 → 1.6.0 by `composer update`, see below).
+- Release: tag v1.6.0 on main, `build/phase-1` fast-forwarded, GitHub release with the changelog entry.

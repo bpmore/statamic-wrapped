@@ -11,7 +11,11 @@ php artisan migrate
 php artisan vendor:publish --tag=wrapped --force
 ```
 
-## Unreleased
+## 1.6.0 - 2026-09-20
+
+Your own music: uploaded on the settings screen, in the video, and on a
+public link. Needs `php artisan migrate` (one new migration, a `soundtrack`
+column on `wrapped_shares`) and a republish of the control panel assets.
 
 ### Added
 
@@ -26,8 +30,7 @@ php artisan vendor:publish --tag=wrapped --force
   have, bundled or your own), or a YouTube video. A track plays as a quiet
   loop behind the story, streamed from your site under the link's own token,
   so it stops when the link does. The bundled tracks may be used this way;
-  the README says what rights your own music needs. Needs
-  `php artisan migrate` and a republish of the control panel assets.
+  the README says what rights your own music needs.
 
 ## 1.5.1 - 2026-09-19
 
