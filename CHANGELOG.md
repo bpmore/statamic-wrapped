@@ -11,6 +11,15 @@ php artisan migrate
 php artisan vendor:publish --tag=wrapped --force
 ```
 
+## 1.6.2 - 2026-09-20
+
+### Changed
+
+- American spelling throughout: color, license, recognize, gray, behavior.
+  Settings screen instructions, control panel text, the public page, the
+  docs. Nothing else changed. Needs a republish of the control panel assets
+  (`php artisan vendor:publish --tag=wrapped --force`); no migration.
+
 ## 1.6.1 - 2026-09-20
 
 ### Fixed
