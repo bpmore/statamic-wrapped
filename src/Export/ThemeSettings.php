@@ -20,8 +20,8 @@ namespace Bpmore\Wrapped\Export;
 class ThemeSettings
 {
     /**
-     * The addon's slug, which is what the settings file is named after and
-     * what the repository looks a record up by — not the package name.
+     * What the settings repository looks the addon's record up by. See
+     * `SavedSettings::ADDON`.
      */
     public const ADDON = SavedSettings::ADDON;
 

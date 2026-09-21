@@ -19,10 +19,12 @@ use Statamic\Facades\AssetContainer;
 class SavedSettings
 {
     /**
-     * The addon's slug, which is what the settings file is named after and
-     * what the repository looks a record up by — not the package name.
+     * The addon's package name, which is what the settings repository looks
+     * a record up by. Statamic's own repository once took the slug here and
+     * the package name there (statamic/cms#15494); asking by package name is
+     * right on both sides of that fix, and is what `Addon::settings()` does.
      */
-    public const ADDON = 'wrapped';
+    public const ADDON = 'bpmore/statamic-wrapped';
 
     /**
      * Exactly what was saved, or null when the screen has never been saved.

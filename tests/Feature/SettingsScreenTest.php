@@ -1,5 +1,6 @@
 <?php
 
+use Bpmore\Wrapped\Export\SavedSettings;
 use Bpmore\Wrapped\Export\Soundtrack;
 use Bpmore\Wrapped\Export\Soundtracks;
 use Bpmore\Wrapped\Export\Theme;
@@ -93,6 +94,17 @@ it('shows what was saved when the screen is opened again', function () {
         ->get(wrappedAddon()->settingsUrl())
         ->assertOk()
         ->assertInertia(fn ($page) => $page->where('values.background', '#fef3c7'));
+});
+
+it('reads its settings by the same name Statamic does', function () {
+    // The addon's readers and Statamic's Addon::settings() must find the same
+    // record. Statamic once found it by slug and once by package name
+    // (statamic/cms#15494); asking by package name is right either way.
+    savedLook(['background' => '#fef3c7']);
+
+    expect(SavedSettings::ADDON)->toBe(wrappedAddon()->id())
+        ->and(SavedSettings::raw())->toBe(wrappedAddon()->settings()->raw())
+        ->and(SavedSettings::raw())->toMatchArray(['background' => '#fef3c7']);
 });
 
 it('lets the screen win once it has been saved', function () {

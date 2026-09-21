@@ -11,6 +11,17 @@ php artisan migrate
 php artisan vendor:publish --tag=wrapped --force
 ```
 
+## 1.6.5 - 2026-09-21
+
+### Fixed
+
+- The addon now asks for its saved settings by package name, the way
+  Statamic's own settings screen does. Statamic is fixing the lookup that
+  1.6.4 worked around (statamic/cms#15495), and once that ships, asking by
+  slug would have come back empty: the look, your soundtracks and the
+  public-links switch would have quietly fallen back to the config file.
+  Right on both sides of the fix. No upgrade steps.
+
 ## 1.6.4 - 2026-09-21
 
 ### Fixed
