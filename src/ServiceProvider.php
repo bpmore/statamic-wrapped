@@ -16,6 +16,7 @@ use Bpmore\Wrapped\History\Sources\EntryDataHistorySource;
 use Bpmore\Wrapped\History\Sources\LogbookHistorySource;
 use Bpmore\Wrapped\History\Sources\MtimeHistorySource;
 use Bpmore\Wrapped\History\Sources\RevisionsHistorySource;
+use Bpmore\Wrapped\Settings\SettingsRepository;
 use Bpmore\Wrapped\Stats\CardGate;
 use Bpmore\Wrapped\Stats\Cards\AssetsUploadedCard;
 use Bpmore\Wrapped\Stats\Cards\BusiestMonthCard;
@@ -38,6 +39,7 @@ use Bpmore\Wrapped\Stats\StatCardRegistry;
 use Bpmore\Wrapped\Widgets\WrappedWidget;
 use Illuminate\Console\Command;
 use Statamic\Assets\AssetContainer;
+use Statamic\Contracts\Addons\SettingsRepository as SettingsRepositoryContract;
 use Statamic\Facades\CP\Nav;
 use Statamic\Facades\Permission;
 use Statamic\Facades\YAML;
@@ -166,6 +168,10 @@ class ServiceProvider extends AddonServiceProvider
 
         $this->bootPermissions();
         $this->bootNav();
+        // After Statamic's own binding: it saves settings by slug and reads
+        // them by package name, and ours differ. See the class.
+        $this->app->bind(SettingsRepositoryContract::class, SettingsRepository::class);
+
         $this->bootSettings();
     }
 

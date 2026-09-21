@@ -81,6 +81,20 @@ it('uses the config file until somebody saves the screen', function () {
     expect(app(Theme::class)->background)->toBe('#123456');
 });
 
+it('shows what was saved when the screen is opened again', function () {
+    // Statamic saves an addon's settings under its slug and, on its own,
+    // reads them back under its package name. Ours differ, so without the
+    // addon's own repository every save looked lost on the next page load.
+    savedLook(['background' => '#fef3c7']);
+
+    expect(wrappedAddon()->settings()->raw())->toMatchArray(['background' => '#fef3c7']);
+
+    $this->actingAs(User::make()->id('super')->email('super@example.com')->makeSuper())
+        ->get(wrappedAddon()->settingsUrl())
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page->where('values.background', '#fef3c7'));
+});
+
 it('lets the screen win once it has been saved', function () {
     savedLook(['background' => '#fef3c7']);
 

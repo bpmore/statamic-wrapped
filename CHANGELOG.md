@@ -11,6 +11,17 @@ php artisan migrate
 php artisan vendor:publish --tag=wrapped --force
 ```
 
+## 1.6.4 - 2026-09-21
+
+### Fixed
+
+- The settings screen now shows what was saved on it. Statamic writes an
+  addon's settings under its slug (`wrapped`) and reads them back under its
+  package name (`statamic-wrapped`), so on a plain site every save looked
+  lost the moment the page reloaded, though the images and the story were
+  already using it. The addon now finds its settings under the name they
+  were saved with. Nothing saved is lost or moved. No upgrade steps.
+
 ## 1.6.3 - 2026-09-21
 
 ### Fixed
