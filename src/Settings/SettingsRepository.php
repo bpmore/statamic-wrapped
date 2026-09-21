@@ -22,7 +22,8 @@ use Statamic\Facades\YAML;
  *
  * Statamic's own lookup is kept for any addon this cannot place. Seen in
  * statamic/cms 6.31 through 6.33 (`FileSettingsRepository::find()` against
- * `FileSettings::path()`); remove this when Statamic reads by slug.
+ * `FileSettings::path()`). Reported as statamic/cms#15494; remove this once
+ * Statamic reads by slug.
  */
 class SettingsRepository extends FileSettingsRepository
 {
