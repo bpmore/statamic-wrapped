@@ -291,7 +291,7 @@ Open an issue at [github.com/bpmore/statamic-wrapped/issues](https://github.com/
 
 ## What is bundled
 
-The five music tracks are made with Suno on a plan that assigns ownership of the output, owned by Had A Farm, and distributed under this package's license. The built control panel assets include canvas-confetti (ISC). Nothing about your site is sent anywhere. The few outside requests an editor or a reader can cause (a logo given as a full URL, the YouTube title lookup when a song is chosen, and a reader's own browser loading YouTube's player) are listed in full in [NOTICE.md](NOTICE.md).
+The five music tracks are made with Suno on a plan that assigns ownership of the output, owned by Had A Farm, and distributed under this package's license. The built control panel assets include canvas-confetti (ISC). Beyond a video id and a logo URL you chose, nothing about your site or its content is sent anywhere. The three outside requests an editor or a reader can cause (a logo given as a full URL, the YouTube title lookup when a song is chosen, and a reader's own browser loading YouTube's player) are listed in full in [NOTICE.md](NOTICE.md).
 
 ## License
 

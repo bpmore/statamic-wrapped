@@ -211,6 +211,34 @@ describe('making a link', function () {
             ->and(Share::sole()->people)->toBeTrue();
     });
 
+    it('never puts a nameless contributor\'s email on the public page, even with people cards in', function () {
+        // The reviewer's case: individual stats on, a share made with people
+        // cards, and a top contributor whose account has no display name.
+        // The page, its og:description and the PNG all take this sentence.
+        $content = sys_get_temp_dir().'/wrapped-users-'.bin2hex(random_bytes(6));
+        mkdir($content, 0777, true);
+        Stache::store('users')->directory($content);
+        Stache::clear();
+
+        User::make()->id('nameless')->email('private@example.com')->save();
+
+        sharer([CardGate::VIEW, CardGate::VIEW_PEOPLE, CardGate::SHARE]);
+        $snapshot = aWrapped();
+        $snapshot->update(['stats' => $snapshot->stats + ['top_contributor' => ['author' => 'nameless', 'count' => 12]]]);
+
+        makeLink(['people' => true, 'voice' => 'we']);
+
+        $share = Share::sole();
+        $html = $this->get($share->url())->assertOk()->getContent();
+
+        expect(array_column($share->cards, 'handle'))->toContain('top_contributor')
+            ->and(json_encode($share->cards))->not->toContain('private@example.com')
+            ->and($html)->not->toContain('private@example.com')
+            ->and($html)->not->toContain('@example.com');
+
+        exec('rm -rf '.escapeshellarg($content));
+    });
+
     it('never publishes people cards the maker may not see, even when asked', function () {
         sharer([CardGate::VIEW, CardGate::SHARE]);
         aWrapped();
