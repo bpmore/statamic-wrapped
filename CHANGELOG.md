@@ -11,6 +11,19 @@ php artisan migrate
 php artisan vendor:publish --tag=wrapped --force
 ```
 
+## 1.6.3 - 2026-09-21
+
+### Fixed
+
+- A top contributor with no display name no longer has their email shown in
+  their place. With individual stats on and a public link made with people
+  cards included, that email could have reached the public page, its
+  `og:description` and the PNG. The card now reads as it does for a deleted
+  user. No upgrade steps.
+- The README's one-line summary of outside requests now matches NOTICE.md:
+  the logo fetch, the YouTube title lookup, and the reader's own browser
+  loading YouTube's player.
+
 ## 1.6.2 - 2026-09-20
 
 ### Changed

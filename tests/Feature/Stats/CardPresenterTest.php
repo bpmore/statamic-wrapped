@@ -78,6 +78,26 @@ it('resolves a contributor id to a name at display time', function () {
     exec('rm -rf '.escapeshellarg($content));
 });
 
+it('never falls back to an email for a contributor with no name', function () {
+    // The same sentence goes on a public page, so a missing name must read
+    // like a deleted user, not leak the address behind the account.
+    $content = sys_get_temp_dir().'/wrapped-users-'.bin2hex(random_bytes(6));
+    mkdir($content, 0777, true);
+
+    Stache::store('users')->directory($content);
+    Stache::clear();
+
+    User::make()->id('nameless')->email('private@example.com')->save();
+
+    $body = bodyOf('top_contributor', ['author' => 'nameless', 'count' => 12]);
+
+    expect($body)->toBe(' published 12 entries.')
+        ->and($body)->not->toContain('private@example.com')
+        ->and($body)->not->toContain('@');
+
+    exec('rm -rf '.escapeshellarg($content));
+});
+
 it('does not show a bare user id for a contributor who has left', function () {
     expect(bodyOf('top_contributor', ['author' => 'someone-deleted', 'count' => 12]))
         ->toBe(' published 12 entries.');

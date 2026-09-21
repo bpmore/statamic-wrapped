@@ -156,6 +156,11 @@ class CardPresenter
      * The snapshot stores a user id so a name can change without rewriting
      * history. If that user is gone, their id is not a thing to show a reader.
      *
+     * A user with no display name gets no fallback. The obvious one, their
+     * email, would be fine in the control panel, but the same sentence goes on
+     * a public page, into its og:description and into the PNG when a share
+     * includes people cards. An empty name reads the same as a deleted user.
+     *
      * @param  array<string, mixed>  $data
      */
     protected function userName(array $data): string
@@ -179,9 +184,7 @@ class CardPresenter
             return $name;
         }
 
-        $email = $user->email();
-
-        return is_string($email) ? $email : '';
+        return '';
     }
 
     protected function translated(string $key): bool
