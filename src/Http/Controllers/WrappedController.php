@@ -4,6 +4,8 @@ namespace Bpmore\Wrapped\Http\Controllers;
 
 use Bpmore\Wrapped\Export\AltText;
 use Bpmore\Wrapped\Export\CardImages;
+use Bpmore\Wrapped\Export\RenderBusy;
+use Bpmore\Wrapped\Export\RenderLock;
 use Bpmore\Wrapped\Export\Soundtrack;
 use Bpmore\Wrapped\Export\SoundtrackResponse;
 use Bpmore\Wrapped\Export\Soundtracks;
@@ -27,6 +29,7 @@ use Statamic\Facades\Site;
 use Statamic\Http\Controllers\CP\CpController;
 use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
 
 /**
  * The Wrapped screen.
@@ -247,9 +250,10 @@ class WrappedController extends CpController
     /**
      * The video, downloaded rather than hosted, with the editor's choice of
      * cards and track carried in the query. Same rules as the images: no
-     * public URL, ever.
+     * public URL, ever, and one render at a time per site (see RenderLock;
+     * the route is rate-limited too).
      */
-    public function video(Request $request, WrappedVideo $video): HttpResponse
+    public function video(Request $request, WrappedVideo $video, RenderLock $lock): HttpResponse
     {
         $snapshot = $this->chosen($request);
 
@@ -266,7 +270,9 @@ class WrappedController extends CpController
         $track = is_string($track) && $track !== '' ? $track : null;
 
         try {
-            $mp4 = $video->render($snapshot, $cards, $track);
+            $mp4 = $lock->run($snapshot->site, fn () => $video->render($snapshot, $cards, $track));
+        } catch (RenderBusy $e) {
+            throw new TooManyRequestsHttpException(RenderLock::RETRY_AFTER, $e->getMessage(), $e);
         } catch (RuntimeException $e) {
             throw new NotFoundHttpException($e->getMessage(), $e);
         }
@@ -299,8 +305,11 @@ class WrappedController extends CpController
      * There is no public URL for a Wrapped and there will not be one: a link
      * leaking a team's internal publishing stats is a support problem and a
      * privacy problem for a free addon — SPEC.md §5.
+     *
+     * One render at a time per site, and a rate limit on the route: a card
+     * is a browser launch on the request thread, asked for by GET.
      */
-    public function image(Request $request, CardImages $images, ?string $card = null): HttpResponse
+    public function image(Request $request, CardImages $images, RenderLock $lock, ?string $card = null): HttpResponse
     {
         $snapshot = $this->chosen($request);
 
@@ -309,9 +318,11 @@ class WrappedController extends CpController
         }
 
         try {
-            $png = $card === null
+            $png = $lock->run($snapshot->site, fn () => $card === null
                 ? $images->summary($snapshot)
-                : $images->card($snapshot, $card);
+                : $images->card($snapshot, $card));
+        } catch (RenderBusy $e) {
+            throw new TooManyRequestsHttpException(RenderLock::RETRY_AFTER, $e->getMessage(), $e);
         } catch (RuntimeException $e) {
             throw new NotFoundHttpException($e->getMessage(), $e);
         }

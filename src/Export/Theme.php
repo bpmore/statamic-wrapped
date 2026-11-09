@@ -2,6 +2,8 @@
 
 namespace Bpmore\Wrapped\Export;
 
+use Closure;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Statamic\Assets\Asset;
 use Throwable;
@@ -164,72 +166,145 @@ class Theme
      * The logo as a data: URI, or null.
      *
      * Rendering happens from a file:// page with no network, so a URL would
-     * simply be a missing image. A path on disk is read directly; a URL under
-     * the site's own public directory is mapped to disk; an asset chosen on
-     * the settings screen is read from its container; anything else is
-     * fetched once, briefly, and skipped on failure.
+     * simply be a missing image, and the public story page shows the same
+     * logo to anyone with a link. So the logo is read from exactly two
+     * places: an asset in the container the settings screen offers, through
+     * that container's disk; or a file under the site's public directory,
+     * given as a path or as its URL on this site. Nothing else on disk is
+     * read (the value can be typed into a text field on a site with no
+     * container, and the result is shown to the public), and nothing is
+     * fetched from another host. The data URI is cached, keyed by the file
+     * and when it last changed, so a public page view does not re-read it.
      */
     protected static function logoFrom(mixed $logo): ?string
     {
         if ($logo instanceof Asset) {
-            $logo = static::assetLocation($logo);
+            return static::logoFromAsset($logo);
         }
 
         if (! is_string($logo) || trim($logo) === '') {
             return null;
         }
 
-        $logo = trim($logo);
-        $path = null;
+        $path = static::publicFile(trim($logo));
 
-        if (is_file($logo)) {
-            $path = $logo;
-        } elseif (str_starts_with($logo, '/') && is_file(public_path(ltrim($logo, '/')))) {
-            $path = public_path(ltrim($logo, '/'));
-        } elseif (function_exists('url') && str_starts_with($logo, rtrim((string) url('/'), '/').'/')) {
-            $relative = substr($logo, strlen(rtrim((string) url('/'), '/')));
-            $path = is_file(public_path(ltrim($relative, '/'))) ? public_path(ltrim($relative, '/')) : null;
-        }
-
-        try {
-            if ($path !== null) {
-                $bytes = file_get_contents($path);
-                $mime = mime_content_type($path) ?: 'image/png';
-            } elseif (str_starts_with($logo, 'http://') || str_starts_with($logo, 'https://')) {
-                $context = stream_context_create(['http' => ['timeout' => 3]]);
-                $bytes = file_get_contents($logo, false, $context);
-                $mime = static::mimeFromBytes($bytes === false ? '' : $bytes);
-            } else {
-                return null;
-            }
-        } catch (Throwable) {
+        if ($path === null) {
             return null;
         }
 
-        if ($bytes === false || $bytes === '' || ! str_starts_with($mime, 'image/')) {
+        return static::remembered('file:'.$path.':'.(string) @filemtime($path), function () use ($path): ?string {
+            try {
+                $bytes = file_get_contents($path);
+                $mime = mime_content_type($path) ?: '';
+            } catch (Throwable) {
+                return null;
+            }
+
+            if ($bytes === false) {
+                return null;
+            }
+
+            // finfo calls an SVG without an XML declaration text; the bytes know better.
+            if (! str_starts_with($mime, 'image/')) {
+                $mime = static::mimeFromBytes($bytes);
+            }
+
+            return static::dataUri($bytes, $mime);
+        });
+    }
+
+    /**
+     * An asset chosen on the settings screen, read through its container's
+     * disk, wherever that disk is. Only the container the screen offers
+     * counts: a value that names another container is not one the screen
+     * could have produced.
+     */
+    protected static function logoFromAsset(Asset $asset): ?string
+    {
+        try {
+            $offered = SavedSettings::formContainer()?->handle();
+
+            if ($offered === null || $asset->containerHandle() !== $offered) {
+                return null;
+            }
+
+            $identity = 'asset:'.$asset->containerHandle().'::'.$asset->path().':'.$asset->lastModified()->timestamp;
+
+            return static::remembered($identity, function () use ($asset): ?string {
+                $bytes = $asset->contents();
+
+                return is_string($bytes) ? static::dataUri($bytes, static::mimeFromBytes($bytes)) : null;
+            });
+        } catch (Throwable) {
+            return null;
+        }
+    }
+
+    /**
+     * The file a path or URL names, if and only if it is a regular file
+     * under the site's public directory once every symlink and `..` is
+     * resolved. `/img/logo.svg` is tried as a URL on this site first and as
+     * a path on disk second; `https://this-site/img/logo.svg` is mapped to
+     * disk; a URL to any other host, or a path anywhere else, is nothing.
+     */
+    protected static function publicFile(string $logo): ?string
+    {
+        $candidates = [];
+
+        if (str_starts_with($logo, '/')) {
+            $relative = (string) parse_url($logo, PHP_URL_PATH);
+            $candidates[] = public_path(ltrim($relative, '/'));
+            $candidates[] = $logo;
+        } elseif (function_exists('url') && str_starts_with($logo, rtrim((string) url('/'), '/').'/')) {
+            $relative = (string) parse_url(substr($logo, strlen(rtrim((string) url('/'), '/'))), PHP_URL_PATH);
+            $candidates[] = public_path(ltrim($relative, '/'));
+        } else {
+            return null;
+        }
+
+        $root = realpath(public_path());
+
+        if ($root === false) {
+            return null;
+        }
+
+        foreach ($candidates as $candidate) {
+            if (! is_file($candidate)) {
+                continue;
+            }
+
+            $real = realpath($candidate);
+
+            if ($real !== false && str_starts_with($real, rtrim($root, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR)) {
+                return $real;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * The data URI for one source, computed once a day per version of the
+     * file. A cache that is down costs a re-read, never the logo.
+     *
+     * @param  Closure(): ?string  $compute
+     */
+    protected static function remembered(string $identity, Closure $compute): ?string
+    {
+        try {
+            return Cache::remember('wrapped.theme.logo.'.sha1($identity), now()->addDay(), $compute);
+        } catch (Throwable) {
+            return $compute();
+        }
+    }
+
+    protected static function dataUri(string $bytes, string $mime): ?string
+    {
+        if ($bytes === '' || ! str_starts_with($mime, 'image/')) {
             return null;
         }
 
         return 'data:'.$mime.';base64,'.base64_encode($bytes);
-    }
-
-    /**
-     * Where an asset's bytes are: its path on a local disk, or its URL for a
-     * disk that is somewhere else, which the fetch below handles.
-     */
-    protected static function assetLocation(Asset $asset): ?string
-    {
-        try {
-            $path = $asset->resolvedPath();
-
-            if (is_file($path)) {
-                return $path;
-            }
-
-            return $asset->absoluteUrl();
-        } catch (Throwable) {
-            return null;
-        }
     }
 
     protected static function mimeFromBytes(string $bytes): string

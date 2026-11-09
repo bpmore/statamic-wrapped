@@ -186,7 +186,7 @@ Set it on the settings screen, under **Addons → Wrapped** in the control panel
 
 Pick any background. The text color is worked out from it so it always clears WCAG AA's 4.5:1 contrast, and the muted label color is derived the same way. An accent that cannot be read against the background is dropped, with a note in the log, rather than used. A site cannot accidentally ship an unreadable Wrapped.
 
-The logo appears on the opening and closing frames and takes a path on disk, a URL under the site, or a full URL. If you have set `custom_logo_url` in `config/statamic/cp.php`, that is used unless you say otherwise.
+The logo appears on the opening and closing frames. It is an asset from your container, or a file under the site's `public/` directory given as a path on disk or as its URL on this site (`/img/logo.svg`). Nothing elsewhere on disk is read and nothing is fetched from another host: the value can be set on the settings screen and the result is shown on public pages, so it is bounded to what the site already serves. If you have set `custom_logo_url` in `config/statamic/cp.php`, that is used unless you say otherwise, under the same rule.
 
 There is no attempt to read a "site color" from your starter kit: Statamic has no standard place for one, and guessing would work on one kit and silently do nothing on the next.
 
@@ -291,7 +291,7 @@ Open an issue at [github.com/bpmore/statamic-wrapped/issues](https://github.com/
 
 ## What is bundled
 
-The five music tracks are made with Suno on a plan that assigns ownership of the output, owned by Had A Farm, and distributed under this package's license. The built control panel assets include canvas-confetti (ISC). Beyond a video id and a logo URL you chose, nothing about your site or its content is sent anywhere. The three outside requests an editor or a reader can cause (a logo given as a full URL, the YouTube title lookup when a song is chosen, and a reader's own browser loading YouTube's player) are listed in full in [NOTICE.md](NOTICE.md).
+The five music tracks are made with Suno on a plan that assigns ownership of the output, owned by Had A Farm, and distributed under this package's license. The built control panel assets include canvas-confetti (ISC). Beyond a video id you chose, nothing about your site or its content is sent anywhere. The two outside requests an editor or a reader can cause (the YouTube title lookup when a song is chosen, and a reader's own browser loading YouTube's player) are listed in full in [NOTICE.md](NOTICE.md).
 
 ## License
 

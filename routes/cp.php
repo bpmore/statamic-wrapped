@@ -14,13 +14,19 @@ Route::middleware('can:'.CardGate::VIEW)->group(function () {
     // The Wrapped as a tap-through story: the self-paced, accessible form.
     Route::get('wrapped/story', [WrappedController::class, 'story'])->name('wrapped.story');
 
-    // Downloads, not hosted images. See WrappedController::image().
-    Route::get('wrapped/image', [WrappedController::class, 'image'])->name('wrapped.image.summary');
-    Route::get('wrapped/image/{card}', [WrappedController::class, 'image'])->name('wrapped.image');
+    // Downloads, not hosted images. See WrappedController::image(). Each
+    // is a browser launch on the request thread, so the route is rate
+    // limited per person (`wrapped-exports`, see the service provider) and
+    // the controller renders one at a time per site.
+    Route::middleware('throttle:wrapped-exports')->group(function () {
+        Route::get('wrapped/image', [WrappedController::class, 'image'])->name('wrapped.image.summary');
+        Route::get('wrapped/image/{card}', [WrappedController::class, 'image'])->name('wrapped.image');
 
-    // The video, with the editor's choice in the query; and a soundtrack
-    // stream for the preview button.
-    Route::get('wrapped/video', [WrappedController::class, 'video'])->name('wrapped.video');
+        // The video, with the editor's choice in the query.
+        Route::get('wrapped/video', [WrappedController::class, 'video'])->name('wrapped.video');
+    });
+
+    // A soundtrack stream for the preview button.
     Route::get('wrapped/soundtrack/{handle}', [WrappedController::class, 'soundtrack'])->name('wrapped.soundtrack');
 
     // Building from the screen: its own permission, because it is work the
