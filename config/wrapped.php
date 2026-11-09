@@ -91,6 +91,25 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Export limits
+    |--------------------------------------------------------------------------
+    |
+    | An image or video download starts Chrome (and, for the video, FFmpeg)
+    | on the server, on demand, for anyone who may view the Wrapped. One
+    | render runs at a time per site; a request that arrives while one is
+    | running gets a 429 and a Retry-After. `per_minute` is how many
+    | downloads one person may start in a minute before the same answer.
+    |
+    */
+
+    'exports' => [
+
+        'per_minute' => (int) env('WRAPPED_EXPORTS_PER_MINUTE', 6),
+
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Look
     |--------------------------------------------------------------------------
     |
@@ -101,9 +120,12 @@ return [
     | `accent` is optional and used sparingly (the small labels). It is dropped
     | if it cannot be read against the background, with a note in the log.
     |
-    | `logo` is a path on disk, a URL under this site, or a full URL. It falls
-    | back to the control panel logo in config/statamic/cp.php, and appears on
-    | the opening and closing frames.
+    | `logo` is a file under this site's public directory, as a path on disk
+    | or as its URL on this site (`/img/logo.svg`). It falls back to the
+    | control panel logo in config/statamic/cp.php, and appears on the
+    | opening and closing frames. Nothing outside the public directory is
+    | read and nothing is fetched from another host: the same value can be
+    | set on the settings screen, and the result is shown on public pages.
     |
     */
 

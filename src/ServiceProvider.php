@@ -37,7 +37,10 @@ use Bpmore\Wrapped\Stats\Cards\TotalWordsCard;
 use Bpmore\Wrapped\Stats\StatCard;
 use Bpmore\Wrapped\Stats\StatCardRegistry;
 use Bpmore\Wrapped\Widgets\WrappedWidget;
+use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Console\Command;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\RateLimiter;
 use Statamic\Assets\AssetContainer;
 use Statamic\Contracts\Addons\SettingsRepository as SettingsRepositoryContract;
 use Statamic\Facades\CP\Nav;
@@ -168,11 +171,28 @@ class ServiceProvider extends AddonServiceProvider
 
         $this->bootPermissions();
         $this->bootNav();
+        $this->bootExportLimit();
         // After Statamic's own binding: it saves settings by slug and reads
         // them by package name, and ours differ. See the class.
         $this->app->bind(SettingsRepositoryContract::class, SettingsRepository::class);
 
         $this->bootSettings();
+    }
+
+    /**
+     * How often one person may ask for an image or a video. Each is a
+     * browser launch on the request thread, by GET, for anyone who may view
+     * the Wrapped; `exports.per_minute` in the config file is the number.
+     * Keyed by the signed-in user, falling back to the address. The lock
+     * that keeps renders to one at a time per site is RenderLock.
+     */
+    protected function bootExportLimit(): void
+    {
+        RateLimiter::for('wrapped-exports', function (Request $request) {
+            $perMinute = max(1, (int) config('wrapped.exports.per_minute', 6));
+
+            return Limit::perMinute($perMinute)->by('wrapped-exports:'.($request->user()?->getAuthIdentifier() ?? $request->ip()));
+        });
     }
 
     /**
@@ -242,7 +262,7 @@ class ServiceProvider extends AddonServiceProvider
             return [
                 'type' => 'text',
                 'display' => $field['display'],
-                'instructions' => 'A picture on this site, as its address (starting with /), or a full web address. Shown on the opening and closing frames. Leave it empty to use the control panel logo, if the site has one.',
+                'instructions' => 'A picture in this site\'s public directory, as its address (starting with /). Shown on the opening and closing frames. Leave it empty to use the control panel logo, if the site has one.',
             ];
         }
 

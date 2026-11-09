@@ -11,6 +11,29 @@ php artisan migrate
 php artisan vendor:publish --tag=wrapped --force
 ```
 
+## Unreleased
+
+### Fixed
+
+- The logo is read from two places only: an asset in the container the
+  settings screen offers, through that container's disk, or a file under
+  the site's public directory, given as a path or as its URL on this site.
+  It used to read any path on disk the value named and fetch any full URL,
+  and did so again for every view of a public share page. Now nothing
+  outside `public/` is read, nothing is fetched from another host, and the
+  result is cached per version of the file. A logo given as a full URL to
+  another host, or as a path elsewhere on disk, is no longer shown: copy
+  it under `public/` or pick it as an asset.
+- Image and video downloads run one at a time per site, and one person may
+  start `exports.per_minute` of them a minute (six by default). Both are
+  a headless browser (the video adds FFmpeg) started on the request thread
+  by anyone who may view the Wrapped, so a second request while one is
+  rendering, or a seventh in a minute, is answered 429 with a Retry-After
+  rather than another browser. The control panel screen is unaffected.
+
+No migration. Republish the config file if you want `exports.per_minute`
+in it; the default applies either way.
+
 ## 1.6.5 - 2026-09-21
 
 ### Fixed

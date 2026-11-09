@@ -34,13 +34,14 @@ loaded from it at runtime.
 
 ## External requests this package can make
 
-None on its own. Four things an editor or a reader does can cause one, and
-one that looks as if it might does not:
+None on its own. Two things an editor or a reader does can cause one, and
+two that look as if they might do not:
 
-- A logo given as a full `http(s)://` URL (config `theme.logo`, or the Logo
-  field on the settings screen) is fetched once when the look is built, with a
-  three-second timeout, and embedded in the images and video. Give a path on
-  the site instead and nothing leaves the server.
+- The logo (config `theme.logo`, or the Logo field on the settings screen) is
+  read from the site's own public directory or from an asset container, and
+  embedded in the images and video. It is never fetched: a full URL to
+  another host is ignored (before 1.7 it was fetched once, with a
+  three-second timeout).
 - Choosing **A YouTube video** under Music when making a public link and
   pasting its address (1.5+) makes one request from the server to
   `https://www.youtube.com/oembed`, with a five-second timeout, carrying the
@@ -59,5 +60,5 @@ one that looks as if it might does not:
 - The Chrome and FFmpeg binaries are run locally; they receive only the
   package's own HTML and files.
 
-Beyond a video id and a logo URL you chose, nothing about a site or its
-content is sent anywhere.
+Beyond a video id you chose, nothing about a site or its content is sent
+anywhere.
